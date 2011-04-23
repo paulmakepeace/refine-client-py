@@ -14,13 +14,24 @@ from google.refine import REFINE_HOST, REFINE_PORT
 from google.refine import Facet, Engine
 from google.refine import RefineServer, Refine, RefineProject
 
+PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
         
 class RefineTestCase(unittest.TestCase):
+    project_file = None
+    project = None
     def setUp(self):
         self.server = RefineServer()
         self.refine = Refine(self.server)
+        if self.project_file:
+            self.project = self.refine.new_project(
+                os.path.join(PATH_TO_TEST_DATA, self.project_file))
 
-
+    def tearDown(self):
+        if self.project:
+            self.project.delete()
+            self.project = None
+              
+               
 class RefineServerTest(RefineTestCase):
     def test_init(self):
         self.assertEqual(self.server.server, 'http://%s:%s' % (REFINE_HOST, REFINE_PORT))
@@ -38,10 +49,8 @@ class RefineServerTest(RefineTestCase):
 
 
 class RefineTest(RefineTestCase):
-    def setUp(self):
-        super(RefineTest, self).setUp()
-        self.project = self.refine.new_project('google/test/data/duplicates.csv')
-        
+    project_file = 'duplicates.csv'
+
     def test_new_project(self):
         self.assertTrue(isinstance(self.project, RefineProject))
 
@@ -53,17 +62,13 @@ class RefineTest(RefineTestCase):
     def test_delete_project(self):
         self.assertTrue(self.project.delete())
 
-    def tearDown(self):
-        if self.project:
-            self.project.delete()
-            self.project = None
 
 class TutorialTestFacets(RefineTestCase):
-    def test_new_project(self):
-        project = self.refine.new_project('google/test/data/louisiana-elected-officials.csv')
+    project_file = 'louisiana-elected-officials.csv'
 
+    def test_basic_facet(self):
         facet = Facet(column='Party Code')
-        facets = project.text_facet(facet)
+        facets = self.project.text_facet(facet)
         pc = facets.facets[0]
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 3700)
@@ -72,13 +77,11 @@ class TutorialTestFacets(RefineTestCase):
         
         engine = Engine(facet)
         engine.add_facet(Facet(column='Ethnicity'))
-        facets = project.text_facet(engine=engine)
+        facets = self.project.text_facet(engine=engine)
         e = facets.facets[1]
         self.assertEqual(e.choices['B'].count, 1255)
         self.assertEqual(e.choices['W'].count, 4469)
-        
-        self.assertTrue(project.delete())
-        
+
 
 if __name__ == '__main__':
     unittest.main()
