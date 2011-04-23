@@ -31,12 +31,32 @@ class RefineServerTest(RefineTestCase):
         projects = self.refine.list_projects()
         self.assertTrue(isinstance(projects, dict))
 
+    def test_get_version(self):
+        version_info = self.refine.get_version()
+        for item in ('revision', 'version', 'full_version', 'full_name'):
+            self.assertTrue(item in version_info)
+
 
 class RefineTest(RefineTestCase):
+    def setUp(self):
+        super(RefineTest, self).setUp()
+        self.project = self.refine.new_project('google/test/data/duplicates.csv')
+        
     def test_new_project(self):
-        project = self.refine.new_project('google/test/data/duplicates.csv')
-        self.assertTrue(project.delete())
+        self.assertTrue(isinstance(self.project, RefineProject))
 
+    def test_get_models(self):
+        self.assertEqual(self.project.key_column, 'email')
+        self.assertTrue('email' in self.project.columns)
+        self.assertEqual(self.project.column_index['name'], 1)
+    
+    def test_delete_project(self):
+        self.assertTrue(self.project.delete())
+
+    def tearDown(self):
+        if self.project:
+            self.project.delete()
+            self.project = None
 
 class TutorialTestFacets(RefineTestCase):
     def test_new_project(self):
@@ -52,7 +72,6 @@ class TutorialTestFacets(RefineTestCase):
         
         engine = Engine(facet)
         engine.add_facet(Facet(column='Ethnicity'))
-        #print engine.as_json()
         facets = project.text_facet(engine=engine)
         e = facets.facets[1]
         self.assertEqual(e.choices['B'].count, 1255)

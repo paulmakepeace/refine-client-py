@@ -134,6 +134,13 @@ class Refine:
         else:
             self.server = RefineServer(server)
 
+    def get_version(self):
+        """Return version data.
+        
+        {"revision":"r1836","full_version":"2.0 [r1836]",
+         "full_name":"Google Refine 2.0 [r1836]","version":"2.0"}"""
+        return self.server.urlopen_json('get-version')
+        
     def list_projects(self):
         """Return a dict of projects indexed by id & name.
         
@@ -173,12 +180,7 @@ class Refine:
         limit=None, # no more than this number of rows
         guess_value_type=True,  # numbers, dates, etc.
         ignore_quotes=False):
-        # Content-Disposition: form-data; name="project-file"; filename="duplicates.csv"
-        # Accept-Encoding:gzip,deflate,sdch
-        # POST http://0.0.0.0:3333/command/core/create-project-from-upload?
-        # url=&split-into-columns=true&separator=&ignore=0&header-lines=1&skip=0&
-        # limit=&guess-value-type=true&ignore-quotes=false
-        # 302 Location:http://0.0.0.0:3333/project?project=2104489985696
+
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
         def s(opt):
@@ -234,6 +236,9 @@ class RefineProject:
                                                                           project_id)
         self.project_id = project_id
         self.project_name = project_name
+        self.columns = []   # columns & column_index filled in by get_models()
+        self.column_index = {}
+        self.get_models()
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
@@ -243,6 +248,19 @@ class RefineProject:
         """Issue a command to the server, parse & return decoded JSON."""
         return self.server.urlopen_json(command, project_id=self.project_id, data=data)
 
+    def get_models(self):
+        """Fill out column metadata."""
+        response = self.do_json('get-models')
+        column_model = response['columnModel']
+        columns = column_model['columns']
+        # Pre-extend the list in python 
+        self.columns = [None] * (1 + max(c['cellIndex'] for c in columns))
+        for column in columns:
+            cell_index, name = column['cellIndex'], column['name']
+            self.column_index[name] = cell_index
+            self.columns[cell_index] = name
+        self.key_column = column_model['keyColumnName']
+        # TODO: implement rest
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
