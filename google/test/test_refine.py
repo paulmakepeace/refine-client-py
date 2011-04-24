@@ -118,6 +118,12 @@ class TutorialTestFacets(RefineTestCase):
         ethnicity_facet.reset()
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 6958)
+        # {11}
+        office_title_facet = Facet('Office Title')
+        self.project.engine.add_facet(office_title_facet)
+        response = self.project.text_facet()
+        self.assertEqual(len(response.facets[2].choices), 76)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -72,7 +72,10 @@ class FacetResponse(object):
 
         for choice in facet['choices']:
             self.choices[choice['v']['v']] = FacetChoice(choice)
-        self.blank_choice = FacetChoice(facet['blankChoice'])
+        if 'blankChoice' in facet:
+            self.blank_choice = FacetChoice(facet['blankChoice'])
+        else:
+            self.blank_choice = None
 
 
 class FacetsResponse(object):
