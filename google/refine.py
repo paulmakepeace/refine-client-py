@@ -44,6 +44,7 @@ class Facet(object):
             'invert': self.invert,
         }
 
+
 class FacetResponse(object):
     def __init__(self, facet):
         self.name = facet['name']
@@ -75,18 +76,22 @@ class Engine(object):
             facets = [facets]
         self.facets = facets
         self.mode = mode
-        
+
     def as_dict(self):
         return {
             'facets': [f.as_dict() for f in self.facets],   # XXX how with json?
             'mode': self.mode,
         }
 
+    def __len__(self):
+        return len(self.facets)
+
     def as_json(self):
         return json.dumps(self.as_dict())
 
     def add_facet(self, facet):
         self.facets.append(facet)
+
 
 class RefineServer(object):
     """Communicate with a Refine server."""
@@ -103,7 +108,7 @@ class RefineServer(object):
             if 'delete' in command:
                 data['project'] = project_id
             else:
-                url += '?project=' + project_id                
+                url += '?project=' + project_id
         req = urllib2.Request(url)
         if data:
             req.add_data(data) # data = urllib.urlencode(data)
@@ -115,7 +120,7 @@ class RefineServer(object):
             # XXX Monkey patch response's filehandle. Better way?
             urllib.addbase.__init__(response, gzip_fp)
         return response
-    
+
     def urlopen_json(self, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         response = self.urlopen(*args, **kwargs)
@@ -136,14 +141,14 @@ class Refine:
 
     def get_version(self):
         """Return version data.
-        
+
         {"revision":"r1836","full_version":"2.0 [r1836]",
          "full_name":"Google Refine 2.0 [r1836]","version":"2.0"}"""
         return self.server.urlopen_json('get-version')
-        
+
     def list_projects(self):
         """Return a dict of projects indexed by id & name.
-        
+
         {u'1877818633188': {
             'id': u'1877818633188', u'name': u'akg',
             u'modified': u'2011-04-07T12:30:07Z',
@@ -193,7 +198,7 @@ class Refine:
             'split-into-columns': s(split_into_columns), 'separator': s(separator),
             'ignore': s(ignore_initial_non_blank_lines), 'header-lines': s(header_lines),
             'skip': s(skip_initial_data_rows), 'limit': s(limit),
-            'guess-value-type': s(guess_value_type), 
+            'guess-value-type': s(guess_value_type),
             'ignore-quotes': s(ignore_quotes),
         }
         if project_url is not None:
@@ -218,6 +223,32 @@ class Refine:
             raise Exception('Project not created')
 
 
+class RowsResponse(object):
+    class RefineRows(object):
+        class RefineRow(object):
+            def __init__(self, row_response):
+                self.flagged = row_response['flagged']
+                self.starred = row_response['starred']
+                self.row = [c['v'] if c else None for c in row_response['cells']]
+
+        def __init__(self, rows_response):
+            self.rows_response = rows_response
+        def __iter__(self):
+            for row_response in self.rows_response:
+                yield self.RefineRow(row_response)
+        def __len__(self):
+            return len(self.rows_response)
+
+    def __init__(self, response):
+        self.mode = response['mode']
+        self.filtered = response['filtered']
+        self.start = response['start']
+        self.limit = response['limit']
+        self.total = response['total']
+        self.pool = response['pool']    # {"reconCandidates": {},"recons": {}}
+        self.rows = self.RefineRows(response['rows'])
+
+
 class RefineProject:
     """A Google Refine project."""
     def __init__(self, server, project_id=None, project_name=None):
@@ -239,6 +270,7 @@ class RefineProject:
         self.columns = []   # columns & column_index filled in by get_models()
         self.column_index = {}
         self.get_models()
+        self.engine = Engine()
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
@@ -253,7 +285,7 @@ class RefineProject:
         response = self.do_json('get-models')
         column_model = response['columnModel']
         columns = column_model['columns']
-        # Pre-extend the list in python 
+        # Pre-extend the list in python
         self.columns = [None] * (1 + max(c['cellIndex'] for c in columns))
         for column in columns:
             cell_index, name = column['cellIndex'], column['name']
@@ -278,7 +310,7 @@ class RefineProject:
                 self.wait_until_idle()
                 return 'ok'
         return response_json['code'] # can be 'ok' or 'pending'
-        
+
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
         data = {
@@ -295,9 +327,15 @@ class RefineProject:
     def delete(self):
         response_json = self.do_json('delete-project')
         return 'code' in response_json and response_json['code'] == 'ok'
-        
-    def text_facet(self, facets=None, engine=None, mode='row-based'):
-        if not engine:
-            engine = Engine(facets, mode)
-        response = self.do_json('compute-facets', {'engine': engine.as_json()})
+
+    def text_facet(self, facets=None):
+        if facets:
+            self.engine = Engine(facets)
+        response = self.do_json('compute-facets',
+                                {'engine': self.engine.as_json()})
         return FacetsResponse(response)
+
+    def get_rows(self, engine=None, start=0, limit=10):
+        response = self.do_json('get-rows', {'start': start, 'limit': limit})
+        return RowsResponse(response)
+

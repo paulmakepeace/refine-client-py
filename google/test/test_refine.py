@@ -15,7 +15,7 @@ from google.refine import Facet, Engine
 from google.refine import RefineServer, Refine, RefineProject
 
 PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
-        
+
 class RefineTestCase(unittest.TestCase):
     project_file = None
     project = None
@@ -30,8 +30,8 @@ class RefineTestCase(unittest.TestCase):
         if self.project:
             self.project.delete()
             self.project = None
-              
-               
+
+
 class RefineServerTest(RefineTestCase):
     def test_init(self):
         self.assertEqual(self.server.server, 'http://%s:%s' % (REFINE_HOST, REFINE_PORT))
@@ -58,13 +58,22 @@ class RefineTest(RefineTestCase):
         self.assertEqual(self.project.key_column, 'email')
         self.assertTrue('email' in self.project.columns)
         self.assertEqual(self.project.column_index['name'], 1)
-    
+
     def test_delete_project(self):
         self.assertTrue(self.project.delete())
 
 
 class TutorialTestFacets(RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+
+    def test_get_rows(self):
+        response = self.project.get_rows(limit=10)
+        self.assertEqual(len(response.rows), 10)
+        self.assertEqual(response.limit, 10)
+        self.assertEqual(response.total, 6958)
+        for row in response.rows:
+            self.assertFalse(row.flagged)
+            self.assertFalse(row.starred)
 
     def test_basic_facet(self):
         facet = Facet(column='Party Code')
@@ -74,10 +83,10 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(pc.choices['D'].count, 3700)
         self.assertEqual(pc.choices['N'].count, 15)
         self.assertEqual(pc.blank_choice.count, 1446)
-        
         engine = Engine(facet)
         engine.add_facet(Facet(column='Ethnicity'))
-        facets = self.project.text_facet(engine=engine)
+        self.project.engine = engine
+        facets = self.project.text_facet()
         e = facets.facets[1]
         self.assertEqual(e.choices['B'].count, 1255)
         self.assertEqual(e.choices['W'].count, 4469)
