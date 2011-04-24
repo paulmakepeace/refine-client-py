@@ -52,6 +52,20 @@ class FacetTest(unittest.TestCase):
         facet.reset()
         self.assertEqual(len(facet.selection), 0)
 
+    def test_reset_remove(self):
+        text_facet1 = TextFacet('column name')
+        text_facet1.include('element')
+        text_facet2 = TextFacet('column name 2')
+        text_facet2.include('element 2')
+        engine = Engine([text_facet1, text_facet2])
+        self.assertEqual(len(engine), 2)
+        self.assertEqual(len(text_facet1.selection), 1)
+        engine.reset_all()
+        self.assertEqual(len(text_facet1.selection), 0)
+        self.assertEqual(len(text_facet2.selection), 0)
+        engine.remove_all()
+        self.assertEqual(len(engine), 0)
+
 
     def test_facets_response(self):
         response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""

@@ -160,6 +160,10 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(len(ot.choices), 21)
         self.assertEqual(ot.choices['Chief of Police'].count, 2)
         self.assertEqual(ot.choices['Chief of Police          '].count, 211)
+        # {14}
+        self.project.engine.remove_all()
+        response = self.project.get_rows()
+        self.assertEqual(response.filtered, 6958)
 
 
 if __name__ == '__main__':

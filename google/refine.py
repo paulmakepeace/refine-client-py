@@ -138,6 +138,13 @@ class Engine(object):
     def add_facet(self, facet):
         self.facets.append(facet)
 
+    def remove_all(self):
+        self.facets = []
+
+    def reset_all(self):
+        for facet in self.facets:
+            facet.reset()
+
 
 class RefineServer(object):
     """Communicate with a Refine server."""
