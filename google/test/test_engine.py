@@ -21,6 +21,9 @@ class FacetTest(unittest.TestCase):
         engine = Engine(facet)
         self.assertEqual(facet.selection, [])
         self.assertTrue(str(engine))
+        facet = NumericFacet('column name', From=1, to=5)
+        self.assertEqual(facet.to, 5)
+        self.assertEqual(facet.From, 1)
 
     def test_serialize(self):
         engine = Engine()
@@ -28,8 +31,8 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(engine_json, '{"facets": [], "mode": "row-based"}')
         facet = TextFacet(column='column')
         self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
-        facet = NumericFacet(column='column')
-        self.assertEqual(facet.as_dict(), {'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value', 'selection': [], 'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})        
+        facet = NumericFacet(column='column', From=1, to=5)
+        self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value', 'selection': [], 'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
 
     def test_add_facet(self):
         facet = TextFacet(column='Party Code')

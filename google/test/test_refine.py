@@ -11,10 +11,34 @@ import sys
 import os
 import unittest
 from google.refine import REFINE_HOST, REFINE_PORT
-from google.refine import TextFacet, Engine
+from google.refine import NumericFacet, TextFacet, Engine
 from google.refine import RefineServer, Refine, RefineProject
+from google.refine import to_camel, from_camel
 
 PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
+
+
+class CamelTest(unittest.TestCase):
+    def test_to_camel(self):
+        pairs = (
+            ('this', 'this'),
+            ('this_attr', 'thisAttr'),
+            ('From', 'from'),
+        )
+        for attr, camel_attr in pairs:
+            self.assertEqual(to_camel(attr), camel_attr)
+
+    def test_from_camel(self):
+        pairs = (
+            ('this', 'this'),
+            ('This', 'this'),
+            ('thisAttr', 'this_attr'),
+            ('ThisAttr', 'this_attr'),
+            ('From', 'from'),
+        )
+        for camel_attr, attr in pairs:
+            self.assertEqual(from_camel(camel_attr), attr)
+
 
 class RefineTestCase(unittest.TestCase):
     project_file = None
@@ -80,7 +104,7 @@ class TutorialTestFacets(RefineTestCase):
     def test_basic_facet(self):
         # {4}
         party_code_facet = TextFacet(column='Party Code')
-        response = self.project.text_facet(party_code_facet)
+        response = self.project.compute_facets(party_code_facet)
         pc = response.facets[0]
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 3700)
@@ -91,7 +115,7 @@ class TutorialTestFacets(RefineTestCase):
         ethnicity_facet = TextFacet(column='Ethnicity')
         engine.add_facet(ethnicity_facet)
         self.project.engine = engine
-        response = self.project.text_facet()
+        response = self.project.compute_facets()
         e = response.facets[1]
         self.assertEqual(e.choices['B'].count, 1255)
         self.assertEqual(e.choices['W'].count, 4469)
@@ -102,7 +126,7 @@ class TutorialTestFacets(RefineTestCase):
         indexes = [r.index for r in response.rows]
         self.assertEqual(indexes, [1, 2, 3, 4, 6, 12, 18, 26, 28, 32])
         # {8}
-        response = self.project.text_facet()
+        response = self.project.compute_facets()
         pc = response.facets[0]
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 1179)
@@ -110,7 +134,7 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(pc.blank_choice.count, 46)
         # {9}
         party_code_facet.include('R')
-        response = self.project.text_facet()
+        response = self.project.compute_facets()
         e = response.facets[1]
         self.assertEqual(e.choices['B'].count, 11)
         # {10}
@@ -121,8 +145,21 @@ class TutorialTestFacets(RefineTestCase):
         # {11}
         office_title_facet = TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
-        response = self.project.text_facet()
+        response = self.project.compute_facets()
         self.assertEqual(len(response.facets[2].choices), 76)
+        # {12} - XXX not sure how to interpret bins & baseBins yet
+        office_level_facet = NumericFacet('Office Level')
+        self.project.engine.add_facet(office_level_facet)
+        # {13}
+        office_level_facet.From = 300   # from reserved word
+        office_level_facet.to = 320
+        response = self.project.get_rows()
+        self.assertEqual(response.filtered, 1907)
+        response = self.project.compute_facets()
+        ot = response.facets[2]   # Office Title
+        self.assertEqual(len(ot.choices), 21)
+        self.assertEqual(ot.choices['Chief of Police'].count, 2)
+        self.assertEqual(ot.choices['Chief of Police          '].count, 211)
 
 
 if __name__ == '__main__':

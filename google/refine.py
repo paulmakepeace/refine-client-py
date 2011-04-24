@@ -19,10 +19,17 @@ REFINE_HOST = os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1')
 REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
 
 
-
 def to_camel(attr):
     """convert this_attr_name to thisAttrName."""
-    return re.sub(r'_(.)', lambda x: x.group(1).upper(), attr)
+    # Do lower case first letter
+    return (attr[0].lower() +
+            re.sub(r'_(.)', lambda x: x.group(1).upper(), attr[1:]))
+
+def from_camel(attr):
+    """convert thisAttrName to this_attr_name."""
+    # Don't add an underscore for capitalized first letter
+    return re.sub(r'(?<=.)([A-Z])', lambda x: '_' + x.group(1), attr).lower()
+
 
 class Facet(object):
     def __init__(self, column, type, expression='value', **options):
@@ -35,7 +42,8 @@ class Facet(object):
             setattr(self, k, v)
 
     def as_dict(self):
-        return dict([(to_camel(k), v) for k, v in self.__dict__.items()])
+        return dict([(to_camel(k), v) for k, v in self.__dict__.items()
+                     if v is not None])
 
     def include(self, selection):
         for s in self.selection:
@@ -62,9 +70,9 @@ class TextFacet(Facet):
             invert=invert,
             **options)
 
-
+# Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):
-    def __init__(self, column, select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
+    def __init__(self, column, From=None, to=None, select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
         super(NumericFacet, self).__init__(
             column,
             type='range',
@@ -72,27 +80,32 @@ class NumericFacet(Facet):
             select_error=select_error,
             select_non_numeric=select_non_numeric,
             select_numeric=select_numeric,
+            From=From,
+            to=to,
             **options)
 
 
 class FacetResponse(object):
     def __init__(self, facet):
-        self.name = facet['name']
-        self.column = self.name
-        self.expression = facet['expression']
-        self.invert = facet['invert']
+        for k, v in facet.items():
+            if isinstance(k, bool) or isinstance(k, basestring):
+                setattr(self, from_camel(k), v)
         self.choices = {}
         class FacetChoice(object):
             def __init__(self, c):
                 self.count = c['c']
                 self.selected = c['s']
 
-        for choice in facet['choices']:
-            self.choices[choice['v']['v']] = FacetChoice(choice)
-        if 'blankChoice' in facet:
-            self.blank_choice = FacetChoice(facet['blankChoice'])
-        else:
-            self.blank_choice = None
+        if 'choices' in facet:
+            for choice in facet['choices']:
+                self.choices[choice['v']['v']] = FacetChoice(choice)
+            if 'blankChoice' in facet:
+                self.blank_choice = FacetChoice(facet['blankChoice'])
+            else:
+                self.blank_choice = None
+        if 'bins' in facet:
+            self.bins = facet['bins']
+            self.base_bins = facet['baseBins']
 
 
 class FacetsResponse(object):
@@ -138,6 +151,7 @@ class RefineServer(object):
         if data is None:
             data = {}
         if project_id:
+            # XXX haven't figured out pattern on qs v body
             if 'delete' in command:
                 data['project'] = project_id
             else:
@@ -362,7 +376,7 @@ class RefineProject:
         response_json = self.do_json('delete-project')
         return 'code' in response_json and response_json['code'] == 'ok'
 
-    def text_facet(self, facets=None):
+    def compute_facets(self, facets=None):
         if facets:
             self.engine = Engine(facets)
         response = self.do_json('compute-facets',
