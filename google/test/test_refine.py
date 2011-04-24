@@ -43,7 +43,7 @@ class CamelTest(unittest.TestCase):
 class RefineTestCase(unittest.TestCase):
     project_file = None
     project = None
-    # {1}, {2}
+    # Section "2. Exploration using Facets": {1}, {2}
     def setUp(self):
         self.server = RefineServer()
         self.refine = Refine(self.server)
@@ -92,7 +92,7 @@ class TutorialTestFacets(RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
 
     def test_get_rows(self):
-        # {3}
+        # Section "2. Exploration using Facets": {3}
         response = self.project.get_rows(limit=10)
         self.assertEqual(len(response.rows), 10)
         self.assertEqual(response.limit, 10)
@@ -101,8 +101,8 @@ class TutorialTestFacets(RefineTestCase):
             self.assertFalse(row.flagged)
             self.assertFalse(row.starred)
 
-    def test_basic_facet(self):
-        # {4}
+    def test_facet(self):
+        # Section "2. Exploration using Facets": {4}
         party_code_facet = TextFacet(column='Party Code')
         response = self.project.compute_facets(party_code_facet)
         pc = response.facets[0]
@@ -164,6 +164,30 @@ class TutorialTestFacets(RefineTestCase):
         self.project.engine.remove_all()
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 6958)
+        # {15}
+        phone_facet = TextFacet('Phone', expression='value[0, 3]')
+        self.project.engine.add_facet(phone_facet)
+        response = self.project.compute_facets()
+        p = response.facets[0]
+        self.assertEqual(p.expression, 'value[0, 3]')
+        self.assertEqual(p.choices['318'].count, 2331)
+        # {16}
+        commissioned_date_facet = NumericFacet('Commissioned Date',
+            expression='value.toDate().datePart("year")')
+        self.project.engine.add_facet(commissioned_date_facet)
+        response = self.project.compute_facets()
+        cd = response.facets[1]
+        self.assertEqual(cd.error_count, 959)
+        self.assertEqual(cd.numeric_count, 5999)
+        # {17}
+        office_description_facet = NumericFacet('Office Description',
+            expression=r'value.match(/\D*(\d+)\w\w Rep.*/)[0].toNumber()')
+        self.project.engine.add_facet(office_description_facet)
+        response = self.project.compute_facets()
+        cd = response.facets[2]
+        self.assertEqual(cd.min, 0)
+        self.assertEqual(cd.max, 110)
+        self.assertEqual(cd.numeric_count, 548)
 
 
 if __name__ == '__main__':
