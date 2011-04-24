@@ -79,15 +79,15 @@ class TutorialTestFacets(RefineTestCase):
 
     def test_basic_facet(self):
         # {4}
-        facet = Facet(column='Party Code')
-        response = self.project.text_facet(facet)
+        party_code_facet = Facet(column='Party Code')
+        response = self.project.text_facet(party_code_facet)
         pc = response.facets[0]
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 3700)
         self.assertEqual(pc.choices['N'].count, 15)
         self.assertEqual(pc.blank_choice.count, 1446)
         # {5}, {6}
-        engine = Engine(facet)
+        engine = Engine(party_code_facet)
         ethnicity_facet = Facet(column='Ethnicity')
         engine.add_facet(ethnicity_facet)
         self.project.engine = engine
@@ -108,7 +108,16 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(pc.choices['D'].count, 1179)
         self.assertEqual(pc.choices['R'].count, 11)
         self.assertEqual(pc.blank_choice.count, 46)
-
+        # {9}
+        party_code_facet.include('R')
+        response = self.project.text_facet()
+        e = response.facets[1]
+        self.assertEqual(e.choices['B'].count, 11)
+        # {10}
+        party_code_facet.reset()
+        ethnicity_facet.reset()
+        response = self.project.get_rows()
+        self.assertEqual(response.filtered, 6958)
 
 if __name__ == '__main__':
     unittest.main()

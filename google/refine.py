@@ -44,16 +44,18 @@ class Facet(object):
             'selectError': self.select_error,
             'invert': self.invert,
         }
-        
+
     def include(self, selection):
         for s in self.selections:
             if s['v']['v'] == selection:
                 return
         self.selections.append({'v': {'v': selection, 'l': selection}})
-        
+
     def exclude(self, selection):
         self.selections = [s for s in self.selections if s['v']['v'] != selection]
-    
+
+    def reset(self):
+        self.selections = []
 
 
 class FacetResponse(object):
