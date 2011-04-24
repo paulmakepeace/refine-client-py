@@ -48,9 +48,11 @@ class FacetTest(unittest.TestCase):
 
     def test_facets_response(self):
         response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
-        response = json.loads(response)
-        facets = FacetsResponse(response)
-        self.assertEqual(facets.facets[0].choices['D'].count, 3700)
+        response = FacetsResponse(json.loads(response))
+        facets = response.facets
+        self.assertEqual(facets[0].choices['D'].count, 3700)
+        self.assertEqual(facets[0].blank_choice.count, 1446)
+
 
 if __name__ == '__main__':
     unittest.main()
