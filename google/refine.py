@@ -23,6 +23,7 @@ class Facet(object):
     def __init__(self, column, expression='value', omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False):
         self.column = column
         self.name = column  # XXX not sure what the difference is yet
+        self.selections = []
         self.expression = expression
         self.invert = invert
         self.omit_blank = omit_blank
@@ -36,13 +37,23 @@ class Facet(object):
             'name': self.column,
             'columnName': self.column,
             'expression': self.expression,
-            'selection': [],    # XXX what is this?
+            'selection': self.selections,
             'omitBlank': self.omit_blank,
             'omitError': self.omit_error,
             'selectBlank': self.select_blank,
             'selectError': self.select_error,
             'invert': self.invert,
         }
+        
+    def include(self, selection):
+        for s in self.selections:
+            if s['v']['v'] == selection:
+                return
+        self.selections.append({'v': {'v': selection, 'l': selection}})
+        
+    def exclude(self, selection):
+        self.selections = [s for s in self.selections if s['v']['v'] != selection]
+    
 
 
 class FacetResponse(object):
@@ -229,6 +240,7 @@ class RowsResponse(object):
             def __init__(self, row_response):
                 self.flagged = row_response['flagged']
                 self.starred = row_response['starred']
+                self.index = row_response['i']
                 self.row = [c['v'] if c else None for c in row_response['cells']]
 
         def __init__(self, rows_response):
@@ -336,6 +348,8 @@ class RefineProject:
         return FacetsResponse(response)
 
     def get_rows(self, engine=None, start=0, limit=10):
-        response = self.do_json('get-rows', {'start': start, 'limit': limit})
+        response = self.do_json('get-rows', {
+            'sorting': "{'criteria': []}", 'engine': self.engine.as_json(),
+            'start': start, 'limit': limit})
         return RowsResponse(response)
 

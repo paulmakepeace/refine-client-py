@@ -36,6 +36,15 @@ class FacetTest(unittest.TestCase):
         engine.add_facet(Facet(column='Ethnicity'))
         self.assertEqual(len(engine.facets), 2)
 
+    def test_selections(self):
+        facet = Facet('column name')
+        facet.include('element')
+        self.assertEqual(len(facet.selections), 1)
+        facet.include('element 2')
+        self.assertEqual(len(facet.selections), 2)
+        facet.exclude('element')
+        self.assertEqual(len(facet.selections), 1)        
+        
     def test_facets_response(self):
         response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
         response = json.loads(response)
