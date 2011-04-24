@@ -11,7 +11,7 @@ import sys
 import os
 import unittest
 from google.refine import REFINE_HOST, REFINE_PORT
-from google.refine import Facet, Engine
+from google.refine import TextFacet, Engine
 from google.refine import RefineServer, Refine, RefineProject
 
 PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
@@ -79,7 +79,7 @@ class TutorialTestFacets(RefineTestCase):
 
     def test_basic_facet(self):
         # {4}
-        party_code_facet = Facet(column='Party Code')
+        party_code_facet = TextFacet(column='Party Code')
         response = self.project.text_facet(party_code_facet)
         pc = response.facets[0]
         self.assertEqual(pc.name, 'Party Code')
@@ -88,7 +88,7 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(pc.blank_choice.count, 1446)
         # {5}, {6}
         engine = Engine(party_code_facet)
-        ethnicity_facet = Facet(column='Ethnicity')
+        ethnicity_facet = TextFacet(column='Ethnicity')
         engine.add_facet(ethnicity_facet)
         self.project.engine = engine
         response = self.project.text_facet()
@@ -119,7 +119,7 @@ class TutorialTestFacets(RefineTestCase):
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 6958)
         # {11}
-        office_title_facet = Facet('Office Title')
+        office_title_facet = TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
         response = self.project.text_facet()
         self.assertEqual(len(response.facets[2].choices), 76)

@@ -13,37 +13,41 @@ import os
 import sys
 import unittest
 import urllib
-from google.refine import Facet, Engine, FacetsResponse
+from google.refine import Facet, TextFacet, NumericFacet, Engine, FacetsResponse
 
 class FacetTest(unittest.TestCase):
     def test_init(self):
-        facet = Facet('column name')
+        facet = TextFacet('column name')
         engine = Engine(facet)
+        self.assertEqual(facet.selection, [])
         self.assertTrue(str(engine))
-
 
     def test_serialize(self):
         engine = Engine()
         engine_json = engine.as_json()
         self.assertEqual(engine_json, '{"facets": [], "mode": "row-based"}')
+        facet = TextFacet(column='column')
+        self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
+        facet = NumericFacet(column='column')
+        self.assertEqual(facet.as_dict(), {'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value', 'selection': [], 'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})        
 
     def test_add_facet(self):
-        facet = Facet(column='Party Code')
+        facet = TextFacet(column='Party Code')
         engine = Engine(facet)
-        engine.add_facet(Facet(column='Ethnicity'))
+        engine.add_facet(TextFacet(column='Ethnicity'))
         self.assertEqual(len(engine.facets), 2)
         self.assertEqual(len(engine), 2)
 
     def test_selections(self):
-        facet = Facet('column name')
+        facet = TextFacet('column name')
         facet.include('element')
-        self.assertEqual(len(facet.selections), 1)
+        self.assertEqual(len(facet.selection), 1)
         facet.include('element 2')
-        self.assertEqual(len(facet.selections), 2)
+        self.assertEqual(len(facet.selection), 2)
         facet.exclude('element')
-        self.assertEqual(len(facet.selections), 1)
+        self.assertEqual(len(facet.selection), 1)
         facet.reset()
-        self.assertEqual(len(facet.selections), 0)
+        self.assertEqual(len(facet.selection), 0)
 
 
     def test_facets_response(self):

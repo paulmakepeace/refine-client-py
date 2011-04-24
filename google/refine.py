@@ -19,43 +19,60 @@ REFINE_HOST = os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1')
 REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
 
 
+
+def to_camel(attr):
+    """convert this_attr_name to thisAttrName."""
+    return re.sub(r'_(.)', lambda x: x.group(1).upper(), attr)
+
 class Facet(object):
-    def __init__(self, column, expression='value', omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False):
-        self.column = column
+    def __init__(self, column, type, expression='value', **options):
+        self.type = type
+        self.column_name = column
         self.name = column  # XXX not sure what the difference is yet
-        self.selections = []
+        self.selection = []
         self.expression = expression
-        self.invert = invert
-        self.omit_blank = omit_blank
-        self.omit_error = omit_error
-        self.select_blank = select_blank
-        self.select_error = select_error
+        for k, v in options.items():
+            setattr(self, k, v)
 
     def as_dict(self):
-        return {
-            'type': 'list',
-            'name': self.column,
-            'columnName': self.column,
-            'expression': self.expression,
-            'selection': self.selections,
-            'omitBlank': self.omit_blank,
-            'omitError': self.omit_error,
-            'selectBlank': self.select_blank,
-            'selectError': self.select_error,
-            'invert': self.invert,
-        }
+        return dict([(to_camel(k), v) for k, v in self.__dict__.items()])
 
     def include(self, selection):
-        for s in self.selections:
+        for s in self.selection:
             if s['v']['v'] == selection:
                 return
-        self.selections.append({'v': {'v': selection, 'l': selection}})
+        self.selection.append({'v': {'v': selection, 'l': selection}})
 
     def exclude(self, selection):
-        self.selections = [s for s in self.selections if s['v']['v'] != selection]
+        self.selection = [s for s in self.selection if s['v']['v'] != selection]
 
     def reset(self):
-        self.selections = []
+        self.selection = []
+
+
+class TextFacet(Facet):
+    def __init__(self, column, omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False, **options):
+        super(TextFacet, self).__init__(
+            column,
+            type='list',
+            omit_blank=omit_blank,
+            omit_error=omit_error,
+            select_blank=select_blank,
+            select_error=select_error,
+            invert=invert,
+            **options)
+
+
+class NumericFacet(Facet):
+    def __init__(self, column, select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
+        super(NumericFacet, self).__init__(
+            column,
+            type='range',
+            select_blank=select_blank,
+            select_error=select_error,
+            select_non_numeric=select_non_numeric,
+            select_numeric=select_numeric,
+            **options)
 
 
 class FacetResponse(object):
