@@ -530,3 +530,11 @@ class RefineProject:
     def star_row(self, row, starred=True):
         return self.annotate_one_row(row, 'starred', starred)
 
+    def add_column(self, column, new_column, expression='value',
+                   column_insert_index=None, on_error='set-to-blank'):
+        if column_insert_index is None:
+            column_insert_index = self.column_index[column] + 1
+        response = self.do_json('add-column', {'baseColumnName': column,
+            'newColumnName': new_column, 'expression': expression,
+            'columnInsertIndex': column_insert_index, 'onError': on_error})
+        return response

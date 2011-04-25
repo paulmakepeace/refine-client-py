@@ -278,6 +278,11 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         response = self.project.get_rows(sort_by='email')
         indexes = [r.index for r in response.rows]
         self.assertEqual(indexes, range(10))
+        # {10}
+        response = self.project.add_column('email', 'count',
+            'facetCount(value, "value", "email")')
+        self.assertTrue('column email by filling 10 rows' in
+                        response['historyEntry']['description'])
 
 
 if __name__ == '__main__':
