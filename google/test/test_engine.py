@@ -13,7 +13,8 @@ import os
 import sys
 import unittest
 import urllib
-from google.refine import Facet, TextFacet, NumericFacet, Engine, FacetsResponse
+from google.refine import TextFacet, NumericFacet, StarredFacet, FlaggedFacet
+from google.refine import Engine, FacetsResponse
 
 class FacetTest(unittest.TestCase):
     def test_init(self):
@@ -24,6 +25,13 @@ class FacetTest(unittest.TestCase):
         facet = NumericFacet('column name', From=1, to=5)
         self.assertEqual(facet.to, 5)
         self.assertEqual(facet.From, 1)
+        facet = StarredFacet()
+        self.assertEqual(facet.expression, 'row.starred')
+        facet = StarredFacet(True)
+        self.assertEqual(facet.selection[0]['v']['v'], True)
+        facet = FlaggedFacet(False)
+        self.assertEqual(facet.selection[0]['v']['v'], False)
+        self.assertRaises(ValueError, FlaggedFacet, 'false')    # no strings
 
     def test_serialize(self):
         engine = Engine()

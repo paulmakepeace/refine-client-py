@@ -11,7 +11,7 @@ import sys
 import os
 import unittest
 from google.refine import REFINE_HOST, REFINE_PORT
-from google.refine import NumericFacet, TextFacet, Engine
+from google.refine import NumericFacet, TextFacet, StarredFacet, Engine
 from google.refine import RefineServer, Refine, RefineProject
 from google.refine import to_camel, from_camel
 
@@ -234,6 +234,31 @@ class TutorialTestEditing(RefineTestCase):
         self.assertTrue('372' in response['historyEntry']['description'])
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 65)
+
+        # Section "4. Row and Column Editing"
+        # Test doesn't strictly follow the tutorial as the "Browse this
+        # cluster" performs a text facet which the server can't complete
+        # as it busts its max facet count. The useful work is done with
+        # get_rows(). Also, we can facet & select in one; the UI can't.
+        # {1}, {2}, {3}, {4}
+        clusters = self.project.compute_clusters('Candidate Name')
+        for cluster in clusters[0:3]:   # just do a few
+            for match in cluster:
+                # {2}
+                if match['value'].endswith(', '):
+                    response = self.project.get_rows(
+                        TextFacet('Candidate Name', match['value']))
+                    self.assertEqual(len(response.rows), 1)
+                    for row in response.rows:
+                        response = self.project.star_row(row)
+                        self.assertTrue(str(row.index + 1) in
+                                        response['historyEntry']['description'])
+        # {5}, {6}, {7}
+        response = self.project.compute_facets(StarredFacet(True))
+        self.assertEqual(len(response.facets[0].choices), 2)    # true & false
+        self.assertEqual(response.facets[0].choices[True].count, 3)
+        response = self.project.remove_rows()
+        self.assertTrue('3 rows' in response['historyEntry']['description'])
 
 
 if __name__ == '__main__':

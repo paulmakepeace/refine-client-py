@@ -79,6 +79,22 @@ class TextFacet(Facet):
         self.selection = []
 
 
+class StarredFacet(TextFacet):
+    def __init__(self, selection=None):
+        if selection is not None and not isinstance(selection, bool):
+            raise ValueError('selection must be True or False.')
+        super(StarredFacet, self).__init__('',
+            expression='row.starred', selection=selection)
+
+
+class FlaggedFacet(TextFacet):
+    def __init__(self, selection=None):
+        if selection is not None and not isinstance(selection, bool):
+            raise ValueError('selection must be True or False.')
+        super(FlaggedFacet, self).__init__('',
+            expression='row.flagged', selection=selection)
+
+
 # Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
@@ -401,11 +417,18 @@ class RefineProject:
                                 {'engine': self.engine.as_json()})
         return FacetsResponse(response)
 
-    def get_rows(self, start=0, limit=10):
+    def get_rows(self, facets=None, start=0, limit=10):
+        if facets:
+            self.engine = Engine(facets)
         response = self.do_json('get-rows', {
             'sorting': "{'criteria': []}", 'engine': self.engine.as_json(),
             'start': start, 'limit': limit})
         return RowsResponse(response)
+
+    def remove_rows(self, facets=None):
+        if facets:
+            self.engine = Engine(facets)
+        return self.do_json('remove-rows', {'engine': self.engine.as_json()})
 
     def text_transform(self, column, expression, on_error='set-to-blank',
                        repeat=False, repeat_count=10):
@@ -456,4 +479,17 @@ class RefineProject:
             'clusterer': json.dumps(clusterer)})
         return [[{'value': x['v'], 'count': x['c']} for x in cluster]
                 for cluster in response]
+
+    def annotate_one_row(self, row, annotation, state=True):
+        if annotation not in ('starred', 'flagged'):
+            raise ValueError('annotation must be one of starred or flagged')
+        state = 'true' if state == True else 'false'
+        return self.do_json('annotate-one-row', {'row': row.index,
+                                                 annotation: state})
+
+    def flag_row(self, row, flagged=True):
+        return self.annotate_one_row(row, 'flagged', flagged)
+
+    def star_row(self, row, starred=True):
+        return self.annotate_one_row(row, 'starred', starred)
 
