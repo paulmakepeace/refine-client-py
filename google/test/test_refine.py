@@ -297,6 +297,25 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         response = self.project.get_rows()
         emails = [1 if r['email'] else 0 for r in response.rows]
         self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
-        
+        # {12}
+        blank_facet = TextFacet('email', expression='isBlank(value)',
+                                selection=True)
+        # {13}
+        response = self.project.remove_rows(blank_facet)
+        self.assertTrue('Remove 4 rows' in
+                        response['historyEntry']['description'])
+        self.project.engine.remove_all()
+        response = self.project.get_rows()
+        email_counts = [(row['email'], row['count']) for row in response.rows]
+        self.assertEqual(email_counts, [
+            (u'arthur.duff@example4.com', 2),
+            (u'ben.morisson@example6.org', 1),
+            (u'ben.tyler@example3.org', 1),
+            (u'danny.baron@example1.com', 3),
+            (u'jean.griffith@example5.org', 1),
+            (u'melanie.white@example2.edu', 2)
+        ])
+
+
 if __name__ == '__main__':
     unittest.main()
