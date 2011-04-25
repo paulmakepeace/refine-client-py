@@ -32,11 +32,11 @@ def from_camel(attr):
 
 
 class Facet(object):
-    def __init__(self, column, type, expression='value', **options):
+    def __init__(self, column, type, expression='value',
+                 **options):
         self.type = type
         self.column_name = column
         self.name = column  # XXX not sure what the difference is yet
-        self.selection = []
         self.expression = expression
         for k, v in options.items():
             setattr(self, k, v)
@@ -45,21 +45,9 @@ class Facet(object):
         return dict([(to_camel(k), v) for k, v in self.__dict__.items()
                      if v is not None])
 
-    def include(self, selection):
-        for s in self.selection:
-            if s['v']['v'] == selection:
-                return
-        self.selection.append({'v': {'v': selection, 'l': selection}})
-
-    def exclude(self, selection):
-        self.selection = [s for s in self.selection if s['v']['v'] != selection]
-
-    def reset(self):
-        self.selection = []
-
 
 class TextFacet(Facet):
-    def __init__(self, column, omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False, **options):
+    def __init__(self, column, selection=None, omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False, **options):
         super(TextFacet, self).__init__(
             column,
             type='list',
@@ -69,6 +57,27 @@ class TextFacet(Facet):
             select_error=select_error,
             invert=invert,
             **options)
+        self.selection = []
+        if selection is None:
+            selection = []
+        elif not isinstance(selection, list):
+            selection = [selection]
+        for value in selection:
+            self.include(value)
+
+    def include(self, value):
+        for s in self.selection:
+            if s['v']['v'] == value:
+                return
+        self.selection.append({'v': {'v': value, 'l': value}})
+
+    def exclude(self, value):
+        self.selection = [s for s in self.selection
+                          if s['v']['v'] != value]
+
+    def reset(self):
+        self.selection = []
+
 
 # Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):

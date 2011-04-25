@@ -32,7 +32,7 @@ class FacetTest(unittest.TestCase):
         facet = TextFacet(column='column')
         self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
         facet = NumericFacet(column='column', From=1, to=5)
-        self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value', 'selection': [], 'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
+        self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value',  'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
 
     def test_add_facet(self):
         facet = TextFacet(column='Party Code')
