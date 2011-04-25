@@ -177,12 +177,10 @@ class RefineServer(object):
 
     def urlopen_json(self, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
-        response = self.urlopen(*args, **kwargs)
-        data = response.read()
-        response_json = json.loads(data)
-        if 'code' in response_json and response_json['code'] == 'error':
-            raise Exception(response_json['message'])
-        return response_json
+        response = json.loads(self.urlopen(*args, **kwargs).read())
+        if 'code' in response and response['code'] != 'ok':
+            raise Exception(response['code'] + ': ' + response['message'])
+        return response
 
 
 class Refine:
@@ -249,8 +247,10 @@ class Refine:
                 return ''
             return str(opt)
         options = {
-            'split-into-columns': s(split_into_columns), 'separator': s(separator),
-            'ignore': s(ignore_initial_non_blank_lines), 'header-lines': s(header_lines),
+            'split-into-columns': s(split_into_columns),
+            'separator': s(separator),
+            'ignore': s(ignore_initial_non_blank_lines),
+            'header-lines': s(header_lines),
             'skip': s(skip_initial_data_rows), 'limit': s(limit),
             'guess-value-type': s(guess_value_type),
             'ignore-quotes': s(ignore_quotes),
@@ -318,8 +318,8 @@ class RefineProject:
         if not project_id and not project_name:
             raise Exception('Missing Refine project ID and name; need at least one of those')
         if not project_name or not project_id:
-            project_id, project_name = Refine(server).get_project_id_name(project_name or
-                                                                          project_id)
+            project_id, project_name = Refine(server).get_project_id_name(
+                project_name or project_id)
         self.project_id = project_id
         self.project_name = project_name
         self.columns = []   # columns & column_index filled in by get_models()
@@ -390,9 +390,16 @@ class RefineProject:
                                 {'engine': self.engine.as_json()})
         return FacetsResponse(response)
 
-    def get_rows(self, engine=None, start=0, limit=10):
+    def get_rows(self, start=0, limit=10):
         response = self.do_json('get-rows', {
             'sorting': "{'criteria': []}", 'engine': self.engine.as_json(),
             'start': start, 'limit': limit})
         return RowsResponse(response)
 
+    def text_transform(self, column, expression, on_error='set-to-blank',
+                       repeat=False, repeat_count=10):
+        response = self.do_json('text-transform', {
+            'engine': self.engine.as_json(), 'columnName': column,
+            'expression': expression, 'onError': on_error, 'repeat': repeat,
+            'repeatCount': repeat_count})
+        return response

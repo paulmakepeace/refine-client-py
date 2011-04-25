@@ -190,5 +190,28 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(cd.numeric_count, 548)
 
 
+class TutorialTestTransformAndClustering(RefineTestCase):
+    project_file = 'louisiana-elected-officials.csv'
+
+    def test_transform(self):
+        # Section "3. Cell Editing": {1}
+        self.project.engine.remove_all()    # redundant due to setUp
+        # {2}
+        response = self.project.text_transform(column='Zip Code 2',
+            expression='value.toString()[0, 5]')
+        self.assertTrue('6067' in response['historyEntry']['description'])
+        # {3} - XXX history
+        # {4}
+        office_title_facet = TextFacet('Office Title')
+        self.project.engine.add_facet(office_title_facet)
+        response = self.project.compute_facets()
+        self.assertEqual(len(response.facets[0].choices), 76)
+        response = self.project.text_transform(column='Office Title',
+            expression='value.trim()')
+        self.assertTrue('6895' in response['historyEntry']['description'])       
+        response = self.project.compute_facets()
+        self.assertEqual(len(response.facets[0].choices), 67)
+
+
 if __name__ == '__main__':
     unittest.main()
