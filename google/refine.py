@@ -403,3 +403,15 @@ class RefineProject:
             'expression': expression, 'onError': on_error, 'repeat': repeat,
             'repeatCount': repeat_count})
         return response
+
+    def edit(self, column, edit_from, edit_to):
+        edits = [{'from': [edit_from], 'to': edit_to}]
+        return self.mass_edit(column, edits)
+
+    def mass_edit(self, column, edits, expression='value'):
+        """edits is [{'from': ['foo'], 'to': 'bar'}, {...}]"""
+        edits = json.dumps(edits)
+        response = self.do_json('mass-edit', {
+            'engine': self.engine.as_json(), 'columnName': column,
+            'expression': expression, 'edits': edits})
+        return response

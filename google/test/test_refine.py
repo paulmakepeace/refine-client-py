@@ -208,9 +208,13 @@ class TutorialTestTransformAndClustering(RefineTestCase):
         self.assertEqual(len(response.facets[0].choices), 76)
         response = self.project.text_transform(column='Office Title',
             expression='value.trim()')
-        self.assertTrue('6895' in response['historyEntry']['description'])       
+        self.assertTrue('6895' in response['historyEntry']['description'])
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 67)
+        # {5}
+        response = self.project.edit(column='Office Title',
+            'Councilmen', 'Councilman')
+        self.assertTrue('13' in response['historyEntry']['description'])
 
 
 if __name__ == '__main__':
