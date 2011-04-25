@@ -340,7 +340,8 @@ class RowsResponse(object):
                 self.flagged = row_response['flagged']
                 self.starred = row_response['starred']
                 self.index = row_response['i']
-                self.row = [c['v'] if c else None for c in row_response['cells']]
+                self.row = [c['v'] if c else None
+                            for c in row_response['cells']]
 
         def __init__(self, rows_response):
             self.rows_response = rows_response
@@ -380,7 +381,8 @@ class RefineProject:
         self.project_id = project_id
         self.project_name = project_name
         self.columns = []   # columns & column_index filled in by get_models()
-        self.column_index = {}
+        self.column_index = {}  # index into data from get_rows()
+        self.column_order = {}  # order of column in UI
         self.get_models()
         self.engine = Engine()
         self.sorting = Sorting()
@@ -399,23 +401,28 @@ class RefineProject:
                                         data=data)
 
     def get_models(self):
-        """Fill out column metadata."""
+        """Fill out column metadata.
+        
+        column structure is sent in a list of columns in their order.
+        The cellIndex is used to find that column's data when returned from
+        get_rows()."""
         response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
         columns = column_model['columns']
         # Pre-extend the list in python
-        self.columns = [None] * (1 + max(c['cellIndex'] for c in columns))
-        for column in columns:
+        self.columns = [None] * len(columns)
+        for i, column in enumerate(columns):
             cell_index, name = column['cellIndex'], column['name']
+            self.column_order[name] = i
             self.column_index[name] = cell_index
-            self.columns[cell_index] = name
+            self.columns[i] = name
         self.key_column = column_model['keyColumnName']
         # TODO: implement rest
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
-            response_json = self.do('get-processes')
-            if 'processes' in response_json and len(response_json['processes']) > 0:
+            response = self.do('get-processes')
+            if 'processes' in response and len(response['processes']) > 0:
                 time.sleep(polling_delay)
             else:
                 return
@@ -537,4 +544,5 @@ class RefineProject:
         response = self.do_json('add-column', {'baseColumnName': column,
             'newColumnName': new_column, 'expression': expression,
             'columnInsertIndex': column_insert_index, 'onError': on_error})
+        self.get_models()
         return response
