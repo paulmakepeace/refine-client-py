@@ -190,10 +190,10 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(cd.numeric_count, 548)
 
 
-class TutorialTestTransformAndClustering(RefineTestCase):
+class TutorialTestEditing(RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
 
-    def test_transform(self):
+    def test_editing(self):
         # Section "3. Cell Editing": {1}
         self.project.engine.remove_all()    # redundant due to setUp
         # {2}
@@ -206,15 +206,34 @@ class TutorialTestTransformAndClustering(RefineTestCase):
         self.project.engine.add_facet(office_title_facet)
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 76)
-        response = self.project.text_transform(column='Office Title',
-            expression='value.trim()')
+        response = self.project.text_transform('Office Title', 'value.trim()')
         self.assertTrue('6895' in response['historyEntry']['description'])
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 67)
         # {5}
-        response = self.project.edit(column='Office Title',
+        response = self.project.edit('Office Title',
             'Councilmen', 'Councilman')
         self.assertTrue('13' in response['historyEntry']['description'])
+        response = self.project.compute_facets()
+        self.assertEqual(len(response.facets[0].choices), 66)
+        # {6}
+        response = self.project.compute_clusters('Office Title')
+        self.assertTrue(not response)
+        # {7}
+        clusters = self.project.compute_clusters('Office Title', 'knn')
+        self.assertEqual(len(clusters), 7)
+        self.assertEqual(len(clusters[0]), 2)
+        self.assertEqual(clusters[0][0]['value'], 'RSCC Member')
+        self.assertEqual(clusters[0][0]['count'], 233)
+        # Not strictly necessary to repeat 'Council Member' but a test
+        # of mass_edit, and it's also what the front end sends.
+        response = self.project.mass_edit('Office Title', [{
+            'from': ['Council Member', 'Councilmember'],
+            'to': 'Council Member'
+        }])
+        self.assertTrue('372' in response['historyEntry']['description'])
+        response = self.project.compute_facets()
+        self.assertEqual(len(response.facets[0].choices), 65)
 
 
 if __name__ == '__main__':

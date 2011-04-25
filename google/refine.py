@@ -179,7 +179,9 @@ class RefineServer(object):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         response = json.loads(self.urlopen(*args, **kwargs).read())
         if 'code' in response and response['code'] != 'ok':
-            raise Exception(response['code'] + ': ' + response['message'])
+            raise Exception(
+                response['code'] + ': ' +
+                response.get('message', response.get('stack', response)))
         return response
 
 
@@ -415,3 +417,34 @@ class RefineProject:
             'engine': self.engine.as_json(), 'columnName': column,
             'expression': expression, 'edits': edits})
         return response
+
+    clusterer_defaults = {
+        'binning': {
+            'type': 'binning',
+            'function': 'fingerprint',
+            'params': {},
+        },
+        'knn': {
+            'type': 'knn',
+            'function': 'levenshtein',
+            'params': {
+                'radius': 1,
+                'blocking-ngram-size': 6,
+            },
+        },
+    }
+    def compute_clusters(self, column, clusterer_type='binning',
+                         function=None, params=None):
+        """Returns a list of clusters of {'value': ..., 'count': ...}."""
+        clusterer = self.clusterer_defaults[clusterer_type]
+        if params is not None:
+            clusterer['params'] = params
+        if function is not None:
+            clusterer['function'] = function
+        clusterer['column'] = column
+        response = self.do_json('compute-clusters', {
+            'engine': self.engine.as_json(),
+            'clusterer': json.dumps(clusterer)})
+        return [[{'value': x['v'], 'count': x['c']} for x in cluster]
+                for cluster in response]
+
