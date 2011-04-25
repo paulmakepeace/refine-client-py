@@ -395,6 +395,7 @@ class RefineProject:
         self.engine = Engine()
         self.sorting = Sorting()
         # following filled in by get_models()
+        self.has_records = False
         self.column_order = {}  # order of column in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
@@ -426,6 +427,7 @@ class RefineProject:
             self.column_order[name] = i
             column_index[name] = column['cellIndex']
         self.key_column = column_model['keyColumnName']
+        self.has_records = response['recordModel'].get('hasRecords', False)
         self.rows_response_factory = RowsResponseFactory(column_index)
         # TODO: implement rest
         return response
@@ -480,6 +482,8 @@ class RefineProject:
             self.sorting = Sorting(sort_by)
         response = self.do_json('reorder-rows',
                                 {'sorting': self.sorting.as_json()})
+        # clear sorting
+        self.sorting = Sorting()
         return response
 
     def remove_rows(self, facets=None):
@@ -555,5 +559,10 @@ class RefineProject:
         response = self.do_json('add-column', {'baseColumnName': column,
             'newColumnName': new_column, 'expression': expression,
             'columnInsertIndex': column_insert_index, 'onError': on_error})
+        self.get_models()
+        return response
+
+    def blank_down(self, column):
+        response = self.do_json('blank-down', {'columnName': column})
         self.get_models()
         return response

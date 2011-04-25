@@ -275,7 +275,7 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         response = self.project.reorder_rows()
         self.assertEqual('Reorder rows',
                          response['historyEntry']['description'])
-        response = self.project.get_rows(sort_by='email')
+        response = self.project.get_rows()
         indexes = [r.index for r in response.rows]
         self.assertEqual(indexes, range(10))
         # {10}
@@ -284,10 +284,19 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         self.assertTrue('column email by filling 10 rows' in
                         response['historyEntry']['description'])
         response = self.project.get_rows()
+        self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
         self.assertEqual(self.project.column_order['count'], 1)  # i.e. 2nd
         counts = [r['count'] for r in response.rows]
         self.assertEqual(counts, [2, 2, 1, 1, 3, 3, 3, 1, 2, 2])
+        # {11}
+        self.assertFalse(self.project.has_records)
+        response = self.project.blank_down('email')
+        self.assertTrue('Blank down 4 cells' in
+                        response['historyEntry']['description'])
+        self.assertTrue(self.project.has_records)
+        response = self.project.get_rows()
+        emails = [1 if r['email'] else 0 for r in response.rows]
+        self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
         
-
 if __name__ == '__main__':
     unittest.main()
