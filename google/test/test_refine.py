@@ -235,7 +235,7 @@ class TutorialTestEditing(RefineTestCase):
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 65)
 
-        # Section "4. Row and Column Editing"
+        # Section "4. Row and Column Editing, Batched Row Deletion"
         # Test doesn't strictly follow the tutorial as the "Browse this
         # cluster" performs a text facet which the server can't complete
         # as it busts its max facet count. The useful work is done with
@@ -259,6 +259,25 @@ class TutorialTestEditing(RefineTestCase):
         self.assertEqual(response.facets[0].choices[True].count, 3)
         response = self.project.remove_rows()
         self.assertTrue('3 rows' in response['historyEntry']['description'])
+
+
+class TutorialTestDuplicateDetection(RefineTestCase):
+    project_file = 'duplicates.csv'
+
+    def test_duplicate_detection(self):
+        # Section "4. Row and Column Editing,
+        #             Duplicate Row Detection and Deletion"
+        # {7}, {8}
+        response = self.project.get_rows(sort_by='email')
+        indexes = [r.index for r in response.rows]
+        self.assertEqual(indexes, [4, 9, 8, 3, 0, 2, 5, 6, 1, 7])
+        # {9}
+        response = self.project.reorder_rows()
+        self.assertEqual('Reorder rows',
+                         response['historyEntry']['description'])
+        response = self.project.get_rows(sort_by='email')
+        indexes = [r.index for r in response.rows]
+        self.assertEqual(indexes, range(10))
 
 
 if __name__ == '__main__':

@@ -7,14 +7,15 @@ Created by Paul Makepeace on 2011-04-22.
 Copyright (c) 2011 Real Programmers. All rights reserved.
 """
 
-import json
 
+import json
 import os
 import sys
 import unittest
 import urllib
 from google.refine import TextFacet, NumericFacet, StarredFacet, FlaggedFacet
-from google.refine import Engine, FacetsResponse
+from google.refine import Engine, Sorting, FacetsResponse
+
 
 class FacetTest(unittest.TestCase):
     def test_init(self):
@@ -41,6 +42,25 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
         facet = NumericFacet(column='column', From=1, to=5)
         self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value',  'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
+
+    def test_sorting(self):
+        sorting = Sorting()
+        self.assertEqual(sorting.as_json(), '{"criteria": []}')
+        sorting = Sorting('email')
+        c = sorting.criteria[0]
+        self.assertEqual(c['column'], 'email')
+        self.assertEqual(c['valueType'], 'string')
+        self.assertEqual(c['reverse'], False)
+        self.assertEqual(c['caseSensitive'], False)
+        self.assertEqual(c['errorPosition'], 1)
+        self.assertEqual(c['blankPosition'], 2)
+        sorting = Sorting(['email', 'gender'])
+        self.assertEqual(len(sorting), 2)
+        sorting = Sorting(['email', {'column': 'date', 'valueType': 'date'}])
+        self.assertEqual(len(sorting), 2)
+        c = sorting.criteria[1]
+        self.assertEqual(c['column'], 'date')
+        self.assertEqual(c['valueType'], 'date')
 
     def test_add_facet(self):
         facet = TextFacet(column='Party Code')
@@ -73,7 +93,6 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(len(text_facet2.selection), 0)
         engine.remove_all()
         self.assertEqual(len(engine), 0)
-
 
     def test_facets_response(self):
         response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""

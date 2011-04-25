@@ -171,6 +171,35 @@ class Engine(object):
             facet.reset()
 
 
+class Sorting(object):
+    """Class representing the current sorting order for a project.
+
+    Used in RefineProject.get_rows()"""
+    def __init__(self, criteria=None):
+        self.criteria = []
+        if criteria is None:
+            criteria = []
+        if not isinstance(criteria, list):
+            criteria = [criteria]
+        for criterion in criteria:
+            if isinstance(criterion, basestring):
+                criterion = {
+                    'column': criterion,
+                    'valueType': 'string',
+                    'caseSensitive': False,
+                }
+                criterion.setdefault('reverse', False)
+                criterion.setdefault('errorPosition', 1)
+                criterion.setdefault('blankPosition', 2)
+            self.criteria.append(criterion)
+
+    def as_json(self):
+        return json.dumps({'criteria': self.criteria})
+
+    def __len__(self):
+        return len(self.criteria)
+
+
 class RefineServer(object):
     """Communicate with a Refine server."""
 
@@ -333,6 +362,7 @@ class RowsResponse(object):
 
 class RefineProject:
     """A Google Refine project."""
+
     def __init__(self, server, project_id=None, project_name=None):
         if not isinstance(server, RefineServer):
             url = urlparse.urlparse(server)
@@ -353,6 +383,7 @@ class RefineProject:
         self.column_index = {}
         self.get_models()
         self.engine = Engine()
+        self.sorting = Sorting()
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
@@ -364,7 +395,8 @@ class RefineProject:
             if data is None:
                 data = {}
             data['engine'] = self.engine.as_json()
-        return self.server.urlopen_json(command, project_id=self.project_id, data=data)
+        return self.server.urlopen_json(command, project_id=self.project_id,
+                                        data=data)
 
     def get_models(self):
         """Fill out column metadata."""
@@ -391,10 +423,9 @@ class RefineProject:
     def apply_operations(self, file_path, wait=True):
         json = open(file_path).read()
         response_json = self.do('apply-operations', {'operations': json})
-        if response_json['code'] == 'pending':
-            if wait:
-                self.wait_until_idle()
-                return 'ok'
+        if response_json['code'] == 'pending' and wait:
+            self.wait_until_idle()
+            return 'ok'
         return response_json['code'] # can be 'ok' or 'pending'
 
     def export(self, export_format='tsv'):
@@ -417,12 +448,21 @@ class RefineProject:
         response = self.do_json('compute-facets')
         return FacetsResponse(response)
 
-    def get_rows(self, facets=None, start=0, limit=10):
+    def get_rows(self, facets=None, sort_by=None, start=0, limit=10):
         if facets:
             self.engine = Engine(facets)
-        response = self.do_json('get-rows', {
-            'sorting': "{'criteria': []}", 'start': start, 'limit': limit})
+        if sort_by is not None:
+            self.sorting = Sorting(sort_by)
+        response = self.do_json('get-rows', {'sorting': self.sorting.as_json(),
+                                             'start': start, 'limit': limit})
         return RowsResponse(response)
+
+    def reorder_rows(self, sort_by=None):
+        if sort_by is not None:
+            self.sorting = Sorting(sort_by)
+        response = self.do_json('reorder-rows',
+                                {'sorting': self.sorting.as_json()})
+        return response
 
     def remove_rows(self, facets=None):
         if facets:
