@@ -333,32 +333,43 @@ class Refine:
             raise Exception('Project not created')
 
 
-class RowsResponse(object):
-    class RefineRows(object):
-        class RefineRow(object):
-            def __init__(self, row_response):
-                self.flagged = row_response['flagged']
-                self.starred = row_response['starred']
-                self.index = row_response['i']
-                self.row = [c['v'] if c else None
-                            for c in row_response['cells']]
+def RowsResponseFactory(column_index):
+    """Factory for the parsing the output from get_rows().
+    
+    Uses the project's model's row cell index so that a row can be used
+    as a dict by column name."""
+    
+    class RowsResponse(object):
+        class RefineRows(object):
+            class RefineRow(object):
+                def __init__(self, row_response):
+                    self.flagged = row_response['flagged']
+                    self.starred = row_response['starred']
+                    self.index = row_response['i']
+                    self.row = [c['v'] if c else None
+                                for c in row_response['cells']]
+                def __getitem__(self, column):
+                    return self.row[column_index[column]]
 
-        def __init__(self, rows_response):
-            self.rows_response = rows_response
-        def __iter__(self):
-            for row_response in self.rows_response:
-                yield self.RefineRow(row_response)
-        def __len__(self):
-            return len(self.rows_response)
+            def __init__(self, rows_response):
+                self.rows_response = rows_response
+            def __iter__(self):
+                for row_response in self.rows_response:
+                    yield self.RefineRow(row_response)
+            def __len__(self):
+                return len(self.rows_response)
 
-    def __init__(self, response):
-        self.mode = response['mode']
-        self.filtered = response['filtered']
-        self.start = response['start']
-        self.limit = response['limit']
-        self.total = response['total']
-        self.pool = response['pool']    # {"reconCandidates": {},"recons": {}}
-        self.rows = self.RefineRows(response['rows'])
+        def __init__(self, response):
+            self.mode = response['mode']
+            self.filtered = response['filtered']
+            self.start = response['start']
+            self.limit = response['limit']
+            self.total = response['total']
+            # 'pool': {"reconCandidates": {},"recons": {}}
+            self.pool = response['pool']
+            self.rows = self.RefineRows(response['rows'])
+
+    return RowsResponse
 
 
 class RefineProject:
@@ -370,7 +381,8 @@ class RefineProject:
             if url.query:
                 # Parse out the project ID and create a base server URL
                 project_id = url.query[8:]  # skip project=
-                server = urlparse.urlunparse((url.scheme, url.netloc, '', '', '', ''))
+                server = urlparse.urlunparse((
+                    url.scheme, url.netloc, '', '', '', ''))
             server = RefineServer(server)
         self.server = server
         if not project_id and not project_name:
@@ -380,9 +392,9 @@ class RefineProject:
                 project_name or project_id)
         self.project_id = project_id
         self.project_name = project_name
-        self.columns = []   # columns & column_index filled in by get_models()
-        self.column_index = {}  # index into data from get_rows()
+        self.columns = []   # following filled in by get_models()
         self.column_order = {}  # order of column in UI
+        self.rows_response_factory = None
         self.get_models()
         self.engine = Engine()
         self.sorting = Sorting()
@@ -411,12 +423,14 @@ class RefineProject:
         columns = column_model['columns']
         # Pre-extend the list in python
         self.columns = [None] * len(columns)
+        column_index = {}
         for i, column in enumerate(columns):
             cell_index, name = column['cellIndex'], column['name']
             self.column_order[name] = i
-            self.column_index[name] = cell_index
+            column_index[name] = cell_index
             self.columns[i] = name
         self.key_column = column_model['keyColumnName']
+        self.rows_response_factory = RowsResponseFactory(column_index)
         # TODO: implement rest
 
     def wait_until_idle(self, polling_delay=0.5):
@@ -462,7 +476,7 @@ class RefineProject:
             self.sorting = Sorting(sort_by)
         response = self.do_json('get-rows', {'sorting': self.sorting.as_json(),
                                              'start': start, 'limit': limit})
-        return RowsResponse(response)
+        return self.rows_response_factory(response)
 
     def reorder_rows(self, sort_by=None):
         if sort_by is not None:
@@ -540,7 +554,7 @@ class RefineProject:
     def add_column(self, column, new_column, expression='value',
                    column_insert_index=None, on_error='set-to-blank'):
         if column_insert_index is None:
-            column_insert_index = self.column_index[column] + 1
+            column_insert_index = self.column_order[column] + 1
         response = self.do_json('add-column', {'baseColumnName': column,
             'newColumnName': new_column, 'expression': expression,
             'columnInsertIndex': column_insert_index, 'onError': on_error})

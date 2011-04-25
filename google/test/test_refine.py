@@ -285,9 +285,7 @@ class TutorialTestDuplicateDetection(RefineTestCase):
                         response['historyEntry']['description'])
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['count'], 1)  # i.e. 2nd
-        # XXX retrieving column data is pretty vile
-        counts = [r.row[self.project.column_index['count']]
-                  for r in response.rows]
+        counts = [r['count'] for r in response.rows]
         self.assertEqual(counts, [2, 2, 1, 1, 3, 3, 3, 1, 2, 2])
         
 
