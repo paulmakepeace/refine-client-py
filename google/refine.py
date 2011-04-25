@@ -392,12 +392,12 @@ class RefineProject:
                 project_name or project_id)
         self.project_id = project_id
         self.project_name = project_name
-        self.columns = []   # following filled in by get_models()
-        self.column_order = {}  # order of column in UI
-        self.rows_response_factory = None
-        self.get_models()
         self.engine = Engine()
         self.sorting = Sorting()
+        # following filled in by get_models()
+        self.column_order = {}  # order of column in UI
+        self.rows_response_factory = None   # for parsing get_rows()
+        self.get_models()
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
@@ -420,18 +420,15 @@ class RefineProject:
         get_rows()."""
         response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
-        columns = column_model['columns']
-        # Pre-extend the list in python
-        self.columns = [None] * len(columns)
         column_index = {}
-        for i, column in enumerate(columns):
-            cell_index, name = column['cellIndex'], column['name']
+        for i, column in enumerate(column_model['columns']):
+            name = column['name']
             self.column_order[name] = i
-            column_index[name] = cell_index
-            self.columns[i] = name
+            column_index[name] = column['cellIndex']
         self.key_column = column_model['keyColumnName']
         self.rows_response_factory = RowsResponseFactory(column_index)
         # TODO: implement rest
+        return response
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:

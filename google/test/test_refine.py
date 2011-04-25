@@ -81,8 +81,8 @@ class RefineTest(RefineTestCase):
 
     def test_get_models(self):
         self.assertEqual(self.project.key_column, 'email')
-        self.assertTrue('email' in self.project.columns)
-        self.assertEqual(self.project.column_index['name'], 1)
+        self.assertTrue('email' in self.project.column_order)
+        self.assertEqual(self.project.column_order['name'], 1)
 
     def test_delete_project(self):
         self.assertTrue(self.project.delete())
