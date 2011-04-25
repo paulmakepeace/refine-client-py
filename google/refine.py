@@ -358,13 +358,17 @@ class RefineProject:
         """Issue a command to the server & return a response object."""
         return self.server.urlopen(command, self.project_id, data)
 
-    def do_json(self, command, data=None):
+    def do_json(self, command, data=None, include_engine=True):
         """Issue a command to the server, parse & return decoded JSON."""
+        if include_engine:
+            if data is None:
+                data = {}
+            data['engine'] = self.engine.as_json()
         return self.server.urlopen_json(command, project_id=self.project_id, data=data)
 
     def get_models(self):
         """Fill out column metadata."""
-        response = self.do_json('get-models')
+        response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
         columns = column_model['columns']
         # Pre-extend the list in python
@@ -395,46 +399,41 @@ class RefineProject:
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
-        data = {
-            'engine': Engine().as_json(),
-            'format': export_format,
-        }
-        return self.do_raw(
-            'export-rows/' + urllib.quote(self.project_name) + '.' + export_format, data)
+        url = ('export-rows/' + urllib.quote(self.project_name) + '.' +
+               export_format)
+        return self.do_raw(url, {'format': export_format})
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
         return csv.reader(self.export(**kwargs), dialect='excel-tab')
 
     def delete(self):
-        response_json = self.do_json('delete-project')
+        response_json = self.do_json('delete-project', include_engine=False)
         return 'code' in response_json and response_json['code'] == 'ok'
 
     def compute_facets(self, facets=None):
         if facets:
             self.engine = Engine(facets)
-        response = self.do_json('compute-facets',
-                                {'engine': self.engine.as_json()})
+        response = self.do_json('compute-facets')
         return FacetsResponse(response)
 
     def get_rows(self, facets=None, start=0, limit=10):
         if facets:
             self.engine = Engine(facets)
         response = self.do_json('get-rows', {
-            'sorting': "{'criteria': []}", 'engine': self.engine.as_json(),
-            'start': start, 'limit': limit})
+            'sorting': "{'criteria': []}", 'start': start, 'limit': limit})
         return RowsResponse(response)
 
     def remove_rows(self, facets=None):
         if facets:
             self.engine = Engine(facets)
-        return self.do_json('remove-rows', {'engine': self.engine.as_json()})
+        return self.do_json('remove-rows')
 
     def text_transform(self, column, expression, on_error='set-to-blank',
                        repeat=False, repeat_count=10):
         response = self.do_json('text-transform', {
-            'engine': self.engine.as_json(), 'columnName': column,
-            'expression': expression, 'onError': on_error, 'repeat': repeat,
+            'columnName': column, 'expression': expression,
+            'onError': on_error, 'repeat': repeat,
             'repeatCount': repeat_count})
         return response
 
@@ -446,8 +445,7 @@ class RefineProject:
         """edits is [{'from': ['foo'], 'to': 'bar'}, {...}]"""
         edits = json.dumps(edits)
         response = self.do_json('mass-edit', {
-            'engine': self.engine.as_json(), 'columnName': column,
-            'expression': expression, 'edits': edits})
+            'columnName': column, 'expression': expression, 'edits': edits})
         return response
 
     clusterer_defaults = {
@@ -475,7 +473,6 @@ class RefineProject:
             clusterer['function'] = function
         clusterer['column'] = column
         response = self.do_json('compute-clusters', {
-            'engine': self.engine.as_json(),
             'clusterer': json.dumps(clusterer)})
         return [[{'value': x['v'], 'count': x['c']} for x in cluster]
                 for cluster in response]
