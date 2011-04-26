@@ -42,6 +42,7 @@ class CamelTest(unittest.TestCase):
 
 class RefineTestCase(unittest.TestCase):
     project_file = None
+    project_file_options = {}
     project = None
     # Section "2. Exploration using Facets": {1}, {2}
     def setUp(self):
@@ -49,7 +50,8 @@ class RefineTestCase(unittest.TestCase):
         self.refine = Refine(self.server)
         if self.project_file:
             self.project = self.refine.new_project(
-                os.path.join(PATH_TO_TEST_DATA, self.project_file))
+                os.path.join(PATH_TO_TEST_DATA, self.project_file),
+                **self.project_file_options)
 
     def tearDown(self):
         if self.project:
@@ -359,9 +361,71 @@ class TutorialTestTransposeColumnsIntoRows(RefineTestCase):
 
 class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
     project_file = 'fixed-rows.csv'
-
+    project_file_options = {'split_into_columns': False,
+                            'header_lines': 0}
     def test_transpose_fixed_number_of_rows_into_columns(self):
-        pass
+        # Section "5. Structural Editing,
+        #             Transpose Fixed Number of Rows into Columns"
+        # {1}
+        self.assertTrue('Column' in self.project.column_order)
+        # {8}
+        response = self.project.transpose_rows_into_columns('Column', 4)
+        self.assertTrue('Transpose every 4 cells in column Column' in
+                        response['historyEntry']['description'])
+        # {9} - renaming column triggers a bug in Refine
+        # {10}
+        response = self.project.add_column('Column 1', 'Transaction',
+            'if(value.contains(" sent "), "send", "receive")')
+        self.assertTrue('Column 1 by filling 4 rows' in
+                        response['historyEntry']['description'])
+        # {11}
+        transaction_facet = TextFacet(column='Transaction', selection='send')
+        self.project.engine.add_facet(transaction_facet)
+        self.project.compute_facets()
+        # {12}, {13}, {14}
+        response = self.project.add_column('Column 1', 'Sender',
+            'value.partition(" sent ")[0]')
+        # XXX resetting the facet shows data in rows with Transaction=receive
+        #     which shouldn't have been possible with the facet.
+        response = self.project.add_column('Column 1', 'Recipient',
+                'value.partition(" to ")[2].partition(" on ")[0]')
+        response = self.project.add_column('Column 1', 'Amount',
+                'value.partition(" sent ")[2].partition(" to ")[0]')
+        # {15}
+        transaction_facet.reset().include('receive')
+        response = self.project.get_rows()
+        # XXX there seems to be some kind of bug where the model doesn't
+        #     match get_rows() output - cellIndex being returned that are
+        #     out of range.
+        #self.assertTrue(a_row['Sender'] is None)
+        #self.assertTrue(a_row['Recipient'] is None)
+        #self.assertTrue(a_row['Amount'] is None)
+        # {16}
+        for column, expression in (
+            ('Sender',
+             'cells["Column 1"].value.partition(" from ")[2]'
+              '.partition(" on ")[0]'),
+            ('Recipient',
+             'cells["Column 1"].value.partition(" received ")[0]'),
+            ('Amount',
+             'cells["Column 1"].value.partition(" received ")[2]'
+             '.partition(" from ")[0]')
+        ):
+            response = self.project.text_transform(column, expression)
+            self.assertTrue('2 cells' in
+                            response['historyEntry']['description'])
+        # {17}
+        transaction_facet.reset()
+        # {18}
+        response = self.project.text_transform('Column 1',
+                                               'value.partition(" on ")[2]')
+        self.assertTrue('4 cells' in
+                        response['historyEntry']['description'])
+        # {19}
+        response = self.project.reorder_columns([
+            'Transaction', 'Amount', 'Sender', 'Recipient'])
+        self.assertEqual('Reorder columns',
+                         response['historyEntry']['description'])
 
 
 class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):

@@ -569,7 +569,14 @@ class RefineProject:
 
     def rename_column(self, column, new_column):
         response = self.do_json('rename-column', {'oldColumnName': column,
-            'newColumnName': new_column})
+                                                  'newColumnName': new_column})
+        self.get_models()
+        return response
+
+    def reorder_columns(self, new_column_order):
+        """Takes an array of column names in the new order."""
+        response = self.do_json('reorder-columns', {
+            'columnNames': new_column_order})
         self.get_models()
         return response
 
@@ -593,3 +600,10 @@ class RefineProject:
             'separator': separator, 'ignoreBlankCells': ignore_blank_cells})
         self.get_models()
         return response
+
+    def transpose_rows_into_columns(self, column, row_count):
+        response = self.do_json('transpose-rows-into-columns', {
+            'columnName': column, 'rowCount': row_count})
+        self.get_models()
+        return response
+
