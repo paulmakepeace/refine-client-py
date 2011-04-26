@@ -11,7 +11,8 @@ import sys
 import os
 import unittest
 from google.refine import REFINE_HOST, REFINE_PORT
-from google.refine import NumericFacet, TextFacet, StarredFacet, Engine
+from google.refine import NumericFacet, TextFacet
+from google.refine import BlankFacet, StarredFacet, Engine
 from google.refine import RefineServer, Refine, RefineProject
 from google.refine import to_camel, from_camel
 
@@ -300,8 +301,7 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         emails = [1 if r['email'] else 0 for r in response.rows]
         self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
         # {12}
-        blank_facet = TextFacet('email', expression='isBlank(value)',
-                                selection=True)
+        blank_facet = BlankFacet('email', selection=True)
         # {13}
         response = self.project.remove_rows(blank_facet)
         self.assertTrue('Remove 4 rows' in
@@ -467,8 +467,7 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):
         # {26}
         self.project.engine.mode = 'row-based'
         # {27}
-        blank_facet = TextFacet('First Line', expression='isBlank(value)',
-                                selection=True)
+        blank_facet = BlankFacet('First Line', selection=True)
         response = self.project.remove_rows(blank_facet)
         self.assertEqual('Remove 14 rows',
                          response['historyEntry']['description'])

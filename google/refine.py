@@ -81,20 +81,32 @@ class TextFacet(Facet):
         return self
 
 
-class StarredFacet(TextFacet):
-    def __init__(self, selection=None):
+class BoolFacet(TextFacet):
+    def __init__(self, column, expression=None, selection=None):
         if selection is not None and not isinstance(selection, bool):
             raise ValueError('selection must be True or False.')
+        if expression is None:
+            raise ValueError('Missing expression')
+        super(BoolFacet, self).__init__(column,
+            expression=expression, selection=selection)
+
+
+class StarredFacet(BoolFacet):
+    def __init__(self, selection=None):
         super(StarredFacet, self).__init__('',
             expression='row.starred', selection=selection)
 
 
-class FlaggedFacet(TextFacet):
+class FlaggedFacet(BoolFacet):
     def __init__(self, selection=None):
-        if selection is not None and not isinstance(selection, bool):
-            raise ValueError('selection must be True or False.')
         super(FlaggedFacet, self).__init__('',
             expression='row.flagged', selection=selection)
+
+
+class BlankFacet(BoolFacet):
+    def __init__(self, column, selection=None):
+        super(BlankFacet, self).__init__(column,
+            expression='isBlank(value)', selection=selection)
 
 
 # Capitalize 'From' to get around python's reserved word.
