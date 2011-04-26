@@ -57,7 +57,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         ethnicity_facet.include('B')
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 1255)
-        indexes = [r.index for r in response.rows]
+        indexes = [row.index for row in response.rows]
         self.assertEqual(indexes, [1, 2, 3, 4, 6, 12, 18, 26, 28, 32])
         # {8}
         response = self.project.compute_facets()
@@ -131,23 +131,22 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # Section "3. Cell Editing": {1}
         self.project.engine.remove_all()    # redundant due to setUp
         # {2}
-        response = self.project.text_transform(column='Zip Code 2',
-            expression='value.toString()[0, 5]')
-        self.assertTrue('6067' in response['historyEntry']['description'])
+        self.project.text_transform(column='Zip Code 2',
+                                    expression='value.toString()[0, 5]')
+        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 76)
-        response = self.project.text_transform('Office Title', 'value.trim()')
-        self.assertTrue('6895' in response['historyEntry']['description'])
+        self.project.text_transform('Office Title', 'value.trim()')
+        self.assertInResponse('6895')
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 67)
         # {5}
-        response = self.project.edit('Office Title',
-            'Councilmen', 'Councilman')
-        self.assertTrue('13' in response['historyEntry']['description'])
+        self.project.edit('Office Title', 'Councilmen', 'Councilman')
+        self.assertInResponse('13')
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 66)
         # {6}
@@ -161,11 +160,11 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(clusters[0][0]['count'], 233)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
-        response = self.project.mass_edit('Office Title', [{
+        self.project.mass_edit('Office Title', [{
             'from': ['Council Member', 'Councilmember'],
             'to': 'Council Member'
         }])
-        self.assertTrue('372' in response['historyEntry']['description'])
+        self.assertInResponse('372')
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 65)
 
@@ -184,15 +183,14 @@ class TutorialTestEditing(refinetest.RefineTestCase):
                         facet.TextFacet('Candidate Name', match['value']))
                     self.assertEqual(len(response.rows), 1)
                     for row in response.rows:
-                        response = self.project.star_row(row)
-                        self.assertTrue(str(row.index + 1) in
-                            response['historyEntry']['description'])
+                        self.project.star_row(row)
+                        self.assertInResponse(str(row.index + 1))
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
         self.assertEqual(response.facets[0].choices[True].count, 3)
-        response = self.project.remove_rows()
-        self.assertTrue('3 rows' in response['historyEntry']['description'])
+        self.project.remove_rows()
+        self.assertInResponse('3 rows')
 
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
@@ -203,40 +201,36 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         #             Duplicate Row Detection and Deletion"
         # {7}, {8}
         response = self.project.get_rows(sort_by='email')
-        indexes = [r.index for r in response.rows]
+        indexes = [row.index for row in response.rows]
         self.assertEqual(indexes, [4, 9, 8, 3, 0, 2, 5, 6, 1, 7])
         # {9}
-        response = self.project.reorder_rows()
-        self.assertEqual('Reorder rows',
-                         response['historyEntry']['description'])
+        self.project.reorder_rows()
+        self.assertInResponse('Reorder rows')
         response = self.project.get_rows()
-        indexes = [r.index for r in response.rows]
+        indexes = [row.index for row in response.rows]
         self.assertEqual(indexes, range(10))
         # {10}
-        response = self.project.add_column('email', 'count',
+        self.project.add_column('email', 'count',
             'facetCount(value, "value", "email")')
-        self.assertTrue('column email by filling 10 rows' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('column email by filling 10 rows')
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
         self.assertEqual(self.project.column_order['count'], 1)  # i.e. 2nd
-        counts = [r['count'] for r in response.rows]
+        counts = [row['count'] for row in response.rows]
         self.assertEqual(counts, [2, 2, 1, 1, 3, 3, 3, 1, 2, 2])
         # {11}
         self.assertFalse(self.project.has_records)
-        response = self.project.blank_down('email')
-        self.assertTrue('Blank down 4 cells' in
-                        response['historyEntry']['description'])
+        self.project.blank_down('email')
+        self.assertInResponse('Blank down 4 cells')
         self.assertTrue(self.project.has_records)
         response = self.project.get_rows()
-        emails = [1 if r['email'] else 0 for r in response.rows]
+        emails = [1 if row['email'] else 0 for row in response.rows]
         self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
         # {12}
         blank_facet = facet.BlankFacet('email', selection=True)
         # {13}
-        response = self.project.remove_rows(blank_facet)
-        self.assertTrue('Remove 4 rows' in
-                        response['historyEntry']['description'])
+        self.project.remove_rows(blank_facet)
+        self.assertInResponse('Remove 4 rows')
         self.project.engine.remove_all()
         response = self.project.get_rows()
         email_counts = [(row['email'], row['count']) for row in response.rows]
@@ -256,31 +250,23 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
     def test_transpose_columns_into_rows(self):
         # Section "5. Structural Editing, Transpose Columns into Rows"
         # {1}, {2}, {3}
-        response = self.project.transpose_columns_into_rows(
-            'FY1946', 64, 'pair')
-        self.assertTrue('64 column(s) starting with FY1946' in
-                        response['historyEntry']['description'])
+        self.project.transpose_columns_into_rows('FY1946', 64, 'pair')
+        self.assertInResponse('64 column(s) starting with FY1946')
         # {4}
-        response = self.project.add_column('pair', 'year',
-            'value[2,6].toNumber()')
-        self.assertTrue('filling 26185 rows' in
-                        response['historyEntry']['description'])
+        self.project.add_column('pair', 'year', 'value[2,6].toNumber()')
+        self.assertInResponse('filling 26185 rows')
         # {5}
-        response = self.project.text_transform(column='pair',
+        self.project.text_transform(column='pair',
             expression='value.substring(7).toNumber()')
-        self.assertTrue('transform on 26185 cells' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('transform on 26185 cells')
         # {6}
-        response = self.project.rename_column('pair', 'amount')
-        self.assertTrue('Rename column pair to amount' in
-                        response['historyEntry']['description'])
+        self.project.rename_column('pair', 'amount')
+        self.assertInResponse('Rename column pair to amount')
         # {7}
-        response = self.project.fill_down('country_name')
-        self.assertTrue('Fill down 23805 cells' in
-                        response['historyEntry']['description'])
-        response = self.project.fill_down('program_name')
-        self.assertTrue('Fill down 23805 cells' in
-                        response['historyEntry']['description'])
+        self.project.fill_down('country_name')
+        self.assertInResponse('Fill down 23805 cells')
+        self.project.fill_down('program_name')
+        self.assertInResponse('Fill down 23805 cells')
         # spot check of last row for transforms and fill down
         response = self.project.get_rows()
         row10 = response.rows[9]
@@ -301,28 +287,26 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         # {1}
         self.assertTrue('Column' in self.project.column_order)
         # {8}
-        response = self.project.transpose_rows_into_columns('Column', 4)
-        self.assertTrue('Transpose every 4 cells in column Column' in
-                        response['historyEntry']['description'])
+        self.project.transpose_rows_into_columns('Column', 4)
+        self.assertInResponse('Transpose every 4 cells in column Column')
         # {9} - renaming column triggers a bug in Refine
         # {10}
-        response = self.project.add_column('Column 1', 'Transaction',
+        self.project.add_column('Column 1', 'Transaction',
             'if(value.contains(" sent "), "send", "receive")')
-        self.assertTrue('Column 1 by filling 4 rows' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('Column 1 by filling 4 rows')
         # {11}
         transaction_facet = facet.TextFacet(column='Transaction',
                                             selection='send')
         self.project.engine.add_facet(transaction_facet)
         self.project.compute_facets()
         # {12}, {13}, {14}
-        response = self.project.add_column('Column 1', 'Sender',
+        self.project.add_column('Column 1', 'Sender',
             'value.partition(" sent ")[0]')
         # XXX resetting the facet shows data in rows with Transaction=receive
         #     which shouldn't have been possible with the facet.
-        response = self.project.add_column('Column 1', 'Recipient',
+        self.project.add_column('Column 1', 'Recipient',
                 'value.partition(" to ")[2].partition(" on ")[0]')
-        response = self.project.add_column('Column 1', 'Amount',
+        self.project.add_column('Column 1', 'Amount',
                 'value.partition(" sent ")[2].partition(" to ")[0]')
         # {15}
         transaction_facet.reset().include('receive')
@@ -344,21 +328,17 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
              'cells["Column 1"].value.partition(" received ")[2]'
              '.partition(" from ")[0]')
         ):
-            response = self.project.text_transform(column, expression)
-            self.assertTrue('2 cells' in
-                            response['historyEntry']['description'])
+            self.project.text_transform(column, expression)
+            self.assertInResponse('2 cells')
         # {17}
         transaction_facet.reset()
         # {18}
-        response = self.project.text_transform('Column 1',
-                                               'value.partition(" on ")[2]')
-        self.assertTrue('4 cells' in
-                        response['historyEntry']['description'])
+        self.project.text_transform('Column 1', 'value.partition(" on ")[2]')
+        self.assertInResponse('4 cells')
         # {19}
-        response = self.project.reorder_columns([
-            'Transaction', 'Amount', 'Sender', 'Recipient'])
-        self.assertEqual('Reorder columns',
-                         response['historyEntry']['description'])
+        self.project.reorder_columns(['Transaction', 'Amount', 'Sender',
+                                      'Recipient'])
+        self.assertInResponse('Reorder columns')
 
 
 class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestCase):
@@ -368,19 +348,17 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestC
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        response = self.project.add_column('Column', 'First Line',
+        self.project.add_column('Column', 'First Line',
             'if(value.contains(" on "), value, null)')
-        self.assertTrue('Column by filling 4 rows' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('Column by filling 4 rows')
         response = self.project.get_rows()
         first_names = [row['First Line'][0:10] if row['First Line'] else None
                        for row in response.rows]
         self.assertEqual(first_names, ['Tom Dalton', None, None, None,
             'Morgan Law', None, None, None, None, 'Eric Batem'])
         # {22}
-        response = self.project.move_column('First Line', 0)
-        self.assertTrue('Move column First Line to position 0' in
-                        response['historyEntry']['description'])
+        self.project.move_column('First Line', 0)
+        self.assertInResponse('Move column First Line to position 0')
         self.assertEqual(self.project.column_order['First Line'], 0)
         # {23}
         self.project.engine.mode = 'record-based'
@@ -388,28 +366,24 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestC
         self.assertEqual(response.mode, 'record-based')
         self.assertEqual(response.filtered, 4)
         # {24}
-        response = self.project.add_column('Column', 'Status',
+        self.project.add_column('Column', 'Status',
             'row.record.cells["Column"].value[-1]')
-        self.assertTrue('filling 18 rows' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('filling 18 rows')
         # {25}
-        response = self.project.text_transform('Column',
+        self.project.text_transform('Column',
             'row.record.cells["Column"].value[1, -1].join("|")')
-        self.assertTrue('18 cells' in
-                        response['historyEntry']['description'])
+        self.assertInResponse('18 cells')
         # {26}
         self.project.engine.mode = 'row-based'
         # {27}
         blank_facet = facet.BlankFacet('First Line', selection=True)
-        response = self.project.remove_rows(blank_facet)
-        self.assertEqual('Remove 14 rows',
-                         response['historyEntry']['description'])
+        self.project.remove_rows(blank_facet)
+        self.assertInResponse('Remove 14 rows')
         self.project.engine.remove_all()
         # {28}
         'Split 4 cell(s) in column Column into several columns by separator'
-        response = self.project.split_column('Column', separator='|')
-        self.assertTrue('Split 4 cell(s) in column Column' in
-                        response['historyEntry']['description'])
+        self.project.split_column('Column', separator='|')
+        self.assertInResponse('Split 4 cell(s) in column Column')
 
 
 if __name__ == '__main__':

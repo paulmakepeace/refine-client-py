@@ -17,6 +17,7 @@ import urllib2
 import urlparse
 
 from google.refine import facet
+from google.refine import history
 
 REFINE_HOST = os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1')
 REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
@@ -209,6 +210,7 @@ class RefineProject:
         self.project_id = project_id
         self.engine = facet.Engine()
         self.sorting = facet.Sorting()
+        self.history_entry = None
         # following filled in by get_models()
         self.has_records = False
         self.column_order = {}  # order of columns in UI
@@ -228,8 +230,15 @@ class RefineProject:
             if data is None:
                 data = {}
             data['engine'] = self.engine.as_json()
-        return self.server.urlopen_json(command, project_id=self.project_id,
-                                        data=data)
+        response = self.server.urlopen_json(command,
+                                            project_id=self.project_id,
+                                            data=data)
+        if 'historyEntry' in response:
+            # **response['historyEntry'] won't work as keys are unicode :-/
+            he = response['historyEntry']
+            self.history_entry = history.HistoryEntry(he['id'], he['time'],
+                                                      he['description'])
+        return response
 
     def get_models(self):
         """Fill out column metadata.

@@ -35,3 +35,10 @@ class RefineTestCase(unittest.TestCase):
         if self.project:
             self.project.delete()
             self.project = None
+
+    def assertInResponse(self, expect):
+        try:
+            desc = self.project.history_entry.description
+            self.assertTrue(expect in desc)
+        except AssertionError:
+            raise AssertionError('Expecting "%s" in "%s"' % (expect, desc))
