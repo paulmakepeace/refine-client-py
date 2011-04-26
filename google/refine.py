@@ -70,13 +70,16 @@ class TextFacet(Facet):
             if s['v']['v'] == value:
                 return
         self.selection.append({'v': {'v': value, 'l': value}})
+        return self
 
     def exclude(self, value):
         self.selection = [s for s in self.selection
                           if s['v']['v'] != value]
+        return self
 
     def reset(self):
         self.selection = []
+        return self
 
 
 class StarredFacet(TextFacet):

@@ -79,6 +79,8 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(len(facet.selection), 1)
         facet.reset()
         self.assertEqual(len(facet.selection), 0)
+        facet.include('element').include('element 2')
+        self.assertEqual(len(facet.selection), 2)
 
     def test_reset_remove(self):
         text_facet1 = TextFacet('column name')
