@@ -3,8 +3,8 @@
 test_refine.py
 
 These tests require a connection to a Refine server either at
-http://127.0.0.1:3333/ or by specifying environment variables REFINE_HOST
-and REFINE_PORT.
+http://127.0.0.1:3333/ or by specifying environment variables
+GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
