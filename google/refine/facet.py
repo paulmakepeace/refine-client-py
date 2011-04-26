@@ -115,13 +115,18 @@ class NumericFacet(Facet):
             column,
             From=From,
             to=to,
-            expression=expression,         
+            expression=expression,
             type='range',
             select_blank=select_blank,
             select_error=select_error,
             select_non_numeric=select_non_numeric,
             select_numeric=select_numeric,
             **options)
+
+    def reset(self):
+        self.From = None
+        self.to = None
+        return self
 
 
 class FacetResponse(object):

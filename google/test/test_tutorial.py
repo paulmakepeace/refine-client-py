@@ -421,6 +421,18 @@ class TutorialTestWebScraping(refinetest.RefineTestCase):
         self.assertEqual(len(rows), 2)
         self.assertEqual(rows[-1]['top'], 567)
         self.project.engine.remove_all()
+        # {5} - tutorial says 'line'; it means 'top'
+        line_facet = facet.NumericFacet('top')
+        line_facet.to = 100
+        self.project.remove_rows(line_facet)
+        self.assertInResponse('Remove 775 rows')
+        line_facet.From = 570
+        line_facet.to = 600
+        self.project.remove_rows(line_facet)
+        self.assertInResponse('Remove 71 rows')
+        line_facet.reset()
+        response = self.project.get_rows()
+        self.assertEqual(response.filtered, 4563)
 
 
 if __name__ == '__main__':
