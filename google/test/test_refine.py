@@ -430,9 +430,54 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
 
 class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):
     project_file = 'variable-rows.csv'
+    project_file_options = {'split_into_columns': False,
+                            'header_lines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
-        pass
+        # {20}, {21}
+        response = self.project.add_column('Column', 'First Line',
+            'if(value.contains(" on "), value, null)')
+        self.assertTrue('Column by filling 4 rows' in
+                        response['historyEntry']['description'])
+        response = self.project.get_rows()
+        first_names = [row['First Line'][0:10] if row['First Line'] else None
+                       for row in response.rows]
+        self.assertEqual(first_names, ['Tom Dalton', None, None, None,
+            'Morgan Law', None, None, None, None, 'Eric Batem'])
+        # {22}
+        response = self.project.move_column('First Line', 0)
+        self.assertTrue('Move column First Line to position 0' in
+                        response['historyEntry']['description'])
+        self.assertEqual(self.project.column_order['First Line'], 0)
+        # {23}
+        self.project.engine.mode = 'record-based'
+        response = self.project.get_rows()
+        self.assertEqual(response.mode, 'record-based')
+        self.assertEqual(response.filtered, 4)
+        # {24}
+        response = self.project.add_column('Column', 'Status',
+            'row.record.cells["Column"].value[-1]')
+        self.assertTrue('filling 18 rows' in
+                        response['historyEntry']['description'])
+        # {25}
+        response = self.project.text_transform('Column',
+            'row.record.cells["Column"].value[1, -1].join("|")')
+        self.assertTrue('18 cells' in
+                        response['historyEntry']['description'])
+        # {26}
+        self.project.engine.mode = 'row-based'
+        # {27}
+        blank_facet = TextFacet('First Line', expression='isBlank(value)',
+                                selection=True)
+        response = self.project.remove_rows(blank_facet)
+        self.assertEqual('Remove 14 rows',
+                         response['historyEntry']['description'])
+        self.project.engine.remove_all()
+        # {28}
+        'Split 4 cell(s) in column Column into several columns by separator'
+        response = self.project.split_column('Column', separator='|')
+        self.assertTrue('Split 4 cell(s) in column Column' in
+                        response['historyEntry']['description'])
 
 
 if __name__ == '__main__':

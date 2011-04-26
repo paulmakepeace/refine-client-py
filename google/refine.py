@@ -354,7 +354,11 @@ def RowsResponseFactory(column_index):
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
                 def __getitem__(self, column):
-                    return self.row[column_index[column]]
+                    # Trailing nulls seem to be stripped from row data
+                    try:
+                        return self.row[column_index[column]]
+                    except IndexError:
+                        return None
 
             def __init__(self, rows_response):
                 self.rows_response = rows_response
@@ -567,6 +571,16 @@ class RefineProject:
         self.get_models()
         return response
 
+    def split_column(self, column, separator=',', mode='separator',
+                     regex=False, guess_cell_type=True,
+                     remove_original_column=True):
+        response = self.do_json('split-column', {'columnName': column,
+            'separator': separator, 'mode': mode, 'regex': regex,
+            'guessCellType': guess_cell_type,
+            'removeOriginalColumn': remove_original_column})
+        self.get_models()
+        return response
+
     def rename_column(self, column, new_column):
         response = self.do_json('rename-column', {'oldColumnName': column,
                                                   'newColumnName': new_column})
@@ -577,6 +591,13 @@ class RefineProject:
         """Takes an array of column names in the new order."""
         response = self.do_json('reorder-columns', {
             'columnNames': new_column_order})
+        self.get_models()
+        return response
+
+    def move_column(self, column, index):
+        """Move column to a new position."""
+        response = self.do_json('move-column', {'columnName': column,
+                                                'index': index})
         self.get_models()
         return response
 
