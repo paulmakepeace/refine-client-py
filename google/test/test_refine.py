@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 """
 test_refine.py
+
+The tests here are based on David Huynh's Refine tutorial at
+http://davidhuynh.net/spaces/nicar2011/tutorial.pdf The tests perform all
+the Refine actions given in the tutorial (except the web scraping) and verify
+the changes expected to observe explained in the tutorial.
+
+These tests require a connection to a Refine server either at
+http://127.0.0.1:3333/ or by specifying environment variables REFINE_HOST
+and REFINE_PORT.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.

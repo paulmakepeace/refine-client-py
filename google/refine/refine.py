@@ -18,8 +18,8 @@ import urlparse
 
 from google.refine import facet
 
-REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
 REFINE_HOST = os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1')
+REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
 
 
 class RefineServer(object):
@@ -156,7 +156,6 @@ def RowsResponseFactory(column_index):
     Uses the project's model's row cell index so that a row can be used
     as a dict by column name."""
 
-    print 'COL_IND', column_index
     class RowsResponse(object):
         class RefineRows(object):
             class RefineRow(object):

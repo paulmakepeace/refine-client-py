@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-test_engine.py
+test_facet.py
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
@@ -31,6 +31,7 @@ class CamelTest(unittest.TestCase):
         )
         for camel_attr, attr in pairs:
             self.assertEqual(from_camel(camel_attr), attr)
+
 
 class FacetTest(unittest.TestCase):
     def test_init(self):
