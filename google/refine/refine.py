@@ -213,6 +213,7 @@ class RefineProject:
         self.history_entry = None
         # following filled in by get_models()
         self.has_records = False
+        self.columns = None
         self.column_order = {}  # order of columns in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
@@ -249,6 +250,7 @@ class RefineProject:
         response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
         column_index = {}
+        self.columns = [column['name'] for column in column_model['columns']]
         for i, column in enumerate(column_model['columns']):
             name = column['name']
             self.column_order[name] = i
@@ -414,6 +416,8 @@ class RefineProject:
 
     def move_column(self, column, index):
         """Move column to a new position."""
+        if index == 'end':
+            index = len(self.columns) - 1
         response = self.do_json('move-column', {'columnName': column,
                                                 'index': index})
         self.get_models()
