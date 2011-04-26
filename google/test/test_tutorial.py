@@ -341,7 +341,8 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         self.assertInResponse('Reorder columns')
 
 
-class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestCase):
+class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(
+    refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
     project_file_options = {'split_into_columns': False,
                             'header_lines': 0}
@@ -384,6 +385,42 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestC
         'Split 4 cell(s) in column Column into several columns by separator'
         self.project.split_column('Column', separator='|')
         self.assertInResponse('Split 4 cell(s) in column Column')
+
+
+class TutorialTestWebScraping(refinetest.RefineTestCase):
+    project_file = 'eli-lilly.csv'
+
+    def test_web_scraping(self):
+        # Section "6. Web Scraping"
+        # {1}, {2}
+        self.project.split_column('key', separator=':')
+        self.assertInResponse('Split 5409 cell(s) in column key')
+        self.project.rename_column('key 1', 'page')
+        self.assertInResponse('Rename column key 1 to page')
+        self.project.rename_column('key 2', 'top')
+        self.assertInResponse('Rename column key 2 to top')
+        self.project.move_column('line', 'end')
+        self.assertInResponse('Move column line to position 2')
+        # {3}
+        self.project.sorting = facet.Sorting([
+            {'column': 'page', 'valueType': 'number'},
+            {'column': 'top',  'valueType': 'number'},
+        ])
+        self.project.reorder_rows()
+        self.assertInResponse('Reorder rows')
+        first_row = self.project.get_rows(limit=1).rows[0]
+        self.assertEqual(first_row['page'], 1)
+        self.assertEqual(first_row['top'], 24)
+        # {4}
+        filter_facet = facet.TextFilterFacet('line', 'ahman')
+        rows = self.project.get_rows(filter_facet).rows
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['top'], 106)
+        filter_facet.query = 'alvarez'
+        rows = self.project.get_rows().rows
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[-1]['top'], 567)
+        self.project.engine.remove_all()
 
 
 if __name__ == '__main__':
