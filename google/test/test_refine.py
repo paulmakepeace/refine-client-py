@@ -9,35 +9,14 @@ and REFINE_PORT.
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
 
-import os
 import unittest
 
 from google.refine import refine
 from google.refine import facet
-
-PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
-
-
-class RefineTestCase(unittest.TestCase):
-    project_file = None
-    project_file_options = {}
-    project = None
-    # Section "2. Exploration using Facets": {1}, {2}
-    def setUp(self):
-        self.server = refine.RefineServer()
-        self.refine = refine.Refine(self.server)
-        if self.project_file:
-            self.project = self.refine.new_project(
-                os.path.join(PATH_TO_TEST_DATA, self.project_file),
-                **self.project_file_options)
-
-    def tearDown(self):
-        if self.project:
-            self.project.delete()
-            self.project = None
+from google.test import refinetest
 
 
-class RefineServerTest(RefineTestCase):
+class RefineServerTest(refinetest.RefineTestCase):
     def test_init(self):
         self.assertEqual(self.server.server,
             'http://%s:%s' % (refine.REFINE_HOST, refine.REFINE_PORT))
@@ -54,7 +33,7 @@ class RefineServerTest(RefineTestCase):
             self.assertTrue(item in version_info)
 
 
-class RefineTest(RefineTestCase):
+class RefineTest(refinetest.RefineTestCase):
     project_file = 'duplicates.csv'
 
     def test_new_project(self):

@@ -14,35 +14,14 @@ and REFINE_PORT.
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
 
-import os
 import unittest
 
 from google.refine import refine
 from google.refine import facet
-
-PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
-
-
-class RefineTestCase(unittest.TestCase):
-    project_file = None
-    project_file_options = {}
-    project = None
-    # Section "2. Exploration using Facets": {1}, {2}
-    def setUp(self):
-        self.server = refine.RefineServer()
-        self.refine = refine.Refine(self.server)
-        if self.project_file:
-            self.project = self.refine.new_project(
-                os.path.join(PATH_TO_TEST_DATA, self.project_file),
-                **self.project_file_options)
-
-    def tearDown(self):
-        if self.project:
-            self.project.delete()
-            self.project = None
+from google.test import refinetest
 
 
-class TutorialTestFacets(RefineTestCase):
+class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
 
     def test_get_rows(self):
@@ -144,7 +123,7 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(cd.numeric_count, 548)
 
 
-class TutorialTestEditing(RefineTestCase):
+class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
 
     def test_editing(self):
@@ -206,7 +185,7 @@ class TutorialTestEditing(RefineTestCase):
                     for row in response.rows:
                         response = self.project.star_row(row)
                         self.assertTrue(str(row.index + 1) in
-                                        response['historyEntry']['description'])
+                            response['historyEntry']['description'])
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
@@ -215,7 +194,7 @@ class TutorialTestEditing(RefineTestCase):
         self.assertTrue('3 rows' in response['historyEntry']['description'])
 
 
-class TutorialTestDuplicateDetection(RefineTestCase):
+class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
     project_file = 'duplicates.csv'
 
     def test_duplicate_detection(self):
@@ -270,7 +249,7 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         ])
 
 
-class TutorialTestTransposeColumnsIntoRows(RefineTestCase):
+class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
     project_file = 'us_economic_assistance.csv'
 
     def test_transpose_columns_into_rows(self):
@@ -310,7 +289,8 @@ class TutorialTestTransposeColumnsIntoRows(RefineTestCase):
         self.assertEqual(row10['amount'], 113777303)
 
 
-class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
+class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
+    refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
     project_file_options = {'split_into_columns': False,
                             'header_lines': 0}
@@ -380,7 +360,7 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
                          response['historyEntry']['description'])
 
 
-class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):
+class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
     project_file_options = {'split_into_columns': False,
                             'header_lines': 0}
