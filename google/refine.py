@@ -32,11 +32,10 @@ def from_camel(attr):
 
 
 class Facet(object):
-    def __init__(self, column, type, expression='value',
-                 **options):
+    def __init__(self, column, type, expression='value', **options):
         self.type = type
+        self.name = column
         self.column_name = column
-        self.name = column  # XXX not sure what the difference is yet
         self.expression = expression
         for k, v in options.items():
             setattr(self, k, v)
