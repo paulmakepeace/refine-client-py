@@ -317,5 +317,59 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         ])
 
 
+class TutorialTestTransposeColumnsIntoRows(RefineTestCase):
+    project_file = 'us_economic_assistance.csv'
+
+    def test_transpose_columns_into_rows(self):
+        # Section "5. Structural Editing, Transpose Columns into Rows"
+        # {1}, {2}, {3}
+        response = self.project.transpose_columns_into_rows(
+            'FY1946', 64, 'pair')
+        self.assertTrue('64 column(s) starting with FY1946' in
+                        response['historyEntry']['description'])
+        # {4}
+        response = self.project.add_column('pair', 'year',
+            'value[2,6].toNumber()')
+        self.assertTrue('filling 26185 rows' in
+                        response['historyEntry']['description'])
+        # {5}
+        response = self.project.text_transform(column='pair',
+            expression='value.substring(7).toNumber()')
+        self.assertTrue('transform on 26185 cells' in
+                        response['historyEntry']['description'])
+        # {6}
+        response = self.project.rename_column('pair', 'amount')
+        self.assertTrue('Rename column pair to amount' in
+                        response['historyEntry']['description'])
+        # {7}
+        response = self.project.fill_down('country_name')
+        self.assertTrue('Fill down 23805 cells' in
+                        response['historyEntry']['description'])
+        response = self.project.fill_down('program_name')
+        self.assertTrue('Fill down 23805 cells' in
+                        response['historyEntry']['description'])
+        # spot check of last row for transforms and fill down
+        response = self.project.get_rows()
+        row10 = [r for r in response.rows][9]
+        self.assertEqual(row10['country_name'], 'Afghanistan')
+        self.assertEqual(row10['program_name'],
+                        'Department of Defense Security Assistance')
+        self.assertEqual(row10['amount'], 113777303)
+
+
+class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
+    project_file = 'fixed-rows.csv'
+
+    def test_transpose_fixed_number_of_rows_into_columns(self):
+        pass
+
+
+class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):
+    project_file = 'variable-rows.csv'
+
+    def test_transpose_variable_number_of_rows_into_columns(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()

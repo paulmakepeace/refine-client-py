@@ -335,10 +335,10 @@ class Refine:
 
 def RowsResponseFactory(column_index):
     """Factory for the parsing the output from get_rows().
-    
+
     Uses the project's model's row cell index so that a row can be used
     as a dict by column name."""
-    
+
     class RowsResponse(object):
         class RefineRows(object):
             class RefineRow(object):
@@ -415,7 +415,7 @@ class RefineProject:
 
     def get_models(self):
         """Fill out column metadata.
-        
+
         column structure is sent in a list of columns in their order.
         The cellIndex is used to find that column's data when returned from
         get_rows()."""
@@ -562,7 +562,29 @@ class RefineProject:
         self.get_models()
         return response
 
+    def rename_column(self, column, new_column):
+        response = self.do_json('rename-column', {'oldColumnName': column,
+            'newColumnName': new_column})
+        self.get_models()
+        return response
+
     def blank_down(self, column):
         response = self.do_json('blank-down', {'columnName': column})
+        self.get_models()
+        return response
+
+    def fill_down(self, column):
+        response = self.do_json('fill-down', {'columnName': column})
+        self.get_models()
+        return response
+
+    def transpose_columns_into_rows(self, start_column, column_count,
+        combined_column_name, separator=':', prepend_column_name=True,
+        ignore_blank_cells=True):
+        response = self.do_json('transpose-columns-into-rows', {
+            'startColumnName': start_column, 'columnCount': column_count,
+            'combinedColumnName': combined_column_name,
+            'prependColumnName': prepend_column_name,
+            'separator': separator, 'ignoreBlankCells': ignore_blank_cells})
         self.get_models()
         return response
