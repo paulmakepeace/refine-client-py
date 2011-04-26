@@ -20,6 +20,7 @@ class RefineServerTest(refinetest.RefineTestCase):
     def test_init(self):
         self.assertEqual(self.server.server,
             'http://%s:%s' % (refine.REFINE_HOST, refine.REFINE_PORT))
+        # strip trailing /
         server = refine.RefineServer('http://refine.example/')
         self.assertEqual(server.server, 'http://refine.example')
 

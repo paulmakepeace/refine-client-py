@@ -105,7 +105,6 @@ class BlankFacet(BoolFacet):
             expression='isBlank(value)', selection=selection)
 
 
-
 # Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
@@ -152,12 +151,15 @@ class FacetsResponse(object):
 
 class Engine(object):
     def __init__(self, facets=None, mode='row-based'):
+        self.set_facets(facets)
+        self.mode = mode
+
+    def set_facets(self, facets=None):
         if facets is None:
             facets = []
         elif not isinstance(facets, list):
             facets = [facets]
         self.facets = facets
-        self.mode = mode
 
     def as_dict(self):
         return {

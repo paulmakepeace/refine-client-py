@@ -282,13 +282,13 @@ class RefineProject:
 
     def compute_facets(self, facets=None):
         if facets:
-            self.engine = facet.Engine(facets)
+            self.engine.set_facets(facets)
         response = self.do_json('compute-facets')
         return facet.FacetsResponse(response)
 
     def get_rows(self, facets=None, sort_by=None, start=0, limit=10):
         if facets:
-            self.engine = facet.Engine(facets)
+            self.engine.set_facets(facets)
         if sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
         response = self.do_json('get-rows', {'sorting': self.sorting.as_json(),
@@ -306,7 +306,7 @@ class RefineProject:
 
     def remove_rows(self, facets=None):
         if facets:
-            self.engine = facet.Engine(facets)
+            self.engine.set_facets(facets)
         return self.do_json('remove-rows')
 
     def text_transform(self, column, expression, on_error='set-to-blank',

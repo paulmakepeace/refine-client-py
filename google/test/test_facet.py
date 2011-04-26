@@ -50,6 +50,31 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(facet.selection[0]['v']['v'], False)
         self.assertRaises(ValueError, FlaggedFacet, 'false')    # no strings
 
+    def test_selections(self):
+        facet = TextFacet('column name')
+        facet.include('element')
+        self.assertEqual(len(facet.selection), 1)
+        facet.include('element 2')
+        self.assertEqual(len(facet.selection), 2)
+        facet.exclude('element')
+        self.assertEqual(len(facet.selection), 1)
+        facet.reset()
+        self.assertEqual(len(facet.selection), 0)
+        facet.include('element').include('element 2')
+        self.assertEqual(len(facet.selection), 2)
+
+
+class EngineTest(unittest.TestCase):
+    def test_init(self):
+        engine = Engine()
+        self.assertEqual(engine.mode, 'row-based')
+        engine.mode = 'record-based'
+        self.assertEqual(engine.mode, 'record-based')
+        engine.set_facets(BlankFacet)
+        self.assertEqual(engine.mode, 'record-based')
+        engine.set_facets([BlankFacet] * 2)
+        self.assertEqual(len(engine), 2)
+
     def test_serialize(self):
         engine = Engine()
         engine_json = engine.as_json()
@@ -59,6 +84,29 @@ class FacetTest(unittest.TestCase):
         facet = NumericFacet(column='column', From=1, to=5)
         self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value',  'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
 
+    def test_add_facet(self):
+        facet = TextFacet(column='Party Code')
+        engine = Engine(facet)
+        engine.add_facet(TextFacet(column='Ethnicity'))
+        self.assertEqual(len(engine.facets), 2)
+        self.assertEqual(len(engine), 2)
+
+    def test_reset_remove(self):
+        text_facet1 = TextFacet('column name')
+        text_facet1.include('element')
+        text_facet2 = TextFacet('column name 2')
+        text_facet2.include('element 2')
+        engine = Engine([text_facet1, text_facet2])
+        self.assertEqual(len(engine), 2)
+        self.assertEqual(len(text_facet1.selection), 1)
+        engine.reset_all()
+        self.assertEqual(len(text_facet1.selection), 0)
+        self.assertEqual(len(text_facet2.selection), 0)
+        engine.remove_all()
+        self.assertEqual(len(engine), 0)
+
+
+class SortingTest(unittest.TestCase):
     def test_sorting(self):
         sorting = Sorting()
         self.assertEqual(sorting.as_json(), '{"criteria": []}')
@@ -78,40 +126,8 @@ class FacetTest(unittest.TestCase):
         self.assertEqual(c['column'], 'date')
         self.assertEqual(c['valueType'], 'date')
 
-    def test_add_facet(self):
-        facet = TextFacet(column='Party Code')
-        engine = Engine(facet)
-        engine.add_facet(TextFacet(column='Ethnicity'))
-        self.assertEqual(len(engine.facets), 2)
-        self.assertEqual(len(engine), 2)
 
-    def test_selections(self):
-        facet = TextFacet('column name')
-        facet.include('element')
-        self.assertEqual(len(facet.selection), 1)
-        facet.include('element 2')
-        self.assertEqual(len(facet.selection), 2)
-        facet.exclude('element')
-        self.assertEqual(len(facet.selection), 1)
-        facet.reset()
-        self.assertEqual(len(facet.selection), 0)
-        facet.include('element').include('element 2')
-        self.assertEqual(len(facet.selection), 2)
-
-    def test_reset_remove(self):
-        text_facet1 = TextFacet('column name')
-        text_facet1.include('element')
-        text_facet2 = TextFacet('column name 2')
-        text_facet2.include('element 2')
-        engine = Engine([text_facet1, text_facet2])
-        self.assertEqual(len(engine), 2)
-        self.assertEqual(len(text_facet1.selection), 1)
-        engine.reset_all()
-        self.assertEqual(len(text_facet1.selection), 0)
-        self.assertEqual(len(text_facet2.selection), 0)
-        engine.remove_all()
-        self.assertEqual(len(engine), 0)
-
+class FacetsResponseTest(unittest.TestCase):
     def test_facets_response(self):
         response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
         response = FacetsResponse(json.loads(response))
