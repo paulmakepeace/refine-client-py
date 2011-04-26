@@ -76,34 +76,26 @@ class Refine:
         return self.server.urlopen_json('get-version')
 
     def list_projects(self):
-        """Return a dict of projects indexed by id & name.
+        """Return a dict of projects indexed by id.
 
         {u'1877818633188': {
             'id': u'1877818633188', u'name': u'akg',
             u'modified': u'2011-04-07T12:30:07Z',
             u'created': u'2011-04-07T12:30:07Z'
         },
-        {u'akg': { ... } } ...}"""
-        projects = self.server.urlopen_json('get-all-project-metadata')['projects']
-        # Provide a way for projects to be indexed by name too
-        for project_id, metadata in projects.items():
-            metadata['id'] = project_id
-            projects[metadata['name']] = metadata
-        return projects
+        """
+        # It's tempting to add in an index by name but there can be
+        # projects with the same name.
+        return self.server.urlopen_json('get-all-project-metadata')['projects']
 
-    def get_project_id_name(self, project):
-        """Returns (project_id, project_name) given either."""
+    def get_project_name(self, project_id):
+        """Returns project name given project_id."""
         projects = self.list_projects()
-        # Is the project param an integer? If so treat as an id, else a name.
-        if re.match(r'^\d+$', project):
-            return project, projects[project]['name']
-        else:
-            return projects[project]['id'], project
+        return projects[project_id]['name']
 
-    def open_project(self, project):
-        """Open a Refine project referred to by id or name."""
-        project_id, project_name = self.get_project_id_name(project)
-        return RefineProject(self.server, project_id, project_name)
+    def open_project(self, project_id):
+        """Open a Refine project."""
+        return RefineProject(self.server, project_id)
 
     def new_project(self, project_file=None, project_url=None,
         project_name=None,
@@ -142,16 +134,17 @@ class Refine:
                 'filename': project_file,
             }
         if project_name is None:
-            # strip extension and directories
+            # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
         response = self.server.urlopen('create-project-from-upload', options)
         # expecting a redirect to the new project containing the id in the url
-        url_params = urlparse.parse_qs(urlparse.urlparse(response.geturl()).query)
+        url_params = urlparse.parse_qs(
+            urlparse.urlparse(response.geturl()).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
-            return RefineProject(self.server, project_id, project_name)
+            return RefineProject(self.server, project_id)
         else:
             raise Exception('Project not created')
 
@@ -202,7 +195,7 @@ def RowsResponseFactory(column_index):
 class RefineProject:
     """A Google Refine project."""
 
-    def __init__(self, server, project_id=None, project_name=None):
+    def __init__(self, server, project_id):
         if not isinstance(server, RefineServer):
             url = urlparse.urlparse(server)
             if url.query:
@@ -212,13 +205,9 @@ class RefineProject:
                     url.scheme, url.netloc, '', '', '', ''))
             server = RefineServer(server)
         self.server = server
-        if not project_id and not project_name:
-            raise Exception('Missing Refine project ID and name; need at least one of those')
-        if not project_name or not project_id:
-            project_id, project_name = Refine(server).get_project_id_name(
-                project_name or project_id)
+        if not project_id:
+            raise Exception('Missing Refine project ID')
         self.project_id = project_id
-        self.project_name = project_name
         self.engine = facet.Engine()
         self.sorting = facet.Sorting()
         # following filled in by get_models()
@@ -226,6 +215,9 @@ class RefineProject:
         self.column_order = {}  # order of column in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
+
+    def project_name(self):
+        return Refine(self.server).get_project_name(project_id)
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
@@ -277,7 +269,7 @@ class RefineProject:
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
-        url = ('export-rows/' + urllib.quote(self.project_name) + '.' +
+        url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
         return self.do_raw(url, {'format': export_format})
 
