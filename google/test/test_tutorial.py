@@ -42,38 +42,6 @@ class RefineTestCase(unittest.TestCase):
             self.project = None
 
 
-class RefineServerTest(RefineTestCase):
-    def test_init(self):
-        self.assertEqual(self.server.server,
-            'http://%s:%s' % (refine.REFINE_HOST, refine.REFINE_PORT))
-        server = refine.RefineServer('http://refine.example/')
-        self.assertEqual(server.server, 'http://refine.example')
-
-    def test_list_projects(self):
-        projects = self.refine.list_projects()
-        self.assertTrue(isinstance(projects, dict))
-
-    def test_get_version(self):
-        version_info = self.refine.get_version()
-        for item in ('revision', 'version', 'full_version', 'full_name'):
-            self.assertTrue(item in version_info)
-
-
-class RefineTest(RefineTestCase):
-    project_file = 'duplicates.csv'
-
-    def test_new_project(self):
-        self.assertTrue(isinstance(self.project, refine.RefineProject))
-
-    def test_get_models(self):
-        self.assertEqual(self.project.key_column, 'email')
-        self.assertTrue('email' in self.project.column_order)
-        self.assertEqual(self.project.column_order['name'], 1)
-
-    def test_delete_project(self):
-        self.assertTrue(self.project.delete())
-
-
 class TutorialTestFacets(RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
 
