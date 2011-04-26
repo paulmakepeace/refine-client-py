@@ -287,7 +287,8 @@ class Refine:
         project_id, project_name = self.get_project_id_name(project)
         return RefineProject(self.server, project_id, project_name)
 
-    def new_project(self, project_file=None, project_url=None, project_name=None,
+    def new_project(self, project_file=None, project_url=None,
+        project_name=None,
         split_into_columns=True,
         separator='',
         ignore_initial_non_blank_lines=0,
@@ -297,7 +298,8 @@ class Refine:
         guess_value_type=True,  # numbers, dates, etc.
         ignore_quotes=False):
 
-        if (project_file and project_url) or (not project_file and not project_url):
+        if ((project_file and project_url) or
+            (not project_file and not project_url)):
             raise ValueError('One (only) of project_file and project_url must be set')
         def s(opt):
             if isinstance(opt, bool):
