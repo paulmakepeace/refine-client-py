@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-test_refine.py
+test_tutorial.py
 
 The tests here are based on David Huynh's Refine tutorial at
 http://davidhuynh.net/spaces/nicar2011/tutorial.pdf The tests perform all
 the Refine actions given in the tutorial (except the web scraping) and verify
-the changes expected to observe explained in the tutorial.
+the changes expected to be observed explained in the tutorial.
 
 These tests require a connection to a Refine server either at
 http://127.0.0.1:3333/ or by specifying environment variables REFINE_HOST
@@ -30,6 +30,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         self.assertEqual(len(response.rows), 10)
         self.assertEqual(response.limit, 10)
         self.assertEqual(response.total, 6958)
+        self.assertEqual(response.filtered, 6958)
         for row in response.rows:
             self.assertFalse(row.flagged)
             self.assertFalse(row.starred)
