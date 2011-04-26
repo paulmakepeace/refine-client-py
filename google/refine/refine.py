@@ -198,14 +198,10 @@ def RowsResponseFactory(column_index):
 class RefineProject:
     """A Google Refine project."""
 
-    def __init__(self, server, project_id):
+    def __init__(self, server, project_id=None):
         if not isinstance(server, RefineServer):
-            url = urlparse.urlparse(server)
-            if url.query:
-                # Parse out the project ID and create a base server URL
-                project_id = url.query[8:]  # skip project=
-                server = urlparse.urlunparse((
-                    url.scheme, url.netloc, '', '', '', ''))
+            if '/project?project=' in server:
+                server, project_id = server.split('/project?project=')
             server = RefineServer(server)
         self.server = server
         if not project_id:
@@ -215,7 +211,7 @@ class RefineProject:
         self.sorting = facet.Sorting()
         # following filled in by get_models()
         self.has_records = False
-        self.column_order = {}  # order of column in UI
+        self.column_order = {}  # order of columns in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
 

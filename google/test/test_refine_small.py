@@ -46,5 +46,21 @@ class RefineRowsTest(unittest.TestCase):
         self.assertEqual(response.rows[0]['name'], 'Danny Baron')
 
 
+class RefineProjectTest(unittest.TestCase):
+    def test_server_init(self):
+        RP = refine.RefineProject
+        # Mock out get_models() so it doesn't attempt to connect to a server
+        RP.get_models = lambda self: self
+        p = RP('http://127.0.0.1:3333/project?project=1658955153749')
+        self.assertEqual(p.server.server, 'http://127.0.0.1:3333')
+        self.assertEqual(p.project_id, '1658955153749')
+        p = RP('http://127.0.0.1:3333', '1658955153749')
+        self.assertEqual(p.server.server, 'http://127.0.0.1:3333')
+        self.assertEqual(p.project_id, '1658955153749')
+        p = RP('http://server/varnish/project?project=1658955153749')
+        self.assertEqual(p.server.server, 'http://server/varnish')
+        self.assertEqual(p.project_id, '1658955153749')
+
+
 if __name__ == '__main__':
     unittest.main()
