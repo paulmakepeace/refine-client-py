@@ -326,7 +326,7 @@ class TutorialTestTransposeColumnsIntoRows(RefineTestCase):
                         response['historyEntry']['description'])
         # spot check of last row for transforms and fill down
         response = self.project.get_rows()
-        row10 = [r for r in response.rows][9]
+        row10 = response.rows[9]
         self.assertEqual(row10['country_name'], 'Afghanistan')
         self.assertEqual(row10['program_name'],
                         'Department of Defense Security Assistance')

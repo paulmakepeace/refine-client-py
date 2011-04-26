@@ -178,6 +178,8 @@ def RowsResponseFactory(column_index):
             def __iter__(self):
                 for row_response in self.rows_response:
                     yield self.RefineRow(row_response)
+            def __getitem__(self, index):
+                return self.RefineRow(self.rows_response[index])
             def __len__(self):
                 return len(self.rows_response)
 
