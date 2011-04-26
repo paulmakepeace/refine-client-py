@@ -22,11 +22,10 @@ def from_camel(attr):
 
 
 class Facet(object):
-    def __init__(self, column, type, expression='value', **options):
+    def __init__(self, column, type, **options):
         self.type = type
         self.name = column
         self.column_name = column
-        self.expression = expression
         for k, v in options.items():
             setattr(self, k, v)
 
@@ -37,12 +36,15 @@ class Facet(object):
 
 class TextFilterFacet(Facet):
     def __init__(self, column, query, **options):
-        super(TextFilterFacet, self).__init__(column, query=query, type='text',
-                                              mode='text', **options)
+        super(TextFilterFacet, self).__init__(
+            column, query=query, case_sensitive=False, type='text',
+            mode='text', **options)
 
 
 class TextFacet(Facet):
-    def __init__(self, column, selection=None, omit_blank=False, omit_error=False, select_blank=False, select_error=False, invert=False, **options):
+    def __init__(self, column, selection=None, expression='value',
+        omit_blank=False, omit_error=False, select_blank=False,
+        select_error=False, invert=False, **options):
         super(TextFacet, self).__init__(
             column,
             type='list',
@@ -52,6 +54,7 @@ class TextFacet(Facet):
             select_error=select_error,
             invert=invert,
             **options)
+        self.expression = expression
         self.selection = []
         if selection is None:
             selection = []
