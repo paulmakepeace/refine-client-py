@@ -11,6 +11,27 @@ import unittest
 from google.refine.facet import *
 
 
+class CamelTest(unittest.TestCase):
+    def test_to_camel(self):
+        pairs = (
+            ('this', 'this'),
+            ('this_attr', 'thisAttr'),
+            ('From', 'from'),
+        )
+        for attr, camel_attr in pairs:
+            self.assertEqual(to_camel(attr), camel_attr)
+
+    def test_from_camel(self):
+        pairs = (
+            ('this', 'this'),
+            ('This', 'this'),
+            ('thisAttr', 'this_attr'),
+            ('ThisAttr', 'this_attr'),
+            ('From', 'from'),
+        )
+        for camel_attr, attr in pairs:
+            self.assertEqual(from_camel(camel_attr), attr)
+
 class FacetTest(unittest.TestCase):
     def test_init(self):
         facet = TextFacet('column name')
