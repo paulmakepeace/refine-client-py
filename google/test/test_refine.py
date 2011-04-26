@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 test_refine.py
-
-Created by Paul Makepeace on 2011-04-22.
-Copyright (c) 2011 Real Programmers. All rights reserved.
 """
 
-import sys
+# Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
+
 import os
 import unittest
-from google.refine import REFINE_HOST, REFINE_PORT
-from google.refine import NumericFacet, TextFacet
-from google.refine import BlankFacet, StarredFacet, Engine
-from google.refine import RefineServer, Refine, RefineProject
-from google.refine import to_camel, from_camel
+
+from google.refine import refine
+from google.refine import facet
 
 PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
 
@@ -27,7 +22,7 @@ class CamelTest(unittest.TestCase):
             ('From', 'from'),
         )
         for attr, camel_attr in pairs:
-            self.assertEqual(to_camel(attr), camel_attr)
+            self.assertEqual(facet.to_camel(attr), camel_attr)
 
     def test_from_camel(self):
         pairs = (
@@ -38,7 +33,7 @@ class CamelTest(unittest.TestCase):
             ('From', 'from'),
         )
         for camel_attr, attr in pairs:
-            self.assertEqual(from_camel(camel_attr), attr)
+            self.assertEqual(facet.from_camel(camel_attr), attr)
 
 
 class RefineTestCase(unittest.TestCase):
@@ -47,8 +42,8 @@ class RefineTestCase(unittest.TestCase):
     project = None
     # Section "2. Exploration using Facets": {1}, {2}
     def setUp(self):
-        self.server = RefineServer()
-        self.refine = Refine(self.server)
+        self.server = refine.RefineServer()
+        self.refine = refine.Refine(self.server)
         if self.project_file:
             self.project = self.refine.new_project(
                 os.path.join(PATH_TO_TEST_DATA, self.project_file),
@@ -62,8 +57,9 @@ class RefineTestCase(unittest.TestCase):
 
 class RefineServerTest(RefineTestCase):
     def test_init(self):
-        self.assertEqual(self.server.server, 'http://%s:%s' % (REFINE_HOST, REFINE_PORT))
-        server = RefineServer('http://refine.example/')
+        self.assertEqual(self.server.server,
+            'http://%s:%s' % (refine.REFINE_HOST, refine.REFINE_PORT))
+        server = refine.RefineServer('http://refine.example/')
         self.assertEqual(server.server, 'http://refine.example')
 
     def test_list_projects(self):
@@ -80,7 +76,7 @@ class RefineTest(RefineTestCase):
     project_file = 'duplicates.csv'
 
     def test_new_project(self):
-        self.assertTrue(isinstance(self.project, RefineProject))
+        self.assertTrue(isinstance(self.project, refine.RefineProject))
 
     def test_get_models(self):
         self.assertEqual(self.project.key_column, 'email')
@@ -106,7 +102,7 @@ class TutorialTestFacets(RefineTestCase):
 
     def test_facet(self):
         # Section "2. Exploration using Facets": {4}
-        party_code_facet = TextFacet(column='Party Code')
+        party_code_facet = facet.TextFacet(column='Party Code')
         response = self.project.compute_facets(party_code_facet)
         pc = response.facets[0]
         self.assertEqual(pc.name, 'Party Code')
@@ -114,8 +110,8 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(pc.choices['N'].count, 15)
         self.assertEqual(pc.blank_choice.count, 1446)
         # {5}, {6}
-        engine = Engine(party_code_facet)
-        ethnicity_facet = TextFacet(column='Ethnicity')
+        engine = facet.Engine(party_code_facet)
+        ethnicity_facet = facet.TextFacet(column='Ethnicity')
         engine.add_facet(ethnicity_facet)
         self.project.engine = engine
         response = self.project.compute_facets()
@@ -146,12 +142,12 @@ class TutorialTestFacets(RefineTestCase):
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 6958)
         # {11}
-        office_title_facet = TextFacet('Office Title')
+        office_title_facet = facet.TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[2].choices), 76)
         # {12} - XXX not sure how to interpret bins & baseBins yet
-        office_level_facet = NumericFacet('Office Level')
+        office_level_facet = facet.NumericFacet('Office Level')
         self.project.engine.add_facet(office_level_facet)
         # {13}
         office_level_facet.From = 300   # from reserved word
@@ -168,14 +164,14 @@ class TutorialTestFacets(RefineTestCase):
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 6958)
         # {15}
-        phone_facet = TextFacet('Phone', expression='value[0, 3]')
+        phone_facet = facet.TextFacet('Phone', expression='value[0, 3]')
         self.project.engine.add_facet(phone_facet)
         response = self.project.compute_facets()
         p = response.facets[0]
         self.assertEqual(p.expression, 'value[0, 3]')
         self.assertEqual(p.choices['318'].count, 2331)
         # {16}
-        commissioned_date_facet = NumericFacet('Commissioned Date',
+        commissioned_date_facet = facet.NumericFacet('Commissioned Date',
             expression='value.toDate().datePart("year")')
         self.project.engine.add_facet(commissioned_date_facet)
         response = self.project.compute_facets()
@@ -183,7 +179,7 @@ class TutorialTestFacets(RefineTestCase):
         self.assertEqual(cd.error_count, 959)
         self.assertEqual(cd.numeric_count, 5999)
         # {17}
-        office_description_facet = NumericFacet('Office Description',
+        office_description_facet = facet.NumericFacet('Office Description',
             expression=r'value.match(/\D*(\d+)\w\w Rep.*/)[0].toNumber()')
         self.project.engine.add_facet(office_description_facet)
         response = self.project.compute_facets()
@@ -205,7 +201,7 @@ class TutorialTestEditing(RefineTestCase):
         self.assertTrue('6067' in response['historyEntry']['description'])
         # {3} - XXX history
         # {4}
-        office_title_facet = TextFacet('Office Title')
+        office_title_facet = facet.TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[0].choices), 76)
@@ -250,14 +246,14 @@ class TutorialTestEditing(RefineTestCase):
                 # {2}
                 if match['value'].endswith(', '):
                     response = self.project.get_rows(
-                        TextFacet('Candidate Name', match['value']))
+                        facet.TextFacet('Candidate Name', match['value']))
                     self.assertEqual(len(response.rows), 1)
                     for row in response.rows:
                         response = self.project.star_row(row)
                         self.assertTrue(str(row.index + 1) in
                                         response['historyEntry']['description'])
         # {5}, {6}, {7}
-        response = self.project.compute_facets(StarredFacet(True))
+        response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
         self.assertEqual(response.facets[0].choices[True].count, 3)
         response = self.project.remove_rows()
@@ -301,7 +297,7 @@ class TutorialTestDuplicateDetection(RefineTestCase):
         emails = [1 if r['email'] else 0 for r in response.rows]
         self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
         # {12}
-        blank_facet = BlankFacet('email', selection=True)
+        blank_facet = facet.BlankFacet('email', selection=True)
         # {13}
         response = self.project.remove_rows(blank_facet)
         self.assertTrue('Remove 4 rows' in
@@ -379,7 +375,8 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(RefineTestCase):
         self.assertTrue('Column 1 by filling 4 rows' in
                         response['historyEntry']['description'])
         # {11}
-        transaction_facet = TextFacet(column='Transaction', selection='send')
+        transaction_facet = facet.TextFacet(column='Transaction',
+                                            selection='send')
         self.project.engine.add_facet(transaction_facet)
         self.project.compute_facets()
         # {12}, {13}, {14}
@@ -467,7 +464,7 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(RefineTestCase):
         # {26}
         self.project.engine.mode = 'row-based'
         # {27}
-        blank_facet = BlankFacet('First Line', selection=True)
+        blank_facet = facet.BlankFacet('First Line', selection=True)
         response = self.project.remove_rows(blank_facet)
         self.assertEqual('Remove 14 rows',
                          response['historyEntry']['description'])

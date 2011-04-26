@@ -1,20 +1,14 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """
 test_engine.py
-
-Created by Paul Makepeace on 2011-04-22.
-Copyright (c) 2011 Real Programmers. All rights reserved.
 """
 
+# Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
 
 import json
-import os
-import sys
 import unittest
-import urllib
-from google.refine import TextFacet, NumericFacet, StarredFacet, FlaggedFacet
-from google.refine import Engine, Sorting, FacetsResponse
+
+from google.refine.facet import *
 
 
 class FacetTest(unittest.TestCase):
