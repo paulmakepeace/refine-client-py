@@ -36,9 +36,9 @@ class Facet(object):
 
 
 class TextFilterFacet(Facet):
-    def __init__(self, column, query):
-        super(TextFacet, self).__init__(column, type='text', mode='text',
-                                        query=query, **options)
+    def __init__(self, column, query, **options):
+        super(TextFilterFacet, self).__init__(column, query=query, type='text',
+                                              mode='text', **options)
 
 
 class TextFacet(Facet):

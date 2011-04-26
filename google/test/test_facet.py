@@ -49,6 +49,8 @@ class FacetTest(unittest.TestCase):
         facet = FlaggedFacet(False)
         self.assertEqual(facet.selection[0]['v']['v'], False)
         self.assertRaises(ValueError, FlaggedFacet, 'false')    # no strings
+        facet = TextFilterFacet('column name', 'query')
+        self.assertEqual(facet.query, 'query')
 
     def test_selections(self):
         facet = TextFacet('column name')
