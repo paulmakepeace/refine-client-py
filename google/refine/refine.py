@@ -214,7 +214,7 @@ class RefineProject:
         # following filled in by get_models()
         self.has_records = False
         self.columns = None
-        self.column_order = {}  # order of columns in UI
+        self.column_order = {}  # map of column names to order in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
 
@@ -292,6 +292,17 @@ class RefineProject:
         return 'code' in response_json and response_json['code'] == 'ok'
 
     def compute_facets(self, facets=None):
+        """Compute facets as per the project's engine.
+
+        The response object has two attributes, mode & facets. mode is one of
+        'row-based' or 'record-based'. facets is a magic list of facets in the
+        same order as they were specified in the Engine. Magic allows the
+        original Engine's facet as index into the response, e.g.,
+
+        name_facet = TextFacet('name')
+        response = project.compute_facets(name_facet)
+        response.facets[name_facet]     # same as response.facets[0]
+        """
         if facets:
             self.engine.set_facets(facets)
         response = self.do_json('compute-facets')
