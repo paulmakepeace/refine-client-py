@@ -382,7 +382,6 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(
         self.assertInResponse('Remove 14 rows')
         self.project.engine.remove_all()
         # {28}
-        'Split 4 cell(s) in column Column into several columns by separator'
         self.project.split_column('Column', separator='|')
         self.assertInResponse('Split 4 cell(s) in column Column')
 
