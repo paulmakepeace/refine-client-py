@@ -3,9 +3,9 @@
 test_tutorial.py
 
 The tests here are based on David Huynh's Refine tutorial at
-http://davidhuynh.net/spaces/nicar2011/tutorial.pdf The tests perform all
-the Refine actions given in the tutorial (except the web scraping) and verify
-the changes expected to be observed explained in the tutorial.
+http://davidhuynh.net/spaces/nicar2011/tutorial.pdf The tests perform all the
+Refine actions given in the tutorial (except the web scraping) and verify the
+changes expected to be observed explained in the tutorial.
 
 These tests require a connection to a Refine server either at
 http://127.0.0.1:3333/ or by specifying environment variables
@@ -390,6 +390,19 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(
 class TutorialTestWebScraping(refinetest.RefineTestCase):
     project_file = 'eli-lilly.csv'
 
+    filter_expr_1 = """
+        forEach(
+            value[2,-2].replace("&#160;", " ").split("), ("),
+            v,
+            v[0,-1].partition(", '", true).join(":")
+        ).join("|")
+    """
+    filter_expr_2 = """
+        filter(
+            value.split("|"), p, p.partition(":")[0].toNumber() == %d
+        )[0].partition(":")[2]
+    """
+
     def test_web_scraping(self):
         # Section "6. Web Scraping"
         # {1}, {2}
@@ -433,6 +446,27 @@ class TutorialTestWebScraping(refinetest.RefineTestCase):
         line_facet.reset()
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 4563)
+        # {6}
+        page_facet = facet.TextFacet('page', 1)   # 1 not '1'
+        self.project.engine.add_facet(page_facet)
+        # {7}
+        rows = self.project.get_rows().rows
+        # Look for a row with a name in it by skipping HTML
+        name_row = [row for row in rows if '<b>' not in row['line']][0]
+        self.assertTrue('WELLNESS' in name_row['line'])
+        self.assertEqual(name_row['top'], 161)
+        line_facet.From = 20
+        line_facet.to = 160
+        self.project.remove_rows()
+        self.assertInResponse('Remove 9 rows')
+        self.project.engine.remove_all()
+        # {8}
+        self.project.text_transform('line', expression=self.filter_expr_1)
+        self.assertInResponse('Text transform on 4554 cells in column line')
+        # {9} - XXX following is generating Java exceptions
+        #filter_expr = self.filter_expr_2 % 16
+        #self.project.add_column('line', 'Name', expression=filter_expr)
+        # {10} to the final {19} - nothing new in terms of exercising the API.
 
 
 if __name__ == '__main__':
