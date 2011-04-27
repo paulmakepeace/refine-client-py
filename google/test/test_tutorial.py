@@ -40,6 +40,8 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         party_code_facet = facet.TextFacet(column='Party Code')
         response = self.project.compute_facets(party_code_facet)
         pc = response.facets[0]
+        # test look by index same as look up by facet object
+        self.assertEqual(pc, response.facets[party_code_facet])
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 3700)
         self.assertEqual(pc.choices['N'].count, 15)
@@ -50,7 +52,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         engine.add_facet(ethnicity_facet)
         self.project.engine = engine
         response = self.project.compute_facets()
-        e = response.facets[1]
+        e = response.facets[ethnicity_facet]
         self.assertEqual(e.choices['B'].count, 1255)
         self.assertEqual(e.choices['W'].count, 4469)
         # {7}
@@ -61,7 +63,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         self.assertEqual(indexes, [1, 2, 3, 4, 6, 12, 18, 26, 28, 32])
         # {8}
         response = self.project.compute_facets()
-        pc = response.facets[0]
+        pc = response.facets[party_code_facet]
         self.assertEqual(pc.name, 'Party Code')
         self.assertEqual(pc.choices['D'].count, 1179)
         self.assertEqual(pc.choices['R'].count, 11)
@@ -69,7 +71,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         # {9}
         party_code_facet.include('R')
         response = self.project.compute_facets()
-        e = response.facets[1]
+        e = response.facets[ethnicity_facet]
         self.assertEqual(e.choices['B'].count, 11)
         # {10}
         party_code_facet.reset()
@@ -90,7 +92,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         response = self.project.get_rows()
         self.assertEqual(response.filtered, 1907)
         response = self.project.compute_facets()
-        ot = response.facets[2]   # Office Title
+        ot = response.facets[office_title_facet]
         self.assertEqual(len(ot.choices), 21)
         self.assertEqual(ot.choices['Chief of Police'].count, 2)
         self.assertEqual(ot.choices['Chief of Police          '].count, 211)
@@ -102,7 +104,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         phone_facet = facet.TextFacet('Phone', expression='value[0, 3]')
         self.project.engine.add_facet(phone_facet)
         response = self.project.compute_facets()
-        p = response.facets[0]
+        p = response.facets[phone_facet]
         self.assertEqual(p.expression, 'value[0, 3]')
         self.assertEqual(p.choices['318'].count, 2331)
         # {16}
@@ -110,7 +112,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
             expression='value.toDate().datePart("year")')
         self.project.engine.add_facet(commissioned_date_facet)
         response = self.project.compute_facets()
-        cd = response.facets[1]
+        cd = response.facets[commissioned_date_facet]
         self.assertEqual(cd.error_count, 959)
         self.assertEqual(cd.numeric_count, 5999)
         # {17}
@@ -118,10 +120,10 @@ class TutorialTestFacets(refinetest.RefineTestCase):
             expression=r'value.match(/\D*(\d+)\w\w Rep.*/)[0].toNumber()')
         self.project.engine.add_facet(office_description_facet)
         response = self.project.compute_facets()
-        cd = response.facets[2]
-        self.assertEqual(cd.min, 0)
-        self.assertEqual(cd.max, 110)
-        self.assertEqual(cd.numeric_count, 548)
+        od = response.facets[office_description_facet]
+        self.assertEqual(od.min, 0)
+        self.assertEqual(od.max, 110)
+        self.assertEqual(od.numeric_count, 548)
 
 
 class TutorialTestEditing(refinetest.RefineTestCase):
@@ -139,25 +141,26 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         office_title_facet = facet.TextFacet('Office Title')
         self.project.engine.add_facet(office_title_facet)
         response = self.project.compute_facets()
-        self.assertEqual(len(response.facets[0].choices), 76)
+        self.assertEqual(len(response.facets[office_title_facet].choices), 76)
         self.project.text_transform('Office Title', 'value.trim()')
         self.assertInResponse('6895')
         response = self.project.compute_facets()
-        self.assertEqual(len(response.facets[0].choices), 67)
+        self.assertEqual(len(response.facets[office_title_facet].choices), 67)
         # {5}
         self.project.edit('Office Title', 'Councilmen', 'Councilman')
         self.assertInResponse('13')
         response = self.project.compute_facets()
-        self.assertEqual(len(response.facets[0].choices), 66)
+        self.assertEqual(len(response.facets[office_title_facet].choices), 66)
         # {6}
         response = self.project.compute_clusters('Office Title')
         self.assertTrue(not response)
         # {7}
         clusters = self.project.compute_clusters('Office Title', 'knn')
         self.assertEqual(len(clusters), 7)
-        self.assertEqual(len(clusters[0]), 2)
-        self.assertEqual(clusters[0][0]['value'], 'RSCC Member')
-        self.assertEqual(clusters[0][0]['count'], 233)
+        first_cluster = clusters[0]
+        self.assertEqual(len(first_cluster), 2)
+        self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
+        self.assertEqual(first_cluster[0]['count'], 233)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
         self.project.mass_edit('Office Title', [{
@@ -166,7 +169,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         }])
         self.assertInResponse('372')
         response = self.project.compute_facets()
-        self.assertEqual(len(response.facets[0].choices), 65)
+        self.assertEqual(len(response.facets[office_title_facet].choices), 65)
 
         # Section "4. Row and Column Editing, Batched Row Deletion"
         # Test doesn't strictly follow the tutorial as the "Browse this

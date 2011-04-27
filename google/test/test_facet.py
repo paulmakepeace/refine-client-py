@@ -130,12 +130,18 @@ class SortingTest(unittest.TestCase):
 
 
 class FacetsResponseTest(unittest.TestCase):
-    def test_facets_response(self):
-        response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
-        response = FacetsResponse(json.loads(response))
-        facets = response.facets
+    response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
+
+    def test_facet_response(self):
+        party_code_facet = TextFacet('Party Code')
+        engine = Engine(party_code_facet)
+        facets = engine.facets_response(json.loads(self.response)).facets
         self.assertEqual(facets[0].choices['D'].count, 3700)
         self.assertEqual(facets[0].blank_choice.count, 1446)
+        self.assertEqual(facets[party_code_facet], facets[0])
+        # test iteration
+        facet = [f for f in facets][0]
+        self.assertEqual(facet, facets[0])
 
 
 if __name__ == '__main__':

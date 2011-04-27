@@ -295,7 +295,7 @@ class RefineProject:
         if facets:
             self.engine.set_facets(facets)
         response = self.do_json('compute-facets')
-        return facet.FacetsResponse(response)
+        return self.engine.facets_response(response)
 
     def get_rows(self, facets=None, sort_by=None, start=0, limit=10):
         if facets:

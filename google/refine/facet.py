@@ -130,6 +130,7 @@ class NumericFacet(Facet):
 
 
 class FacetResponse(object):
+    """Class for unpacking an individual facet response."""
     def __init__(self, facet):
         for k, v in facet.items():
             if isinstance(k, bool) or isinstance(k, basestring):
@@ -153,42 +154,76 @@ class FacetResponse(object):
 
 
 class FacetsResponse(object):
-    def __init__(self, facets):
-        self.facets = [FacetResponse(f) for f in facets['facets']]
+    """FacetsResponse unpacking the compute-facets response.
+
+    It has two attributes: facets & mode. Mode is either 'row-based' or
+    'record-based'. facets is a list of facets produced by compute-facets, in
+    the same order as they were specified in the Engine. By coupling the engine
+    object with a custom container it's possible to look up the computed facet
+    by the original facet's object.
+    """
+    def __init__(self, engine, facets):
+        class FacetResponseContainer(object):
+            facets = None
+            def __init__(self, facet_responses):
+                self.facets = [FacetResponse(fr) for fr in facet_responses]
+            def __iter__(self):
+                for facet in self.facets:
+                    yield facet
+            def __getitem__(self, index):
+                if not isinstance(index, int):
+                    index = engine.facet_index_by_id[id(index)]
+                assert self.facets[index].name == engine.facets[index].name
+                return self.facets[index]
+
+        self.facets = FacetResponseContainer(facets['facets'])
         self.mode = facets['mode']
 
 
 class Engine(object):
+    """An Engine keeps track of Facets, and responses to facet computation."""
+    facets = []
+    facet_index_by_id = {}  # index into facets by Facet object id
+
     def __init__(self, facets=None, mode='row-based'):
         self.set_facets(facets)
         self.mode = mode
 
     def set_facets(self, facets=None):
+        """facets may be a Facet or list of Facets."""
+        self.remove_all()
         if facets is None:
             facets = []
         elif not isinstance(facets, list):
             facets = [facets]
-        self.facets = facets
+        for facet in facets:
+            self.add_facet(facet)
 
-    def as_dict(self):
-        return {
-            'facets': [f.as_dict() for f in self.facets],  # XXX how with json?
-            'mode': self.mode,
-        }
+    def facets_response(self, response):
+        """Unpack a compute-facets response."""
+        return FacetsResponse(self, response)
 
     def __len__(self):
         return len(self.facets)
 
     def as_json(self):
-        return json.dumps(self.as_dict())
+        """Return a JSON string suitable for use as a POST parameter."""
+        return json.dumps({
+            'facets': [f.as_dict() for f in self.facets],  # XXX how with json?
+            'mode': self.mode,
+        })
 
     def add_facet(self, facet):
+        # Record the facet's object id so facet response can be looked up by id
+        self.facet_index_by_id[id(facet)] = len(self.facets)
         self.facets.append(facet)
 
     def remove_all(self):
+        """Remove all facets."""
         self.facets = []
 
     def reset_all(self):
+        """Reset all facets."""
         for facet in self.facets:
             facet.reset()
 
@@ -204,15 +239,16 @@ class Sorting(object):
         if not isinstance(criteria, list):
             criteria = [criteria]
         for criterion in criteria:
+            # A string criterion defaults to a string sort on that column
             if isinstance(criterion, basestring):
                 criterion = {
                     'column': criterion,
                     'valueType': 'string',
                     'caseSensitive': False,
                 }
-                criterion.setdefault('reverse', False)
-                criterion.setdefault('errorPosition', 1)
-                criterion.setdefault('blankPosition', 2)
+            criterion.setdefault('reverse', False)
+            criterion.setdefault('errorPosition', 1)
+            criterion.setdefault('blankPosition', 2)
             self.criteria.append(criterion)
 
     def as_json(self):
