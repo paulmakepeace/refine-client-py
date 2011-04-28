@@ -44,7 +44,15 @@ class RefineServer(object):
         if data:
             req.add_data(data) # data = urllib.urlencode(data)
         #req.add_header('Accept-Encoding', 'gzip')
-        response = urllib2.urlopen(req)
+        try:
+            response = urllib2.urlopen(req)
+        except urllib2.URLError as (url_error,):
+            if 'Connection refused' in url_error:
+                raise urllib2.URLError(
+                    '%s for %s. No Refine server reachable/running; ENV set?' %
+                    (url_error, self.server))
+            else:
+                raise
         if response.info().get('Content-Encoding', None) == 'gzip':
             # Need a seekable filestream for gzip
             gzip_fp = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
