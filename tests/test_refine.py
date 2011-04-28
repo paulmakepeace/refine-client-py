@@ -48,6 +48,12 @@ class RefineTest(refinetest.RefineTestCase):
     def test_delete_project(self):
         self.assertTrue(self.project.delete())
 
+    def test_open_export(self):
+        fp = refine.RefineProject(self.project.project_url()).export()
+        line = fp.next()
+        self.assertTrue('email' in line)
+        fp.close()
 
+        
 if __name__ == '__main__':
     unittest.main()

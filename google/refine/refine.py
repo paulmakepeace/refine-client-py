@@ -224,11 +224,15 @@ class RefineProject:
         self.get_models()
 
     def project_name(self):
-        return Refine(self.server).get_project_name(project_id)
+        return Refine(self.server).get_project_name(self.project_id)
+
+    def project_url(self):
+        """Return a URL to the project."""
+        return '%s/project?project=%s' % (self.server.server, self.project_id)
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
-        return self.server.urlopen(command, self.project_id, data)
+        return self.server.urlopen(command, data, self.project_id)
 
     def do_json(self, command, data=None, include_engine=True):
         """Issue a command to the server, parse & return decoded JSON."""
