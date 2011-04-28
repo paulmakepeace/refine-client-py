@@ -26,13 +26,16 @@ class RefineTestCase(unittest.TestCase):
     project_file_options = {}
     project = None
     # Section "2. Exploration using Facets": {1}, {2}
+    
+    def project_path(self):
+        return os.path.join(PATH_TO_TEST_DATA, self.project_file)
+    
     def setUp(self):
         self.server = refine.RefineServer()
         self.refine = refine.Refine(self.server)
         if self.project_file:
             self.project = self.refine.new_project(
-                os.path.join(PATH_TO_TEST_DATA, self.project_file),
-                **self.project_file_options)
+                self.project_path(), **self.project_file_options)
 
     def tearDown(self):
         if self.project:
