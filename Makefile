@@ -12,6 +12,9 @@ TEST_DATA = google/test/data/*.csv
 BUMF = README.rst Makefile
 ALL = $(SOURCE) $(TEST_DATA) $(BUMF)
 
+readme:
+	rst2html.py README.rst > README.html
+
 test:
 	PYTHONPATH=. sh -c 'for t in $(TEST_FILES); do python $$t; done'
 
@@ -20,6 +23,7 @@ smalltest:
 
 clean:
 	find . -name '*.pyc' | xargs rm -f
+	rm -f README.html
 
 # COPYFILE_DISABLE=true for annoying ._* files in OS X
 dist: clean
