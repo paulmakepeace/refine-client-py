@@ -87,6 +87,8 @@ Paul Makepeace, author
 
 David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29cf8d660e66a9>`_
 
+`Artfinder <http://www.artfinder.com/>`_, inspiration
+
 Some data used in the test suite has been used from publicly available sources,
 
  - louisiana-elected-ofﬁcials.csv: from
