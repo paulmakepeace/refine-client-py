@@ -37,7 +37,7 @@ Configuration
 =============
 
 By default the Google Refine server URL is http://127.0.0.1:3333
-The environment variables `GOOGLE_REFINE_HOST` and `GOOGLE_REFINE_PORT`
+The environment variables ``GOOGLE_REFINE_HOST`` and ``GOOGLE_REFINE_PORT``
 enable overriding the host & port.
 
 In order to run all tests, a live Refine server is needed. No existing projects
@@ -46,13 +46,25 @@ are affected.
 Installation
 ============
 
-#. Run tests:
+(Someone with more familiarity with python's byzantine collection of installation
+frameworks is very welcome to improve/"best practice" all this.)
 
-   make smalltest  # if no Refine server available
+#. Install dependencies, which currently is ``urllib2_file``:
 
-   make test
+   ``sudo pip install -r requirements.txt``
 
-#. TODO
+#. Ensure you have a Refine server running somewhere and, if necessary, set
+   the envvars as above.
+
+#. Run tests, build, and install:
+
+   ``python setup.py test # to do a subset, e.g., --test-suite tests.test_facet``
+
+   ``python setup.py build``
+
+   ``python setup.py install``
+   
+There is a Makefile that will do this too, and more.
 
 TODO
 ====
