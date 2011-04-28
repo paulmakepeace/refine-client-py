@@ -1,29 +1,34 @@
 # XXX have a Makefile written by someone that knows Makefiles...
 
-NAME=refine-client-py
-VERSION = 0.1
+NAME = refine-client-py
+# make sure VERSION matches what's in setup.py
+VERSION = 0.1.0
 
-SMALL_TEST_FILES = google/test/test_refine_small.py google/test/test_facet.py google/test/test_history.py 
-LARGE_TEST_FILES = google/test/test_refine.py google/test/test_tutorial.py
-TEST_FILES = $(SMALL_TEST_FILES) $(LARGE_TEST_FILES)
-
-SOURCE = google/*.py google/refine/*.py google/test/*.py
-TEST_DATA = google/test/data/*.csv
-BUMF = README.rst Makefile
-ALL = $(SOURCE) $(TEST_DATA) $(BUMF)
-
+all: test build install
+	
 readme:
+	# requires docutils, e.g. pip install docutils
 	rst2html.py README.rst > README.html
 
 test:
-	PYTHONPATH=. sh -c 'for t in $(TEST_FILES); do python $$t; done'
+	python setup.py test
 
+# tests that don't require a Refine server running
 smalltest:
-	PYTHONPATH=. sh -c 'for t in $(SMALL_TEST_FILES); do python $$t; done'
+	python setup.py test --test-suite tests.test_refine_small
+	python setup.py test --test-suite tests.test_facet
+	python setup.py test --test-suite tests.test_history
+
+build:
+	python setup.py build
+	
+install:
+	sudo python setup.py install
 
 clean:
 	find . -name '*.pyc' | xargs rm -f
-	rm -f README.html
+	# XXX is there some way of having setup.py clean up its junk?
+	rm -rf README.html build dist refine_client_py.egg-info distribute-*
 
 # COPYFILE_DISABLE=true for annoying ._* files in OS X
 dist: clean
