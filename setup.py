@@ -2,7 +2,10 @@
 """python setup.py install"""
 
 import os
-from setuptools import setup
+try:
+    from setuptools.core import setup
+except ImportError:
+    from distutils.core import setup
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -20,9 +23,11 @@ setup(name='refine-client-py',
       #package_data={'': ['tests/data/*.csv']},
       install_requires=[
         #'MultipartPostHandler',     # for urllib2_file
-      ],    
+      ],
+      platforms=['Any'],  
       classifiers = [
         'Development Status :: 3 - Alpha',
+        'Environment :: Library',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
