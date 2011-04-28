@@ -18,7 +18,7 @@ import unittest
 
 from google.refine import refine
 from google.refine import facet
-from google.test import refinetest
+from tests import refinetest
 
 
 class TutorialTestFacets(refinetest.RefineTestCase):

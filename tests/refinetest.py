@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """
-test_refine.py
+refinetest.py
+
+RefineTestCase is a base class that loads Refine projects specified by
+the class's 'project_file' attribute and provides a 'project' object.
 
 These tests require a connection to a Refine server either at
 http://127.0.0.1:3333/ or by specifying environment variables REFINE_HOST
@@ -15,7 +18,7 @@ import unittest
 from google.refine import refine
 from google.refine import facet
 
-PATH_TO_TEST_DATA = os.path.join('google', 'test', 'data')
+PATH_TO_TEST_DATA = os.path.join('tests', 'data')
 
 
 class RefineTestCase(unittest.TestCase):
