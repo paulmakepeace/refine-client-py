@@ -1,7 +1,7 @@
 # XXX have a Makefile written by someone that knows Makefiles...
 
 all: test build install
-	
+
 readme:
 	# requires docutils, e.g. pip install docutils
 	rst2html.py README.rst > README.html
@@ -29,3 +29,4 @@ clean:
 
 dist: clean
 	python setup.py sdist
+	
