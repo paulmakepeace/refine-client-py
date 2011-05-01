@@ -29,8 +29,7 @@ install:
 clean:
 	find . -name '*.pyc' | xargs rm -f
 	# XXX is there some way of having setup.py clean up its junk?
-	rm -rf README.html build dist refine_client_py.egg-info distribute-*
+	rm -rf README.html build dist refine_client.egg-info distribute-*
 
-# COPYFILE_DISABLE=true for annoying ._* files in OS X
 dist: clean
-	(cd ..; COPYFILE_DISABLE=true tar zcf $(NAME)-$(VERSION).tar.gz  --exclude='.*' $(NAME))
+	python setup.py dist
