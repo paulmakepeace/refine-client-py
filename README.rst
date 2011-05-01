@@ -63,7 +63,7 @@ frameworks is very welcome to improve/"best practice" all this.)
    ``python setup.py build``
 
    ``python setup.py install``
-   
+
 There is a Makefile that will do this too, and more.
 
 TODO
@@ -91,7 +91,7 @@ David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29
 
 Some data used in the test suite has been used from publicly available sources,
 
- - louisiana-elected-ofﬁcials.csv: from
+ - louisiana-elected-officials.csv: from
    http://www.sos.louisiana.gov/tabid/136/Default.aspx
 
  - us_economic_assistance.csv: `"The Green Book" <http://www.data.gov/raw/1554>`_
