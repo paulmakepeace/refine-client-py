@@ -18,6 +18,7 @@
 
 import os
 from setuptools import setup
+from setuptools import find_packages
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -30,7 +31,7 @@ setup(name='refine-client',
       author='Paul Makepeace',
       author_email='paulm@paulm.com',
       url='https://github.com/PaulMakepeace/refine-client-py',
-      packages=['google.refine'],
+      packages=find_packages(exclude=['tests']),
       install_requires=['urllib2_file'],
       platforms=['Any'],
       classifiers = [
