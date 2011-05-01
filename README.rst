@@ -83,7 +83,7 @@ currently include:
 Credits
 =======
 
-Paul Makepeace, author
+Paul Makepeace, author, <paulm@paulm.com>
 
 David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29cf8d660e66a9>`_
 
