@@ -9,6 +9,7 @@ all: test build install
 readme:
 	# requires docutils, e.g. pip install docutils
 	rst2html.py README.rst > README.html
+	w3m -dump README.html | unix2dos > README.txt
 
 test:
 	python setup.py test
