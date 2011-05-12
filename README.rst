@@ -106,7 +106,7 @@ David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29
 Some data used in the test suite has been used from publicly available sources,
 
 - louisiana-elected-officials.csv: from
-   http://www.sos.louisiana.gov/tabid/136/Default.aspx
+  http://www.sos.louisiana.gov/tabid/136/Default.aspx
 
 - us_economic_assistance.csv: `"The Green Book" <http://www.data.gov/raw/1554>`_
 
