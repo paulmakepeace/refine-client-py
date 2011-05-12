@@ -80,6 +80,20 @@ currently include:
 - join columns
 - columns from URL
 
+Contribute
+============
+
+Patches welcome! Source is at https://github.com/PaulMakepeace/refine-client-py
+
+Useful Tools
+------------
+
+One aspect of development is watching HTTP transactions. To that end, I found
+`Fiddler <http://www.fiddler2.com/>`_ on Windows and `HTTPScoop
+<http://www.tuffcode.com/>`_ invaluable. The latter won't URL-decode nor nicely
+format JSON but the `Online JavaScript Beautifier <http://jsbeautifier.org/>`_
+will.
+
 Credits
 =======
 
@@ -91,10 +105,10 @@ David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29
 
 Some data used in the test suite has been used from publicly available sources,
 
- - louisiana-elected-officials.csv: from
+- louisiana-elected-officials.csv: from
    http://www.sos.louisiana.gov/tabid/136/Default.aspx
 
- - us_economic_assistance.csv: `"The Green Book" <http://www.data.gov/raw/1554>`_
+- us_economic_assistance.csv: `"The Green Book" <http://www.data.gov/raw/1554>`_
 
- - eli-lilly.csv: `ProPublica's "Docs for Dollars" <http://projects.propublica.org/docdollars/>`_ leading to a `Lilly Faculty PDF <http://www.lillyfacultyregistry.com/documents/EliLillyFacultyRegistryQ22010.pdf>`_ processed by `David Huynh's ScraperWiki script <http://scraperwiki.com/scrapers/eli-lilly-dollars-for-docs-scraper/edit/>`_
+- eli-lilly.csv: `ProPublica's "Docs for Dollars" <http://projects.propublica.org/docdollars/>`_ leading to a `Lilly Faculty PDF <http://www.lillyfacultyregistry.com/documents/EliLillyFacultyRegistryQ22010.pdf>`_ processed by `David Huynh's ScraperWiki script <http://scraperwiki.com/scrapers/eli-lilly-dollars-for-docs-scraper/edit/>`_
 
