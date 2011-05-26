@@ -63,6 +63,9 @@ class RefineProjectTest(unittest.TestCase):
         p = RP('http://server/varnish/project?project=1658955153749')
         self.assertEqual(p.server.server, 'http://server/varnish')
         self.assertEqual(p.project_id, '1658955153749')
+        p = RP('1658955153749')
+        self.assertEqual(p.server.server, 'http://127.0.0.1:3333')
+        self.assertEqual(p.project_id, '1658955153749')
 
     def tearDown(self):
         # Restore mocked get_models

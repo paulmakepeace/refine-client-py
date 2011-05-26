@@ -221,7 +221,11 @@ class RefineProject:
         if not isinstance(server, RefineServer):
             if '/project?project=' in server:
                 server, project_id = server.split('/project?project=')
-            server = RefineServer(server)
+                server = RefineServer(server)
+            elif re.match(r'\d+$', server):     # just digits => project ID
+                server, project_id = RefineServer(), server
+            else:
+                server = RefineServer(server)
         self.server = server
         if not project_id:
             raise Exception('Missing Refine project ID')
