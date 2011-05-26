@@ -66,6 +66,10 @@ class RefineProjectTest(unittest.TestCase):
         p = RP('1658955153749')
         self.assertEqual(p.server.server, 'http://127.0.0.1:3333')
         self.assertEqual(p.project_id, '1658955153749')
+        refine.REFINE_HOST='10.0.0.1'
+        refine.REFINE_PORT='80'
+        p = RP('1658955153749')
+        self.assertEqual(p.server.server, 'http://10.0.0.1:80')
 
     def tearDown(self):
         # Restore mocked get_models
