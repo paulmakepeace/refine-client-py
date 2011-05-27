@@ -39,7 +39,9 @@ REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
 class RefineServer(object):
     """Communicate with a Refine server."""
 
-    def __init__(self, server='http://%s:%s' % (REFINE_HOST, REFINE_PORT)):
+    def __init__(self, server=None):
+        if server is None:
+            server='http://%s:%s' % (REFINE_HOST, REFINE_PORT)
         self.server = server[:-1] if server.endswith('/') else server
 
     def urlopen(self, command, data=None, project_id=None):
