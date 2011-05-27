@@ -23,7 +23,7 @@ refine --export --output=project.xls 1234...
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-    
+
 
 import optparse
 import os
@@ -45,7 +45,8 @@ PARSER.add_option('-l', '--list', dest='list', action='store_true',
                   help='List projects')
 PARSER.add_option('-E', '--export', dest='export', action='store_true',
                   help='Export project')
-
+PARSER.add_option('-f', '--apply', dest='apply',
+                  help='Apply a JSON commands file to a project')
 
 def list_projects():
     """Query the Refine server and list projects by ID: name."""
@@ -69,7 +70,7 @@ def export_project(project, options):
         output = sys.stdout
     output.writelines(project.export(export_format=export_format))
     output.close()
-    
+
 def main():
     "Main."
     options, args = PARSER.parse_args()
@@ -78,16 +79,21 @@ def main():
         refine.REFINE_HOST = options.host
     if options.port:
         refine.REFINE_PORT = options.port
-    
+
     if not options.list and len(args) != 1:
         PARSER.error('expecting --list or project ID/URL')
     if options.list:
         list_projects()
     else:
         project = refine.RefineProject(args[0])
+        if options.apply:
+            response = project.apply_operations(options.apply)
+            if response != 'ok':
+                print >>sys.stderr, 'Failed to apply %s: %s' % (options.apply,
+                                                                response)
         if options.export:
             export_project(project, options)
 
-  
+
 if __name__ == '__main__':
     main()

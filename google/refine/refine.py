@@ -291,7 +291,7 @@ class RefineProject:
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
-            response = self.do('get-processes')
+            response = self.do_json('get-processes')
             if 'processes' in response and len(response['processes']) > 0:
                 time.sleep(polling_delay)
             else:
@@ -299,7 +299,7 @@ class RefineProject:
 
     def apply_operations(self, file_path, wait=True):
         json = open(file_path).read()
-        response_json = self.do('apply-operations', {'operations': json})
+        response_json = self.do_json('apply-operations', {'operations': json})
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
