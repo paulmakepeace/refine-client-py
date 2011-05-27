@@ -7,6 +7,7 @@ Examples,
 refine --list    # show list of Refine projects, ID: name
 refine --export 1234... > project.tsv
 refine --export --output=project.xls 1234...
+refine --apply trim.json 1234...
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
