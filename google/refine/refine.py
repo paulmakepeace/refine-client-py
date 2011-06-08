@@ -17,7 +17,7 @@ Client library to communicate with a Refine server.
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-    
+
 import csv
 import json
 import gzip
@@ -489,3 +489,18 @@ class RefineProject:
         self.get_models()
         return response
 
+    # Reconciliation
+    # http://code.google.com/p/google-refine/wiki/ReconciliationServiceApi
+    def guess_types_of_column(self, column, service):
+        """Query the reconciliation service for what it thinks this column is.
+
+        service -- reconciliation endpoint URL
+
+        Returns [
+           {"id":"/artfinder/artist","name":"Artist","score":10.2,"count":18},
+           ...
+        ]
+        """
+        response = self.do_json('guess-types-of-column', {
+            'columnName': column, 'service': service})
+        return response['types']
