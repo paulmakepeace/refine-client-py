@@ -83,10 +83,10 @@ def main():
         refine.REFINE_PORT = options.port
 
     if not options.list and len(args) != 1:
-        PARSER.error('expecting --list or project ID/URL')
+        PARSER.print_usage()
     if options.list:
         list_projects()
-    else:
+    if args:
         project = refine.RefineProject(args[0])
         if options.apply:
             response = project.apply_operations(options.apply)
@@ -96,6 +96,8 @@ def main():
         if options.export:
             export_project(project, options)
 
+        return project
 
 if __name__ == '__main__':
-    main()
+    # return project so that it's available interactively, python -i refine.py
+    project = main()
