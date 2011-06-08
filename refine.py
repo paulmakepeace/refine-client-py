@@ -34,7 +34,8 @@ import time
 from google.refine import refine
 
 
-PARSER = optparse.OptionParser(usage='usage: %prog [OPTIONS] [project ID/URL]')
+PARSER = optparse.OptionParser(
+    usage='usage: %prog [--help | OPTIONS] [project ID/URL]')
 PARSER.add_option('-H', '--host', dest='host',
                   help='Google Refine hostname')
 PARSER.add_option('-P', '--port', dest='port',
