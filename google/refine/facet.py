@@ -123,7 +123,9 @@ class BlankFacet(BoolFacet):
 
 # Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):
-    def __init__(self, column, From=None, to=None, expression='value', select_blank=True, select_error=True, select_non_numeric=True, select_numeric=True, **options):
+    def __init__(self, column, From=None, to=None, expression='value',
+                 select_blank=True, select_error=True, select_non_numeric=True,
+                 select_numeric=True, **options):
         super(NumericFacet, self).__init__(
             column,
             From=From,
