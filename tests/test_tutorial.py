@@ -16,7 +16,6 @@ GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
 
 import unittest
 
-from google.refine import refine
 from google.refine import facet
 from tests import refinetest
 
