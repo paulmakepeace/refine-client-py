@@ -187,6 +187,9 @@ def RowsResponseFactory(column_index):
                     self.index = row_response['i']
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
+                    # list of reconciliation ids indexing into self.recons
+                    self.recon = [c.get('r', None) if c else None
+                                  for c in row_response['cells']]
                 def __getitem__(self, column):
                     # Trailing nulls seem to be stripped from row data
                     try:
@@ -210,8 +213,25 @@ def RowsResponseFactory(column_index):
             self.start = response['start']
             self.limit = response['limit']
             self.total = response['total']
-            # 'pool': {"reconCandidates": {},"recons": {}}
             self.pool = response['pool']
+            self.recons = self.pool['recons']
+            #"1307457513974512303": {
+            #    "id": 1307457513974512303,
+            #    "service": "http://.../reconcile/",
+            #    "identifierSpace": "http://.../ns/authority",
+            #    "schemaSpace": "http://.../ns/type",
+            #    # j for judgment
+            #    "j": "none",    # "matched"
+            #    # c for candidates. Indexes into self.recon_candidates
+            #    "c": ["/domain/type/id", ...]
+            #}
+            self.recon_candidates = self.pool['reconCandidates']
+            #"/domain/type/id": {
+            #    "id": "/domain/type/id",
+            #    "name": "...",
+            #    "score": 0.439394,
+            #    "types": ["/domain/type"]
+            #}
             self.rows = self.RefineRows(response['rows'])
 
     return RowsResponse
@@ -242,6 +262,8 @@ class RefineProject:
         self.column_order = {}  # map of column names to order in UI
         self.rows_response_factory = None   # for parsing get_rows()
         self.get_models()
+        # following filled in by get_reconciliation_services
+        self.recon_services = None
 
     def project_name(self):
         return Refine(self.server).get_project_name(self.project_id)
@@ -289,6 +311,12 @@ class RefineProject:
         self.rows_response_factory = RowsResponseFactory(column_index)
         # TODO: implement rest
         return response
+
+    def get_preferences(self, name):
+        """Returns the (JSON) value of a given preference."""
+        response = self.do_json('get-preferences', {'name': name},
+                                include_engine=False)
+        return response['value']
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
@@ -495,13 +523,64 @@ class RefineProject:
     def guess_types_of_column(self, column, service):
         """Query the reconciliation service for what it thinks this column is.
 
-        service -- reconciliation endpoint URL
+        service: reconciliation endpoint URL
 
         Returns [
-           {"id":"/artfinder/artist","name":"Artist","score":10.2,"count":18},
+           {"id":"/domain/type","name":"Type Name","score":10.2,"count":18},
            ...
         ]
         """
         response = self.do_json('guess-types-of-column', {
-            'columnName': column, 'service': service})
+            'columnName': column, 'service': service}, include_engine=False)
         return response['types']
+
+    def get_reconciliation_services(self):
+        response = self.get_preferences('reconciliation.standardServices')
+        self.recon_services = response
+        return response
+
+    def get_reconciliation_service_by_name_or_url(self, name):
+        recon_services = self.get_reconciliation_services()
+        for recon_service in recon_services:
+            if recon_service['name'] == name or recon_service['url'] == name:
+                return recon_service
+        return None
+
+    def reconcile(self, column, service, type=None, config=None):
+        """Perform a reconciliation asynchronously.
+
+        config: {
+            "mode": "standard-service",
+            "service": "http://.../reconcile/",
+            "identifierSpace": "http://.../ns/authority",
+            "schemaSpace": "http://.../ns/type",
+            "type": {
+                "id": "/domain/type",
+                "name": "Type Name"
+            },
+            "autoMatch": true,
+            "columnDetails": []
+        }
+
+        Returns typically {'code': 'pending'}; call wait_until_idle() to wait
+        for reconciliation to complete.
+        """
+        # Create a reconciliation config by looking up recon service info
+        if config is None:
+            service = self.get_reconciliation_service_by_name_or_url(service)
+            if type is None:
+                raise ValueError('Must have at least one of config or type')
+            config = {
+                'mode': 'standard-service',
+                'service': service['url'],
+                'identifierSpace': service['identifierSpace'],
+                'schemaSpace': service['schemaSpace'],
+                'type': {
+                    'id': type['id'],
+                    'name': type['name'],
+                },
+                'autoMatch': True,
+                'columnDetails': [],
+            }
+        return self.do_json('reconcile', {
+            'columnName': column, 'config': config})
