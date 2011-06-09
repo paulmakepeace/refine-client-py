@@ -76,7 +76,7 @@ class RefineServer(object):
     def urlopen_json(self, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         response = json.loads(self.urlopen(*args, **kwargs).read())
-        if 'code' in response and response['code'] != 'ok':
+        if 'code' in response and response['code'] not in ('ok', 'pending'):
             raise Exception(
                 response['code'] + ': ' +
                 response.get('message', response.get('stack', response)))
