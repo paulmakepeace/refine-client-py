@@ -16,7 +16,6 @@ import os
 import unittest
 
 from google.refine import refine
-from google.refine import facet
 
 PATH_TO_TEST_DATA = os.path.join('tests', 'data')
 
@@ -26,10 +25,10 @@ class RefineTestCase(unittest.TestCase):
     project_file_options = {}
     project = None
     # Section "2. Exploration using Facets": {1}, {2}
-    
+
     def project_path(self):
         return os.path.join(PATH_TO_TEST_DATA, self.project_file)
-    
+
     def setUp(self):
         self.server = refine.RefineServer()
         self.refine = refine.Refine(self.server)
