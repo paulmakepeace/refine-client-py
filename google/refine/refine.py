@@ -331,11 +331,11 @@ class RefineProject:
         # TODO: implement rest
         return response
 
-    def get_preferences(self, name):
-        """Returns the (JSON) value of a given preference."""
-        response = self.do_json('get-preferences', {'name': name},
-                                include_engine=False)
-        return response['value']
+    def get_preference(self, name):
+        """Returns the (JSON) value of a given preference setting."""
+        response = self.server.urlopen_json('get-preference',
+                                            params={'name': name})
+        return json.loads(response['value'])
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
@@ -554,7 +554,7 @@ class RefineProject:
         return response['types']
 
     def get_reconciliation_services(self):
-        response = self.get_preferences('reconciliation.standardServices')
+        response = self.get_preference('reconciliation.standardServices')
         self.recon_services = response
         return response
 
