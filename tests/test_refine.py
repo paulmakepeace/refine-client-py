@@ -12,7 +12,6 @@ GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
 import unittest
 
 from google.refine import refine
-from google.refine import facet
 from tests import refinetest
 
 
@@ -54,6 +53,6 @@ class RefineTest(refinetest.RefineTestCase):
         self.assertTrue('email' in line)
         fp.close()
 
-        
+
 if __name__ == '__main__':
     unittest.main()
