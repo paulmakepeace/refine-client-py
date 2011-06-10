@@ -339,7 +339,7 @@ class RefineProject:
 
     def wait_until_idle(self, polling_delay=0.5):
         while True:
-            response = self.do_json('get-processes')
+            response = self.do_json('get-processes', include_engine=False)
             if 'processes' in response and len(response['processes']) > 0:
                 time.sleep(polling_delay)
             else:
@@ -602,4 +602,4 @@ class RefineProject:
                 'columnDetails': [],
             }
         return self.do_json('reconcile', {
-            'columnName': column, 'config': config})
+            'columnName': column, 'config': json.dumps(config)})
