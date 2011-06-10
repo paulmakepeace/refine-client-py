@@ -33,6 +33,13 @@ Currently, the following API is supported:
   - reorder
   - remove
 
+- reconciliation
+
+  - reconciliation judgment facet
+  - guessing column type
+  - querying reconciliation services preferences
+  - perform reconciliation
+
 Configuration
 =============
 
@@ -74,7 +81,7 @@ actions in `David Huynh's Refine tutorial <http://davidhuynh.net/spaces/nicar201
 wide range of Refine features doesn't cover the entire suite. Notable exceptions
 currently include:
 
-- reconciliation
+- reconciliation support is useful but not complete
 - undo/redo
 - Freebase
 - join columns
