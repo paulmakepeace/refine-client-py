@@ -121,6 +121,14 @@ class BlankFacet(BoolFacet):
             expression='isBlank(value)', selection=selection)
 
 
+class ReconJudgmentFacet(TextFacet):
+    def __init__(self, column, **options):
+        super(ReconJudgmentFacet, self).__init__(column,
+            expression=('forNonBlank(cell.recon.judgment, v, v, '
+                        'if(isNonBlank(value), "(unreconciled)", "(blank)"))'),
+            **options)
+
+
 # Capitalize 'From' to get around python's reserved word.
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, expression='value',
