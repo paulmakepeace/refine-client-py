@@ -314,12 +314,12 @@ class RefineProject:
     def get_models(self):
         """Fill out column metadata.
 
-        column structure is sent in a list of columns in their order.
-        The cellIndex is used to find that column's data when returned from
-        get_rows()."""
+        Column structure is a list of columns in their order.
+        The cellIndex is an index for that column's data into the list returned
+        from get_rows()."""
         response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
-        column_index = {}
+        column_index = {}   # map of column name to index into get_rows() data
         self.columns = [column['name'] for column in column_model['columns']]
         for i, column in enumerate(column_model['columns']):
             name = column['name']
