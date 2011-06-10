@@ -52,6 +52,7 @@ class RefineServer(object):
         if server is None:
             server=self.url()
         self.server = server[:-1] if server.endswith('/') else server
+        self.__version = None     # see version @property below
 
     def urlopen(self, command, data=None, params=None, project_id=None):
         """Open a Refine URL and with optional query params and POST data.
@@ -100,6 +101,18 @@ class RefineServer(object):
                 response.get('message', response.get('stack', response)))
         return response
 
+    def get_version(self):
+        """Return version data.
+
+        {"revision":"r1836","full_version":"2.0 [r1836]",
+         "full_name":"Google Refine 2.0 [r1836]","version":"2.0"}"""
+        return self.urlopen_json('get-version')
+
+    @property
+    def version(self):
+        if self.__version is None:
+            self.__version = self.get_version()['version']
+        return self.__version
 
 class Refine:
     """Class representing a connection to a Refine server."""
@@ -108,13 +121,6 @@ class Refine:
             self.server = server
         else:
             self.server = RefineServer(server)
-
-    def get_version(self):
-        """Return version data.
-
-        {"revision":"r1836","full_version":"2.0 [r1836]",
-         "full_name":"Google Refine 2.0 [r1836]","version":"2.0"}"""
-        return self.server.urlopen_json('get-version')
 
     def list_projects(self):
         """Return a dict of projects indexed by id.

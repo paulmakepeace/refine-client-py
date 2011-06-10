@@ -29,9 +29,12 @@ class RefineServerTest(refinetest.RefineTestCase):
         self.assertTrue(isinstance(projects, dict))
 
     def test_get_version(self):
-        version_info = self.refine.get_version()
+        version_info = self.server.get_version()
         for item in ('revision', 'version', 'full_version', 'full_name'):
             self.assertTrue(item in version_info)
+
+    def test_version(self):
+        self.assertTrue(self.server.version in ('2.0', '2.1'))
 
 
 class RefineTest(refinetest.RefineTestCase):
