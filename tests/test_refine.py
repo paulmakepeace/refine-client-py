@@ -40,8 +40,12 @@ class RefineTest(refinetest.RefineTestCase):
     def test_new_project(self):
         self.assertTrue(isinstance(self.project, refine.RefineProject))
 
-    def _test_get_models(self):
+    def test_wait_until_idle(self):
+        self.project.wait_until_idle()  # should just return
+
+    def test_get_models(self):
         self.assertEqual(self.project.key_column, 'email')
+        self.assertTrue('email' in self.project.columns)
         self.assertTrue('email' in self.project.column_order)
         self.assertEqual(self.project.column_order['name'], 1)
 
