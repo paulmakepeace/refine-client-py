@@ -51,6 +51,9 @@ class RefineProjectTest(unittest.TestCase):
         # Mock out get_models so it doesn't attempt to connect to a server
         self._get_models = refine.RefineProject.get_models
         refine.RefineProject.get_models = lambda self: self
+        # Save REFINE_{HOST,PORT} as tests overwrite it
+        self._refine_host_port = refine.REFINE_HOST, refine.REFINE_PORT
+        refine.REFINE_HOST, refine.REFINE_PORT = '127.0.0.1', '3333'
 
     def test_server_init(self):
         RP = refine.RefineProject
@@ -69,14 +72,13 @@ class RefineProjectTest(unittest.TestCase):
         refine.REFINE_HOST='10.0.0.1'
         refine.REFINE_PORT='80'
         p = RP('1658955153749')
-        self.assertEqual(p.server.server, 'http://10.0.0.1:80')
+        self.assertEqual(p.server.server, 'http://10.0.0.1')
 
     def tearDown(self):
         # Restore mocked get_models
         refine.RefineProject.get_models = self._get_models
-        # Ensure default values for REFINE_{HOST,PORT}
-        refine.REFINE_HOST='127.0.0.1'
-        refine.REFINE_PORT='3333'
+        # Restore values for REFINE_{HOST,PORT}
+        refine.REFINE_HOST, refine.REFINE_PORT = self._refine_host_port
 
 
 if __name__ == '__main__':
