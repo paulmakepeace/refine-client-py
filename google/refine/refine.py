@@ -53,17 +53,27 @@ class RefineServer(object):
             server=self.url()
         self.server = server[:-1] if server.endswith('/') else server
 
-    def urlopen(self, command, data=None, project_id=None):
-        """Open a Refine URL and optionally POST data."""
+    def urlopen(self, command, data=None, params=None, project_id=None):
+        """Open a Refine URL and with optional query params and POST data.
+
+        data: POST data dict
+        param: query params dict
+        project_id: project ID as string
+
+        Returns urllib2.urlopen iterable."""
         url = self.server + '/command/core/' + command
         if data is None:
             data = {}
+        if params is None:
+            params = {}
         if project_id:
             # XXX haven't figured out pattern on qs v body
-            if 'delete' in command:
+            if 'delete' in command or data:
                 data['project'] = project_id
             else:
-                url += '?project=' + project_id
+                params['project'] = project_id
+        if params:
+            url += '?' + urllib.urlencode(params)
         req = urllib2.Request(url)
         if data:
             req.add_data(data) # data = urllib.urlencode(data)
@@ -282,7 +292,8 @@ class RefineProject:
 
     def do_raw(self, command, data):
         """Issue a command to the server & return a response object."""
-        return self.server.urlopen(command, data, self.project_id)
+        return self.server.urlopen(command, project_id=self.project_id,
+                                   data=data)
 
     def do_json(self, command, data=None, include_engine=True):
         """Issue a command to the server, parse & return decoded JSON."""
@@ -346,7 +357,7 @@ class RefineProject:
         """Return a fileobject of a project's data."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, {'format': export_format})
+        return self.do_raw(url, data={'format': export_format})
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
