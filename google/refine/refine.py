@@ -43,7 +43,7 @@ class RefineServer(object):
     @staticmethod
     def url():
         """Return the URL to the Refine server."""
-        server='http://%s' % REFINE_HOST
+        server = 'http://' + REFINE_HOST
         if REFINE_PORT != '80':
             server += ':' + REFINE_PORT
         return server
