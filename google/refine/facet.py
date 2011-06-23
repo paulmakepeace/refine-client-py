@@ -208,17 +208,13 @@ class Engine(object):
     facets = []
     facet_index_by_id = {}  # dict of facets by Facet object id
 
-    def __init__(self, facets=None, mode='row-based'):
-        self.set_facets(facets)
-        self.mode = mode
+    def __init__(self, *facets, **kwargs):
+        self.set_facets(*facets)
+        self.mode = kwargs.get('mode', 'row-based')
 
-    def set_facets(self, facets=None):
+    def set_facets(self, *facets):
         """facets may be a Facet or list of Facets."""
         self.remove_all()
-        if facets is None:
-            facets = []
-        elif not isinstance(facets, list):
-            facets = [facets]
         for facet in facets:
             self.add_facet(facet)
 

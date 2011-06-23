@@ -74,7 +74,7 @@ class EngineTest(unittest.TestCase):
         self.assertEqual(engine.mode, 'record-based')
         engine.set_facets(BlankFacet)
         self.assertEqual(engine.mode, 'record-based')
-        engine.set_facets([BlankFacet] * 2)
+        engine.set_facets(BlankFacet, BlankFacet)
         self.assertEqual(len(engine), 2)
 
     def test_serialize(self):
@@ -98,7 +98,7 @@ class EngineTest(unittest.TestCase):
         text_facet1.include('element')
         text_facet2 = TextFacet('column name 2')
         text_facet2.include('element 2')
-        engine = Engine([text_facet1, text_facet2])
+        engine = Engine(text_facet1, text_facet2)
         self.assertEqual(len(engine), 2)
         self.assertEqual(len(text_facet1.selection), 1)
         engine.reset_all()
