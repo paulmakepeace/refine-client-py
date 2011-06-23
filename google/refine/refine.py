@@ -283,6 +283,7 @@ class RefineProject:
         self.sorting = facet.Sorting()
         self.history_entry = None
         # following filled in by get_models()
+        self.key_column = None
         self.has_records = False
         self.columns = None
         self.column_order = {}  # map of column names to order in UI
