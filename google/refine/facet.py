@@ -206,7 +206,7 @@ class FacetsResponse(object):
 class Engine(object):
     """An Engine keeps track of Facets, and responses to facet computation."""
     facets = []
-    facet_index_by_id = {}  # index into facets by Facet object id
+    facet_index_by_id = {}  # dict of facets by Facet object id
 
     def __init__(self, facets=None, mode='row-based'):
         self.set_facets(facets)
@@ -243,6 +243,7 @@ class Engine(object):
 
     def remove_all(self):
         """Remove all facets."""
+        self.facet_index_by_id = {}
         self.facets = []
 
     def reset_all(self):
