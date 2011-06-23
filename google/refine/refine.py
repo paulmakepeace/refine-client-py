@@ -116,7 +116,7 @@ class RefineServer(object):
 
 class Refine:
     """Class representing a connection to a Refine server."""
-    def __init__(self, server, **kwargs):
+    def __init__(self, server):
         if isinstance(server, RefineServer):
             self.server = server
         else:
