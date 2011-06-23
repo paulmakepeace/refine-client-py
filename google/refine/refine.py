@@ -249,13 +249,15 @@ def RowsResponseFactory(column_index):
             #    # c for candidates. Indexes into self.recon_candidates
             #    "c": ["/domain/type/id", ...]
             #}
-            self.recon_candidates = self.pool['reconCandidates']
-            #"/domain/type/id": {
-            #    "id": "/domain/type/id",
-            #    "name": "...",
-            #    "score": 0.439394,
-            #    "types": ["/domain/type"]
-            #}
+            # Recon data structure changed after Refine 2.0
+            if 'reconCandidates' in self.pool:
+                self.recon_candidates = self.pool['reconCandidates']
+                #"/domain/type/id": {
+                #    "id": "/domain/type/id",
+                #    "name": "...",
+                #    "score": 0.439394,
+                #    "types": ["/domain/type"]
+                #}
             self.rows = self.RefineRows(response['rows'])
 
     return RowsResponse
