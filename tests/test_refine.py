@@ -9,6 +9,7 @@ GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
 
+import csv
 import unittest
 
 from google.refine import refine
@@ -61,6 +62,17 @@ class RefineTest(refinetest.RefineTestCase):
         fp = refine.RefineProject(self.project.project_url()).export()
         line = fp.next()
         self.assertTrue('email' in line)
+        for line in fp:
+            self.assertTrue('M' in line or 'F' in line)
+        fp.close()
+
+    def test_open_export_csv(self):
+        fp = refine.RefineProject(self.project.project_url()).export()
+        csv_fp = csv.reader(fp, dialect='excel-tab')
+        row = csv_fp.next()
+        self.assertTrue(row[0] == 'email')
+        for row in csv_fp:
+            self.assertTrue(row[3] == 'F' or row[3] == 'M')
         fp.close()
 
 
