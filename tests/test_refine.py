@@ -17,7 +17,9 @@ from tests import refinetest
 
 class RefineServerTest(refinetest.RefineTestCase):
     def test_init(self):
-        server_url = 'http://%s:%s' % (refine.REFINE_HOST, refine.REFINE_PORT)
+        server_url = 'http://' + refine.REFINE_HOST
+        if refine.REFINE_PORT != '80':
+            server_url += ':' + refine.REFINE_PORT
         self.assertEqual(self.server.server, server_url)
         self.assertEqual(refine.RefineServer.url(), server_url)
         # strip trailing /
