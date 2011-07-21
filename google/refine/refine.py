@@ -211,9 +211,6 @@ def RowsResponseFactory(column_index):
                     self.index = row_response['i']
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
-                    # list of reconciliation ids indexing into self.recons
-                    self.recon = [c.get('r', None) if c else None
-                                  for c in row_response['cells']]
                 def __getitem__(self, column):
                     # Trailing nulls seem to be stripped from row data
                     try:
@@ -237,27 +234,6 @@ def RowsResponseFactory(column_index):
             self.start = response['start']
             self.limit = response['limit']
             self.total = response['total']
-            self.pool = response['pool']
-            self.recons = self.pool['recons']
-            #"1307457513974512303": {
-            #    "id": 1307457513974512303,
-            #    "service": "http://.../reconcile/",
-            #    "identifierSpace": "http://.../ns/authority",
-            #    "schemaSpace": "http://.../ns/type",
-            #    # j for judgment
-            #    "j": "none",    # "matched"
-            #    # c for candidates. Indexes into self.recon_candidates
-            #    "c": ["/domain/type/id", ...]
-            #}
-            # Recon data structure changed after Refine 2.0
-            if 'reconCandidates' in self.pool:
-                self.recon_candidates = self.pool['reconCandidates']
-                #"/domain/type/id": {
-                #    "id": "/domain/type/id",
-                #    "name": "...",
-                #    "score": 0.439394,
-                #    "types": ["/domain/type"]
-                #}
             self.rows = self.RefineRows(response['rows'])
 
     return RowsResponse

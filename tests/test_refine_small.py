@@ -33,10 +33,6 @@ class RefineRowsTest(unittest.TestCase):
             u'mode': u'row-based',
             u'filtered': 10,
             u'total': 10,
-            u'pool': {
-                u'recons': {},
-                u'reconCandidates': {}
-            }
         })
         self.assertEqual(len(response.rows), 1)
         # test iteration
