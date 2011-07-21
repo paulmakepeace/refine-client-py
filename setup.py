@@ -24,7 +24,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='refine-client',
-      version='0.1.0',
+      version='0.2.1',
       description=('The Google Refine Python Client Library provides an '
                    'interface to communicating with a Google Refine server.'),
       long_description=read('README.rst'),
