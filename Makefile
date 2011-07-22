@@ -27,6 +27,6 @@ clean:
 	# XXX is there some way of having setup.py clean up its junk?
 	rm -rf README.html build dist refine_client.egg-info distribute-*
 
-dist: clean
-	python setup.py sdist
+upload: clean
+	python setup.py sdist upload
 	
