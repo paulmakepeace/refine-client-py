@@ -36,7 +36,6 @@ setup(name='refine-client',
       platforms=['Any'],
       classifiers = [
         'Development Status :: 3 - Alpha',
-        'Environment :: Library',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: OS Independent',
