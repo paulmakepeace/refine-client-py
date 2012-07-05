@@ -316,6 +316,10 @@ class RefineProject:
         # TODO: implement rest
         return response
 
+    def get_operations(self):
+        """List out the operations history."""
+        return self.do_json('get-operations', include_engine=False)['entries']
+
     def get_preference(self, name):
         """Returns the (JSON) value of a given preference setting."""
         response = self.server.urlopen_json('get-preference',
