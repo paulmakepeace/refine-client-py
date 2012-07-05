@@ -336,6 +336,9 @@ class RefineProject:
 
     def apply_operations(self, file_path, wait=True):
         json = open(file_path).read()
+        self.apply_operations_json(json, wait)
+
+    def apply_operations_json(self, json, wait=True):
         response_json = self.do_json('apply-operations', {'operations': json})
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
