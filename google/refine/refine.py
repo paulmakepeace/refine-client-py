@@ -76,8 +76,9 @@ class RefineServer(object):
             url += '?' + urllib.urlencode(params)
         req = urllib2.Request(url)
         if data:
-            req.add_data(data) # data = urllib.urlencode(data)
-        #req.add_header('Accept-Encoding', 'gzip')
+            data = urllib.urlencode(data)
+            req.add_data(data)
+            #req.add_header('Accept-Encoding', 'gzip')
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError as (url_error,):
@@ -112,6 +113,7 @@ class RefineServer(object):
         if self.__version is None:
             self.__version = self.get_version()['version']
         return self.__version
+
 
 class Refine:
     """Class representing a connection to a Refine server."""
@@ -148,15 +150,18 @@ class Refine:
         split_into_columns=True,
         separator='',
         ignore_initial_non_blank_lines=0,
-        header_lines=1, # use 0 if your data has no header
+        header_lines=1,  # use 0 if your data has no header
         skip_initial_data_rows=0,
-        limit=None, # no more than this number of rows
+        limit=None,  # no more than this number of rows
         guess_value_type=True,  # numbers, dates, etc.
         ignore_quotes=False):
 
         if ((project_file and project_url) or
             (not project_file and not project_url)):
-            raise ValueError('One (only) of project_file and project_url must be set')
+            raise ValueError(
+                'One (only) of project_file and project_url must be set'
+            )
+
         def s(opt):
             if isinstance(opt, bool):
                 return 'on' if opt else ''
@@ -346,7 +351,7 @@ class RefineProject:
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
-        return response_json['code'] # can be 'ok' or 'pending'
+        return response_json['code']  # can be 'ok' or 'pending'
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
@@ -361,6 +366,14 @@ class RefineProject:
     def delete(self):
         response_json = self.do_json('delete-project', include_engine=False)
         return 'code' in response_json and response_json['code'] == 'ok'
+
+    def undo_redo(self, op_id):
+        self.server.urlopen(
+            'undo-redo',
+            params={'lastDoneID': op_id},
+            data={'facets': []},
+            project_id=self.project_id
+        )
 
     def compute_facets(self, facets=None):
         """Compute facets as per the project's engine.
@@ -436,6 +449,7 @@ class RefineProject:
             },
         },
     }
+
     def compute_clusters(self, column, clusterer_type='binning',
                          function=None, params=None):
         """Returns a list of clusters of {'value': ..., 'count': ...}."""
