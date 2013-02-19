@@ -26,7 +26,6 @@ import re
 import StringIO
 import time
 import urllib
-import urllib2_file
 import urllib2
 import urlparse
 
@@ -50,7 +49,7 @@ class RefineServer(object):
 
     def __init__(self, server=None):
         if server is None:
-            server=self.url()
+            server = self.url()
         self.server = server[:-1] if server.endswith('/') else server
         self.__version = None     # see version @property below
 
@@ -211,6 +210,7 @@ def RowsResponseFactory(column_index):
                     self.index = row_response['i']
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
+
                 def __getitem__(self, column):
                     # Trailing nulls seem to be stripped from row data
                     try:
@@ -220,11 +220,14 @@ def RowsResponseFactory(column_index):
 
             def __init__(self, rows_response):
                 self.rows_response = rows_response
+
             def __iter__(self):
                 for row_response in self.rows_response:
                     yield self.RefineRow(row_response)
+
             def __getitem__(self, index):
                 return self.RefineRow(self.rows_response[index])
+
             def __len__(self):
                 return len(self.rows_response)
 
