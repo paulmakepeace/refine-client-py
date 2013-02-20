@@ -27,6 +27,7 @@ import StringIO
 import time
 import urllib
 import urllib2
+import urllib2_file  # do not remove
 import urlparse
 
 from google.refine import facet
@@ -76,7 +77,7 @@ class RefineServer(object):
             url += '?' + urllib.urlencode(params)
         req = urllib2.Request(url)
         if data:
-            data = urllib.urlencode(data)
+            #data = urllib.urlencode(data)
             req.add_data(data)
             #req.add_header('Accept-Encoding', 'gzip')
         try:
