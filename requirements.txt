@@ -1,1 +1,1 @@
-https://github.com/seisen/urllib2_file/tarball/master
+requests>=1.1.0

@@ -26,9 +26,8 @@ import re
 import StringIO
 import time
 import urllib
-import urllib2_file
-import urllib2
 import urlparse
+import requests
 
 from google.refine import facet
 from google.refine import history
@@ -50,18 +49,17 @@ class RefineServer(object):
 
     def __init__(self, server=None):
         if server is None:
-            server=self.url()
+            server = self.url()
         self.server = server[:-1] if server.endswith('/') else server
         self.__version = None     # see version @property below
 
-    def urlopen(self, command, data=None, params=None, project_id=None):
+    def urlopen(self, command, data=None, params=None, project_id=None, files=None):
         """Open a Refine URL and with optional query params and POST data.
 
         data: POST data dict
         param: query params dict
         project_id: project ID as string
-
-        Returns urllib2.urlopen iterable."""
+        """
         url = self.server + '/command/core/' + command
         if data is None:
             data = {}
@@ -73,28 +71,23 @@ class RefineServer(object):
                 data['project'] = project_id
             else:
                 params['project'] = project_id
-        if params:
-            url += '?' + urllib.urlencode(params)
-        req = urllib2.Request(url)
-        if data:
-            req.add_data(data) # data = urllib.urlencode(data)
-        #req.add_header('Accept-Encoding', 'gzip')
+        #req = urllib2.Request(url)
         try:
-            response = urllib2.urlopen(req)
-        except urllib2.URLError as (url_error,):
-            raise urllib2.URLError(
+            if data:
+                response = requests.post(url, data=data, files=files,
+                                         params=params, stream=True)
+            else:
+                response = requests.get(url, params=params, stream=True)
+        except requests.exceptions.RequestException as url_error:
+            raise Exception(
                 '%s for %s. No Refine server reachable/running; ENV set?' %
-                (url_error, self.server))
-        if response.info().get('Content-Encoding', None) == 'gzip':
-            # Need a seekable filestream for gzip
-            gzip_fp = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-            # XXX Monkey patch response's filehandle. Better way?
-            urllib.addbase.__init__(response, gzip_fp)
+                (url_error, self.server)
+            )
         return response
 
     def urlopen_json(self, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
-        response = json.loads(self.urlopen(*args, **kwargs).read())
+        response = self.urlopen(*args, **kwargs).json()
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             raise Exception(
                 response['code'] + ': ' +
@@ -113,6 +106,7 @@ class RefineServer(object):
         if self.__version is None:
             self.__version = self.get_version()['version']
         return self.__version
+
 
 class Refine:
     """Class representing a connection to a Refine server."""
@@ -149,15 +143,18 @@ class Refine:
         split_into_columns=True,
         separator='',
         ignore_initial_non_blank_lines=0,
-        header_lines=1, # use 0 if your data has no header
+        header_lines=1,  # use 0 if your data has no header
         skip_initial_data_rows=0,
-        limit=None, # no more than this number of rows
+        limit=None,  # no more than this number of rows
         guess_value_type=True,  # numbers, dates, etc.
         ignore_quotes=False):
 
         if ((project_file and project_url) or
             (not project_file and not project_url)):
-            raise ValueError('One (only) of project_file and project_url must be set')
+            raise ValueError(
+                'One (only) of project_file and project_url must be set'
+            )
+
         def s(opt):
             if isinstance(opt, bool):
                 return 'on' if opt else ''
@@ -173,22 +170,20 @@ class Refine:
             'guess-value-type': s(guess_value_type),
             'ignore-quotes': s(ignore_quotes),
         }
+        files = None
         if project_url is not None:
             options['url'] = project_url
         elif project_file is not None:
-            options['project-file'] = {
-                'fd': open(project_file),
-                'filename': project_file,
-            }
+            files = {'project-file': (project_file, open(project_file))}
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
-        response = self.server.urlopen('create-project-from-upload', options)
+        response = self.server.urlopen('create-project-from-upload', options, files=files)
         # expecting a redirect to the new project containing the id in the url
         url_params = urlparse.parse_qs(
-            urlparse.urlparse(response.geturl()).query)
+            urlparse.urlparse(response.url).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
             return RefineProject(self.server, project_id)
@@ -211,6 +206,7 @@ def RowsResponseFactory(column_index):
                     self.index = row_response['i']
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
+
                 def __getitem__(self, column):
                     # Trailing nulls seem to be stripped from row data
                     try:
@@ -220,11 +216,14 @@ def RowsResponseFactory(column_index):
 
             def __init__(self, rows_response):
                 self.rows_response = rows_response
+
             def __iter__(self):
                 for row_response in self.rows_response:
                     yield self.RefineRow(row_response)
+
             def __getitem__(self, index):
                 return self.RefineRow(self.rows_response[index])
+
             def __len__(self):
                 return len(self.rows_response)
 
@@ -316,6 +315,10 @@ class RefineProject:
         # TODO: implement rest
         return response
 
+    def get_operations(self):
+        """List out the operations history."""
+        return self.do_json('get-operations', include_engine=False)['entries']
+
     def get_preference(self, name):
         """Returns the (JSON) value of a given preference setting."""
         response = self.server.urlopen_json('get-preference',
@@ -332,17 +335,23 @@ class RefineProject:
 
     def apply_operations(self, file_path, wait=True):
         json = open(file_path).read()
+        self.apply_operations_json(json, wait)
+
+    def apply_operations_json(self, json, wait=True):
         response_json = self.do_json('apply-operations', {'operations': json})
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
-        return response_json['code'] # can be 'ok' or 'pending'
+        return response_json['code']  # can be 'ok' or 'pending'
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, data={'format': export_format})
+        fileobj = StringIO.StringIO(
+            self.do_raw(url, data={'format': export_format}).content
+        )
+        return fileobj
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
@@ -351,6 +360,14 @@ class RefineProject:
     def delete(self):
         response_json = self.do_json('delete-project', include_engine=False)
         return 'code' in response_json and response_json['code'] == 'ok'
+
+    def undo_redo(self, op_id):
+        self.server.urlopen(
+            'undo-redo',
+            params={'lastDoneID': op_id},
+            data={'facets': []},
+            project_id=self.project_id
+        )
 
     def compute_facets(self, facets=None):
         """Compute facets as per the project's engine.
@@ -426,6 +443,7 @@ class RefineProject:
             },
         },
     }
+
     def compute_clusters(self, column, clusterer_type='binning',
                          function=None, params=None):
         """Returns a list of clusters of {'value': ..., 'count': ...}."""
@@ -482,7 +500,7 @@ class RefineProject:
     def reorder_columns(self, new_column_order):
         """Takes an array of column names in the new order."""
         response = self.do_json('reorder-columns', {
-            'columnNames': new_column_order})
+            'columnNames': json.dumps(new_column_order)})
         self.get_models()
         return response
 
