@@ -348,7 +348,10 @@ class RefineProject:
         """Return a fileobject of a project's data."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, data={'format': export_format}).iter_lines()
+        fileobj = StringIO.StringIO(
+            self.do_raw(url, data={'format': export_format}).content
+        )
+        return fileobj
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
