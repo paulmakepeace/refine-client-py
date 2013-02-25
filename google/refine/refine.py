@@ -26,9 +26,8 @@ import re
 import StringIO
 import time
 import urllib
-import urllib2
-import urllib2_file  # do not remove
 import urlparse
+import requests
 
 from google.refine import facet
 from google.refine import history
@@ -54,14 +53,13 @@ class RefineServer(object):
         self.server = server[:-1] if server.endswith('/') else server
         self.__version = None     # see version @property below
 
-    def urlopen(self, command, data=None, params=None, project_id=None):
+    def urlopen(self, command, data=None, params=None, project_id=None, files=None):
         """Open a Refine URL and with optional query params and POST data.
 
         data: POST data dict
         param: query params dict
         project_id: project ID as string
-
-        Returns urllib2.urlopen iterable."""
+        """
         url = self.server + '/command/core/' + command
         if data is None:
             data = {}
@@ -73,29 +71,23 @@ class RefineServer(object):
                 data['project'] = project_id
             else:
                 params['project'] = project_id
-        if params:
-            url += '?' + urllib.urlencode(params)
-        req = urllib2.Request(url)
-        if data:
-            #data = urllib.urlencode(data)
-            req.add_data(data)
-            #req.add_header('Accept-Encoding', 'gzip')
+        #req = urllib2.Request(url)
         try:
-            response = urllib2.urlopen(req)
-        except urllib2.URLError as (url_error,):
-            raise urllib2.URLError(
+            if data:
+                response = requests.post(url, data=data, files=files,
+                                         params=params, stream=True)
+            else:
+                response = requests.get(url, params=params, stream=True)
+        except requests.exceptions.RequestException as url_error:
+            raise Exception(
                 '%s for %s. No Refine server reachable/running; ENV set?' %
-                (url_error, self.server))
-        if response.info().get('Content-Encoding', None) == 'gzip':
-            # Need a seekable filestream for gzip
-            gzip_fp = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-            # XXX Monkey patch response's filehandle. Better way?
-            urllib.addbase.__init__(response, gzip_fp)
+                (url_error, self.server)
+            )
         return response
 
     def urlopen_json(self, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
-        response = json.loads(self.urlopen(*args, **kwargs).read())
+        response = self.urlopen(*args, **kwargs).json()
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             raise Exception(
                 response['code'] + ': ' +
@@ -178,22 +170,20 @@ class Refine:
             'guess-value-type': s(guess_value_type),
             'ignore-quotes': s(ignore_quotes),
         }
+        files = None
         if project_url is not None:
             options['url'] = project_url
         elif project_file is not None:
-            options['project-file'] = {
-                'fd': open(project_file),
-                'filename': project_file,
-            }
+            files = {'project-file': (project_file, open(project_file))}
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
-        response = self.server.urlopen('create-project-from-upload', options)
+        response = self.server.urlopen('create-project-from-upload', options, files=files)
         # expecting a redirect to the new project containing the id in the url
         url_params = urlparse.parse_qs(
-            urlparse.urlparse(response.geturl()).query)
+            urlparse.urlparse(response.url).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
             return RefineProject(self.server, project_id)
@@ -358,7 +348,7 @@ class RefineProject:
         """Return a fileobject of a project's data."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, data={'format': export_format})
+        return self.do_raw(url, data={'format': export_format}).iter_lines()
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
@@ -507,7 +497,7 @@ class RefineProject:
     def reorder_columns(self, new_column_order):
         """Takes an array of column names in the new order."""
         response = self.do_json('reorder-columns', {
-            'columnNames': new_column_order})
+            'columnNames': json.dumps(new_column_order)})
         self.get_models()
         return response
 

@@ -32,7 +32,7 @@ setup(name='refine-client',
       author_email='paulm@paulm.com',
       url='https://github.com/PaulMakepeace/refine-client-py',
       packages=find_packages(exclude=['tests']),
-      install_requires=['urllib2_file'],
+      install_requires=['requests>=1.1.0'],
       platforms=['Any'],
       classifiers = [
         'Development Status :: 3 - Alpha',
