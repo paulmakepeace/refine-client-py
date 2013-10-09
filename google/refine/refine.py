@@ -50,7 +50,7 @@ class RefineServer(object):
 
     def __init__(self, server=None):
         if server is None:
-            server=self.url()
+            server = self.url()
         self.server = server[:-1] if server.endswith('/') else server
         self.__version = None     # see version @property below
 
@@ -77,7 +77,7 @@ class RefineServer(object):
             url += '?' + urllib.urlencode(params)
         req = urllib2.Request(url)
         if data:
-            req.add_data(data) # data = urllib.urlencode(data)
+            req.add_data(data)  # data = urllib.urlencode(data)
         #req.add_header('Accept-Encoding', 'gzip')
         try:
             response = urllib2.urlopen(req)
@@ -114,6 +114,7 @@ class RefineServer(object):
             self.__version = self.get_version()['version']
         return self.__version
 
+
 class Refine:
     """Class representing a connection to a Refine server."""
     def __init__(self, server):
@@ -145,19 +146,19 @@ class Refine:
         return RefineProject(self.server, project_id)
 
     def new_project(self, project_file=None, project_url=None,
-        project_name=None,
-        split_into_columns=True,
-        separator='',
-        ignore_initial_non_blank_lines=0,
-        header_lines=1, # use 0 if your data has no header
-        skip_initial_data_rows=0,
-        limit=None, # no more than this number of rows
-        guess_value_type=True,  # numbers, dates, etc.
-        ignore_quotes=False):
+                    project_name=None,
+                    split_into_columns=True,
+                    separator='',
+                    ignore_initial_non_blank_lines=0,
+                    header_lines=1,  # use 0 if your data has no header
+                    skip_initial_data_rows=0,
+                    limit=None,  # no more than this number of rows
+                    guess_value_type=True,  # numbers, dates, etc.
+                    ignore_quotes=False):
 
-        if ((project_file and project_url) or
-            (not project_file and not project_url)):
+        if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
+
         def s(opt):
             if isinstance(opt, bool):
                 return 'on' if opt else ''
@@ -211,6 +212,7 @@ def RowsResponseFactory(column_index):
                     self.index = row_response['i']
                     self.row = [c['v'] if c else None
                                 for c in row_response['cells']]
+
                 def __getitem__(self, column):
                     # Trailing nulls seem to be stripped from row data
                     try:
@@ -220,11 +222,14 @@ def RowsResponseFactory(column_index):
 
             def __init__(self, rows_response):
                 self.rows_response = rows_response
+
             def __iter__(self):
                 for row_response in self.rows_response:
                     yield self.RefineRow(row_response)
+
             def __getitem__(self, index):
                 return self.RefineRow(self.rows_response[index])
+
             def __len__(self):
                 return len(self.rows_response)
 
@@ -331,12 +336,12 @@ class RefineProject:
                 return
 
     def apply_operations(self, file_path, wait=True):
-        json = open(file_path).read()
-        response_json = self.do_json('apply-operations', {'operations': json})
+        json_data = open(file_path).read()
+        response_json = self.do_json('apply-operations', {'operations': json_data})
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
-        return response_json['code'] # can be 'ok' or 'pending'
+        return response_json['code']  # can be 'ok' or 'pending'
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
@@ -426,6 +431,7 @@ class RefineProject:
             },
         },
     }
+
     def compute_clusters(self, column, clusterer_type='binning',
                          function=None, params=None):
         """Returns a list of clusters of {'value': ..., 'count': ...}."""
@@ -443,7 +449,7 @@ class RefineProject:
     def annotate_one_row(self, row, annotation, state=True):
         if annotation not in ('starred', 'flagged'):
             raise ValueError('annotation must be one of starred or flagged')
-        state = 'true' if state == True else 'false'
+        state = 'true' if state is True else 'false'
         return self.do_json('annotate-one-row', {'row': row.index,
                                                  annotation: state})
 
@@ -457,18 +463,19 @@ class RefineProject:
                    column_insert_index=None, on_error='set-to-blank'):
         if column_insert_index is None:
             column_insert_index = self.column_order[column] + 1
-        response = self.do_json('add-column', {'baseColumnName': column,
-            'newColumnName': new_column, 'expression': expression,
-            'columnInsertIndex': column_insert_index, 'onError': on_error})
+        response = self.do_json('add-column', {
+            'baseColumnName': column, 'newColumnName': new_column,
+            'expression': expression, 'columnInsertIndex': column_insert_index,
+            'onError': on_error})
         self.get_models()
         return response
 
     def split_column(self, column, separator=',', mode='separator',
                      regex=False, guess_cell_type=True,
                      remove_original_column=True):
-        response = self.do_json('split-column', {'columnName': column,
-            'separator': separator, 'mode': mode, 'regex': regex,
-            'guessCellType': guess_cell_type,
+        response = self.do_json('split-column', {
+            'columnName': column, 'separator': separator, 'mode': mode,
+            'regex': regex, 'guessCellType': guess_cell_type,
             'removeOriginalColumn': remove_original_column})
         self.get_models()
         return response
@@ -505,9 +512,11 @@ class RefineProject:
         self.get_models()
         return response
 
-    def transpose_columns_into_rows(self, start_column, column_count,
-        combined_column_name, separator=':', prepend_column_name=True,
-        ignore_blank_cells=True):
+    def transpose_columns_into_rows(
+            self, start_column, column_count,
+            combined_column_name, separator=':', prepend_column_name=True,
+            ignore_blank_cells=True):
+
         response = self.do_json('transpose-columns-into-rows', {
             'startColumnName': start_column, 'columnCount': column_count,
             'combinedColumnName': combined_column_name,
@@ -550,7 +559,8 @@ class RefineProject:
                 return recon_service
         return None
 
-    def reconcile(self, column, service, type=None, config=None):
+    def reconcile(self, column, service, reconciliation_type=None,
+                  reconciliation_config=None):
         """Perform a reconciliation asynchronously.
 
         config: {
@@ -570,21 +580,21 @@ class RefineProject:
         for reconciliation to complete.
         """
         # Create a reconciliation config by looking up recon service info
-        if config is None:
+        if reconciliation_config is None:
             service = self.get_reconciliation_service_by_name_or_url(service)
-            if type is None:
+            if reconciliation_type is None:
                 raise ValueError('Must have at least one of config or type')
-            config = {
+            reconciliation_config = {
                 'mode': 'standard-service',
                 'service': service['url'],
                 'identifierSpace': service['identifierSpace'],
                 'schemaSpace': service['schemaSpace'],
                 'type': {
-                    'id': type['id'],
-                    'name': type['name'],
+                    'id': reconciliation_type['id'],
+                    'name': reconciliation_type['name'],
                 },
                 'autoMatch': True,
                 'columnDetails': [],
             }
         return self.do_json('reconcile', {
-            'columnName': column, 'config': json.dumps(config)})
+            'columnName': column, 'config': json.dumps(reconciliation_config)})

@@ -20,6 +20,7 @@ from google.refine import refine
 PATH_TO_TEST_DATA = os.path.join('tests', 'data')
 
 
+#noinspection PyPep8Naming
 class RefineTestCase(unittest.TestCase):
     project_file = None
     project_file_options = {}
@@ -42,6 +43,7 @@ class RefineTestCase(unittest.TestCase):
             self.project = None
 
     def assertInResponse(self, expect):
+        desc = None
         try:
             desc = self.project.history_entry.description
             self.assertTrue(expect in desc)

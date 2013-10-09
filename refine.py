@@ -50,15 +50,18 @@ PARSER.add_option('-E', '--export', dest='export', action='store_true',
 PARSER.add_option('-f', '--apply', dest='apply',
                   help='Apply a JSON commands file to a project')
 
+
 def list_projects():
     """Query the Refine server and list projects by ID: name."""
     projects = refine.Refine(refine.RefineServer()).list_projects().items()
+
     def date_to_epoch(json_dt):
-        "Convert a JSON date time into seconds-since-epoch."
+        """Convert a JSON date time into seconds-since-epoch."""
         return time.mktime(time.strptime(json_dt, '%Y-%m-%dT%H:%M:%SZ'))
     projects.sort(key=lambda v: date_to_epoch(v[1]['modified']), reverse=True)
     for project_id, project_info in projects:
         print('{0:>14}: {1}'.format(project_id, project_info['name']))
+
 
 def export_project(project, options):
     """Dump a project to stdout or options.output file."""
@@ -73,8 +76,10 @@ def export_project(project, options):
     output.writelines(project.export(export_format=export_format))
     output.close()
 
+
+#noinspection PyPep8Naming
 def main():
-    "Main."
+    """Main."""
     options, args = PARSER.parse_args()
 
     if options.host:
@@ -100,4 +105,4 @@ def main():
 
 if __name__ == '__main__':
     # return project so that it's available interactively, python -i refine.py
-    project = main()
+    refine_project = main()

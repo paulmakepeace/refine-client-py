@@ -46,7 +46,7 @@ class RefineProjectTest(unittest.TestCase):
     def setUp(self):
         # Mock out get_models so it doesn't attempt to connect to a server
         self._get_models = refine.RefineProject.get_models
-        refine.RefineProject.get_models = lambda self: self
+        refine.RefineProject.get_models = lambda me: me
         # Save REFINE_{HOST,PORT} as tests overwrite it
         self._refine_host_port = refine.REFINE_HOST, refine.REFINE_PORT
         refine.REFINE_HOST, refine.REFINE_PORT = '127.0.0.1', '3333'
@@ -65,8 +65,8 @@ class RefineProjectTest(unittest.TestCase):
         p = RP('1658955153749')
         self.assertEqual(p.server.server, 'http://127.0.0.1:3333')
         self.assertEqual(p.project_id, '1658955153749')
-        refine.REFINE_HOST='10.0.0.1'
-        refine.REFINE_PORT='80'
+        refine.REFINE_HOST = '10.0.0.1'
+        refine.REFINE_PORT = '80'
         p = RP('1658955153749')
         self.assertEqual(p.server.server, 'http://10.0.0.1')
 

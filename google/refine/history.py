@@ -18,15 +18,13 @@ Google Refine history: parsing responses.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
-import re
-
 
 class HistoryEntry(object):
     # N.B. e.g. **response['historyEntry'] won't work as keys are unicode :-/
-    def __init__(self, id=None, time=None, description=None, **kwargs):
-        if id is None:
+    #noinspection PyUnusedLocal
+    def __init__(self, history_entry_id=None, time=None, description=None, **kwargs):
+        if history_entry_id is None:
             raise ValueError('History entry id must be set')
-        self.id = id
+        self.id = history_entry_id
         self.description = description
         self.time = time

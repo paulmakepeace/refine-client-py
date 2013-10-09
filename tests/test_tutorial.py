@@ -107,7 +107,8 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         self.assertEqual(p.expression, 'value[0, 3]')
         self.assertEqual(p.choices['318'].count, 2331)
         # {16}
-        commissioned_date_facet = facet.NumericFacet('Commissioned Date',
+        commissioned_date_facet = facet.NumericFacet(
+            'Commissioned Date',
             expression='value.toDate().datePart("year")')
         self.project.engine.add_facet(commissioned_date_facet)
         response = self.project.compute_facets()
@@ -115,7 +116,8 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         self.assertEqual(cd.error_count, 959)
         self.assertEqual(cd.numeric_count, 5999)
         # {17}
-        office_description_facet = facet.NumericFacet('Office Description',
+        office_description_facet = facet.NumericFacet(
+            'Office Description',
             expression=r'value.match(/\D*(\d+)\w\w Rep.*/)[0].toNumber()')
         self.project.engine.add_facet(office_description_facet)
         response = self.project.compute_facets()
@@ -212,8 +214,8 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         indexes = [row.index for row in response.rows]
         self.assertEqual(indexes, range(10))
         # {10}
-        self.project.add_column('email', 'count',
-            'facetCount(value, "value", "email")')
+        self.project.add_column(
+            'email', 'count', 'facetCount(value, "value", "email")')
         self.assertInResponse('column email by filling 10 rows')
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
@@ -258,8 +260,8 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
         self.project.add_column('pair', 'year', 'value[2,6].toNumber()')
         self.assertInResponse('filling 26185 rows')
         # {5}
-        self.project.text_transform(column='pair',
-            expression='value.substring(7).toNumber()')
+        self.project.text_transform(
+            column='pair', expression='value.substring(7).toNumber()')
         self.assertInResponse('transform on 26185 cells')
         # {6}
         self.project.rename_column('pair', 'amount')
@@ -274,15 +276,16 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
         row10 = response.rows[9]
         self.assertEqual(row10['country_name'], 'Afghanistan')
         self.assertEqual(row10['program_name'],
-                        'Department of Defense Security Assistance')
+                         'Department of Defense Security Assistance')
         self.assertEqual(row10['amount'], 113777303)
 
 
-class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
-    refinetest.RefineTestCase):
+class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
+        refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
     project_file_options = {'split_into_columns': False,
                             'header_lines': 0}
+
     def test_transpose_fixed_number_of_rows_into_columns(self):
         # Section "5. Structural Editing,
         #             Transpose Fixed Number of Rows into Columns"
@@ -293,7 +296,8 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         self.assertInResponse('Transpose every 4 cells in column Column')
         # {9} - renaming column triggers a bug in Refine
         # {10}
-        self.project.add_column('Column 1', 'Transaction',
+        self.project.add_column(
+            'Column 1', 'Transaction',
             'if(value.contains(" sent "), "send", "receive")')
         self.assertInResponse('Column 1 by filling 4 rows')
         # {11}
@@ -302,17 +306,20 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         self.project.engine.add_facet(transaction_facet)
         self.project.compute_facets()
         # {12}, {13}, {14}
-        self.project.add_column('Column 1', 'Sender',
+        self.project.add_column(
+            'Column 1', 'Sender',
             'value.partition(" sent ")[0]')
         # XXX resetting the facet shows data in rows with Transaction=receive
         #     which shouldn't have been possible with the facet.
-        self.project.add_column('Column 1', 'Recipient',
-                'value.partition(" to ")[2].partition(" on ")[0]')
-        self.project.add_column('Column 1', 'Amount',
-                'value.partition(" sent ")[2].partition(" to ")[0]')
+        self.project.add_column(
+            'Column 1', 'Recipient',
+            'value.partition(" to ")[2].partition(" on ")[0]')
+        self.project.add_column(
+            'Column 1', 'Amount',
+            'value.partition(" sent ")[2].partition(" to ")[0]')
         # {15}
         transaction_facet.reset().include('receive')
-        response = self.project.get_rows()
+        self.project.get_rows()
         # XXX there seems to be some kind of bug where the model doesn't
         #     match get_rows() output - cellIndex being returned that are
         #     out of range.
@@ -322,13 +329,11 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         # {16}
         for column, expression in (
             ('Sender',
-             'cells["Column 1"].value.partition(" from ")[2]'
-              '.partition(" on ")[0]'),
+             'cells["Column 1"].value.partition(" from ")[2].partition(" on ")[0]'),
             ('Recipient',
              'cells["Column 1"].value.partition(" received ")[0]'),
             ('Amount',
-             'cells["Column 1"].value.partition(" received ")[2]'
-             '.partition(" from ")[0]')
+             'cells["Column 1"].value.partition(" received ")[2].partition(" from ")[0]')
         ):
             self.project.text_transform(column, expression)
             self.assertInResponse('2 cells')
@@ -343,21 +348,22 @@ class TutorialTestTransposeFixedNumbeOfRowsIntoColumns(
         self.assertInResponse('Reorder columns')
 
 
-class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(
-    refinetest.RefineTestCase):
+class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
+        refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
     project_file_options = {'split_into_columns': False,
                             'header_lines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        self.project.add_column('Column', 'First Line',
-            'if(value.contains(" on "), value, null)')
+        self.project.add_column(
+            'Column', 'First Line', 'if(value.contains(" on "), value, null)')
         self.assertInResponse('Column by filling 4 rows')
         response = self.project.get_rows()
         first_names = [row['First Line'][0:10] if row['First Line'] else None
                        for row in response.rows]
-        self.assertEqual(first_names, ['Tom Dalton', None, None, None,
+        self.assertEqual(first_names, [
+            'Tom Dalton', None, None, None,
             'Morgan Law', None, None, None, None, 'Eric Batem'])
         # {22}
         self.project.move_column('First Line', 0)
@@ -369,12 +375,12 @@ class TutorialTestTransposeVariableNumbeOfRowsIntoColumns(
         self.assertEqual(response.mode, 'record-based')
         self.assertEqual(response.filtered, 4)
         # {24}
-        self.project.add_column('Column', 'Status',
-            'row.record.cells["Column"].value[-1]')
+        self.project.add_column(
+            'Column', 'Status', 'row.record.cells["Column"].value[-1]')
         self.assertInResponse('filling 18 rows')
         # {25}
-        self.project.text_transform('Column',
-            'row.record.cells["Column"].value[1, -1].join("|")')
+        self.project.text_transform(
+            'Column', 'row.record.cells["Column"].value[1, -1].join("|")')
         self.assertInResponse('18 cells')
         # {26}
         self.project.engine.mode = 'row-based'

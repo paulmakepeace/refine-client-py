@@ -28,6 +28,7 @@ def to_camel(attr):
     return (attr[0].lower() +
             re.sub(r'_(.)', lambda x: x.group(1).upper(), attr[1:]))
 
+
 def from_camel(attr):
     """convert thisAttrName to this_attr_name."""
     # Don't add an underscore for capitalized first letter
@@ -35,8 +36,8 @@ def from_camel(attr):
 
 
 class Facet(object):
-    def __init__(self, column, type, **options):
-        self.type = type
+    def __init__(self, column, facet_type, **options):
+        self.type = facet_type
         self.name = column
         self.column_name = column
         for k, v in options.items():
@@ -50,17 +51,17 @@ class Facet(object):
 class TextFilterFacet(Facet):
     def __init__(self, column, query, **options):
         super(TextFilterFacet, self).__init__(
-            column, query=query, case_sensitive=False, type='text',
+            column, query=query, case_sensitive=False, facet_type='text',
             mode='text', **options)
 
 
 class TextFacet(Facet):
     def __init__(self, column, selection=None, expression='value',
-        omit_blank=False, omit_error=False, select_blank=False,
-        select_error=False, invert=False, **options):
+                 omit_blank=False, omit_error=False, select_blank=False,
+                 select_error=False, invert=False, **options):
         super(TextFacet, self).__init__(
             column,
-            type='list',
+            facet_type='list',
             omit_blank=omit_blank,
             omit_error=omit_error,
             select_blank=select_blank,
@@ -99,37 +100,39 @@ class BoolFacet(TextFacet):
             raise ValueError('selection must be True or False.')
         if expression is None:
             raise ValueError('Missing expression')
-        super(BoolFacet, self).__init__(column,
-            expression=expression, selection=selection)
+        super(BoolFacet, self).__init__(
+            column, expression=expression, selection=selection)
 
 
 class StarredFacet(BoolFacet):
     def __init__(self, selection=None):
-        super(StarredFacet, self).__init__('',
-            expression='row.starred', selection=selection)
+        super(StarredFacet, self).__init__(
+            '', expression='row.starred', selection=selection)
 
 
 class FlaggedFacet(BoolFacet):
     def __init__(self, selection=None):
-        super(FlaggedFacet, self).__init__('',
-            expression='row.flagged', selection=selection)
+        super(FlaggedFacet, self).__init__(
+            '', expression='row.flagged', selection=selection)
 
 
 class BlankFacet(BoolFacet):
     def __init__(self, column, selection=None):
-        super(BlankFacet, self).__init__(column,
-            expression='isBlank(value)', selection=selection)
+        super(BlankFacet, self).__init__(
+            column, expression='isBlank(value)', selection=selection)
 
 
 class ReconJudgmentFacet(TextFacet):
     def __init__(self, column, **options):
-        super(ReconJudgmentFacet, self).__init__(column,
+        super(ReconJudgmentFacet, self).__init__(
+            column,
             expression=('forNonBlank(cell.recon.judgment, v, v, '
                         'if(isNonBlank(value), "(unreconciled)", "(blank)"))'),
             **options)
 
 
 # Capitalize 'From' to get around python's reserved word.
+#noinspection PyPep8Naming
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, expression='value',
                  select_blank=True, select_error=True, select_non_numeric=True,
@@ -139,7 +142,7 @@ class NumericFacet(Facet):
             From=From,
             to=to,
             expression=expression,
-            type='range',
+            facet_type='range',
             select_blank=select_blank,
             select_error=select_error,
             select_non_numeric=select_non_numeric,
@@ -155,10 +158,12 @@ class NumericFacet(Facet):
 class FacetResponse(object):
     """Class for unpacking an individual facet response."""
     def __init__(self, facet):
+        self.name = None
         for k, v in facet.items():
             if isinstance(k, bool) or isinstance(k, basestring):
                 setattr(self, from_camel(k), v)
         self.choices = {}
+
         class FacetChoice(object):
             def __init__(self, c):
                 self.count = c['c']
@@ -188,11 +193,14 @@ class FacetsResponse(object):
     def __init__(self, engine, facets):
         class FacetResponseContainer(object):
             facets = None
+
             def __init__(self, facet_responses):
                 self.facets = [FacetResponse(fr) for fr in facet_responses]
+
             def __iter__(self):
                 for facet in self.facets:
                     yield facet
+
             def __getitem__(self, index):
                 if not isinstance(index, int):
                     index = engine.facet_index_by_id[id(index)]
