@@ -60,8 +60,10 @@ frameworks is very welcome to improve/"best practice" all this.)
 
    ``sudo pip install -r requirements.txt``
 
+   (If you don't have ``pip`` visit `pip-installer.org <http://www.pip-installer.org/en/latest/installing.html#install-or-upgrade-pip>`_)
+
 #. Ensure you have a Refine server running somewhere and, if necessary, set
-   the envvars as above.
+   the environment vars as above.
 
 #. Run tests, build, and install:
 
@@ -90,7 +92,7 @@ currently include:
 Contribute
 ============
 
-Patches welcome! Source is at https://github.com/PaulMakepeace/refine-client-py
+Pull requests with passing tests welcome! Source is at https://github.com/PaulMakepeace/refine-client-py
 
 Useful Tools
 ------------
