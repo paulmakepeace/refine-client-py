@@ -25,7 +25,7 @@ install:
 clean:
 	find . -name '*.pyc' | xargs rm -f
 	# XXX is there some way of having setup.py clean up its junk?
-	rm -rf README.html build dist refine_client.egg-info distribute-*
+	rm -rf README.{html,txt} build dist refine_client.egg-info distribute-*
 
 upload: clean
 	python setup.py sdist upload
