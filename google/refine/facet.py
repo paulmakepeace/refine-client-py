@@ -213,10 +213,10 @@ class FacetsResponse(object):
 
 class Engine(object):
     """An Engine keeps track of Facets, and responses to facet computation."""
-    facets = []
-    facet_index_by_id = {}  # dict of facets by Facet object id
 
     def __init__(self, *facets, **kwargs):
+        self.facets = []
+        self.facet_index_by_id = {}  # dict of facets by Facet object id
         self.set_facets(*facets)
         self.mode = kwargs.get('mode', 'row-based')
 
