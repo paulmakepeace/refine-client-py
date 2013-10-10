@@ -17,8 +17,7 @@ import unittest
 
 from google.refine import refine
 
-PATH_TO_TEST_DATA = os.path.join('tests', 'data')
-
+PATH_TO_TEST_DATA = os.path.join(os.path.dirname(__file__), 'data')
 
 #noinspection PyPep8Naming
 class RefineTestCase(unittest.TestCase):
