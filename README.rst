@@ -114,7 +114,7 @@ Credits
 
 Paul Makepeace, author, <paulm@paulm.com>
 
-David Huynh, `initial cut <http://groups.google.com/group/google-refine/msg/ee29cf8d660e66a9>`_
+David Huynh, `initial cut <http://markmail.org/message/jsxzlcu3gn6drtb7>`_
 
 `Artfinder <http://www.artfinder.com/>`_, inspiration
 
