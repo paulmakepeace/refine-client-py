@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Google Refine history: parsing responses.
+OpenRefine history: parsing responses.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.

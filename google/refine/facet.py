@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Google Refine Facets, Engine, and Facet Responses.
+OpenRefine Facets, Engine, and Facet Responses.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.

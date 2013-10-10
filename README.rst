@@ -1,9 +1,9 @@
 ===================================
-Google Refine Python Client Library
+OpenRefine Python Client Library
 ===================================
 
-The Google Refine Python Client Library provides an interface to
-communicating with a Google Refine server.
+The OpenRefine Python Client Library provides an interface to
+communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 
 Currently, the following API is supported:
 
@@ -43,8 +43,8 @@ Currently, the following API is supported:
 Configuration
 =============
 
-By default the Google Refine server URL is http://127.0.0.1:3333
-The environment variables ``GOOGLE_REFINE_HOST`` and ``GOOGLE_REFINE_PORT``
+By default the OpenRefine server URL is http://127.0.0.1:3333
+The environment variables ``OPENREFINE_HOST`` and ``OPENREFINE_PORT``
 enable overriding the host & port.
 
 In order to run all tests, a live Refine server is needed. No existing projects
@@ -102,6 +102,12 @@ One aspect of development is watching HTTP transactions. To that end, I found
 <http://www.tuffcode.com/>`_ invaluable. The latter won't URL-decode nor nicely
 format JSON but the `Online JavaScript Beautifier <http://jsbeautifier.org/>`_
 will.
+
+History
+=======
+
+OpenRefine used to be called Google Refine, and this library used to be called
+the Google Refine Python Client Library.
 
 Credits
 =======

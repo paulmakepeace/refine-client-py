@@ -33,8 +33,8 @@ import urlparse
 from google.refine import facet
 from google.refine import history
 
-REFINE_HOST = os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1')
-REFINE_PORT = os.environ.get('GOOGLE_REFINE_PORT', '3333')
+REFINE_HOST = os.environ.get('OPENREFINE_HOST', os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1'))
+REFINE_PORT = os.environ.get('OPENREFINE_PORT', os.environ.get('GOOGLE_REFINE_PORT', '3333'))
 
 
 class RefineServer(object):
@@ -245,7 +245,7 @@ def RowsResponseFactory(column_index):
 
 
 class RefineProject:
-    """A Google Refine project."""
+    """An OpenRefine project."""
 
     def __init__(self, server, project_id=None):
         if not isinstance(server, RefineServer):

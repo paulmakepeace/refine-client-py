@@ -4,7 +4,7 @@ test_refine.py
 
 These tests require a connection to a Refine server either at
 http://127.0.0.1:3333/ or by specifying environment variables
-GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
+OPENREFINE_HOST and OPENREFINE_PORT.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
@@ -37,7 +37,7 @@ class RefineServerTest(refinetest.RefineTestCase):
             self.assertTrue(item in version_info)
 
     def test_version(self):
-        self.assertTrue(self.server.version in ('2.0', '2.1'))
+        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5'))
 
 
 class RefineTest(refinetest.RefineTestCase):

@@ -9,7 +9,7 @@ changes expected to be observed explained in the tutorial.
 
 These tests require a connection to a Refine server either at
 http://127.0.0.1:3333/ or by specifying environment variables
-GOOGLE_REFINE_HOST and GOOGLE_REFINE_PORT.
+OPENREFINE_HOST and OPENREFINE_PORT.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.

@@ -37,9 +37,9 @@ from google.refine import refine
 PARSER = optparse.OptionParser(
     usage='usage: %prog [--help | OPTIONS] [project ID/URL]')
 PARSER.add_option('-H', '--host', dest='host',
-                  help='Google Refine hostname')
+                  help='OpenRefine hostname')
 PARSER.add_option('-P', '--port', dest='port',
-                  help='Google Refine port')
+                  help='OpenRefine port')
 PARSER.add_option('-o', '--output', dest='output',
                   help='Output filename')
 # Options that are more like commands

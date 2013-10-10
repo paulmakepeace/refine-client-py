@@ -26,8 +26,8 @@ def read(filename):
 
 setup(name='refine-client',
       version='0.2.1',
-      description=('The Google Refine Python Client Library provides an '
-                   'interface to communicating with a Google Refine server.'),
+      description=('The OpenRefine Python Client Library provides an '
+                   'interface to communicating with an OpenRefine server.'),
       long_description=read('README.rst'),
       author='Paul Makepeace',
       author_email='paulm@paulm.com',
