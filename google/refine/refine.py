@@ -81,10 +81,12 @@ class RefineServer(object):
         #req.add_header('Accept-Encoding', 'gzip')
         try:
             response = urllib2.urlopen(req)
-        except urllib2.URLError as (url_error,):
+        except urllib2.HTTPError as e:
+            raise Exception('HTTP %d "%s" for %s\n\t%s' % (e.code, e.msg, e.geturl(), data))
+        except urllib2.URLError as e:
             raise urllib2.URLError(
                 '%s for %s. No Refine server reachable/running; ENV set?' %
-                (url_error, self.server))
+                (e.reason, self.server))
         if response.info().get('Content-Encoding', None) == 'gzip':
             # Need a seekable filestream for gzip
             gzip_fp = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
