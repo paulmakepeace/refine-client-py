@@ -19,10 +19,12 @@ from google.refine import refine
 
 PATH_TO_TEST_DATA = os.path.join(os.path.dirname(__file__), 'data')
 
+
 #noinspection PyPep8Naming
 class RefineTestCase(unittest.TestCase):
     project_file = None
-    project_file_options = {}
+    project_format = 'text/line-based/*sv'
+    project_options = {}
     project = None
     # Section "2. Exploration using Facets": {1}, {2}
 
@@ -34,7 +36,7 @@ class RefineTestCase(unittest.TestCase):
         self.refine = refine.Refine(self.server)
         if self.project_file:
             self.project = self.refine.new_project(
-                self.project_path(), **self.project_file_options)
+                project_file=self.project_path(), project_format=self.project_format, **self.project_options)
 
     def tearDown(self):
         if self.project:
