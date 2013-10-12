@@ -283,8 +283,8 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
 class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
-    project_file_options = {'split_into_columns': False,
-                            'header_lines': 0}
+    project_format = 'text/line-based'
+    project_options = {'header_lines': 0}
 
     def test_transpose_fixed_number_of_rows_into_columns(self):
         # Section "5. Structural Editing,
@@ -351,14 +351,15 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
 class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
-    project_file_options = {'split_into_columns': False,
-                            'header_lines': 0}
+    project_format = 'text/line-based'
+    project_options = {'header_lines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
+        column_name = 'Column 1' if self.server.version == '2.5' else 'Column'
         self.project.add_column(
-            'Column', 'First Line', 'if(value.contains(" on "), value, null)')
-        self.assertInResponse('Column by filling 4 rows')
+            column_name, 'First Line', 'if(value.contains(" on "), value, null)')
+        self.assertInResponse(column_name + ' by filling 4 rows')
         response = self.project.get_rows()
         first_names = [row['First Line'][0:10] if row['First Line'] else None
                        for row in response.rows]
@@ -376,11 +377,11 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         self.assertEqual(response.filtered, 4)
         # {24}
         self.project.add_column(
-            'Column', 'Status', 'row.record.cells["Column"].value[-1]')
+            column_name, 'Status', 'row.record.cells["' + column_name + '"].value[-1]')
         self.assertInResponse('filling 18 rows')
         # {25}
         self.project.text_transform(
-            'Column', 'row.record.cells["Column"].value[1, -1].join("|")')
+            column_name, 'row.record.cells["' + column_name + '"].value[1, -1].join("|")')
         self.assertInResponse('18 cells')
         # {26}
         self.project.engine.mode = 'row-based'
@@ -390,8 +391,8 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         self.assertInResponse('Remove 14 rows')
         self.project.engine.remove_all()
         # {28}
-        self.project.split_column('Column', separator='|')
-        self.assertInResponse('Split 4 cell(s) in column Column')
+        self.project.split_column(column_name, separator='|')
+        self.assertInResponse('Split 4 cell(s) in column ' + column_name)
 
 
 class TutorialTestWebScraping(refinetest.RefineTestCase):
