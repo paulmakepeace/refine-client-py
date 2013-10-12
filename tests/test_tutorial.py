@@ -287,6 +287,8 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
     project_options = {'header_lines': 0}
 
     def test_transpose_fixed_number_of_rows_into_columns(self):
+        if self.server.version == '2.5':
+            self.project.rename_column('Column 1', 'Column')
         # Section "5. Structural Editing,
         #             Transpose Fixed Number of Rows into Columns"
         # {1}
@@ -294,7 +296,11 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         # {8}
         self.project.transpose_rows_into_columns('Column', 4)
         self.assertInResponse('Transpose every 4 cells in column Column')
-        # {9} - renaming column triggers a bug in Refine
+        # {9} - renaming column triggers a bug in Refine <= 2.1
+        if self.server.version in ('2.5',):
+            self.project.rename_column('Column 2', 'Address')
+            self.project.rename_column('Column 3', 'Address 2')
+            self.project.rename_column('Column 4', 'Status')
         # {10}
         self.project.add_column(
             'Column 1', 'Transaction',
@@ -356,10 +362,11 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        column_name = 'Column 1' if self.server.version == '2.5' else 'Column'
+        if self.server.version == '2.5':
+            self.project.rename_column('Column 1', 'Column')
         self.project.add_column(
-            column_name, 'First Line', 'if(value.contains(" on "), value, null)')
-        self.assertInResponse(column_name + ' by filling 4 rows')
+            'Column', 'First Line', 'if(value.contains(" on "), value, null)')
+        self.assertInResponse('Column by filling 4 rows')
         response = self.project.get_rows()
         first_names = [row['First Line'][0:10] if row['First Line'] else None
                        for row in response.rows]
@@ -377,11 +384,11 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         self.assertEqual(response.filtered, 4)
         # {24}
         self.project.add_column(
-            column_name, 'Status', 'row.record.cells["' + column_name + '"].value[-1]')
+            'Column', 'Status', 'row.record.cells["Column"].value[-1]')
         self.assertInResponse('filling 18 rows')
         # {25}
         self.project.text_transform(
-            column_name, 'row.record.cells["' + column_name + '"].value[1, -1].join("|")')
+            'Column', 'row.record.cells["Column"].value[1, -1].join("|")')
         self.assertInResponse('18 cells')
         # {26}
         self.project.engine.mode = 'row-based'
@@ -391,8 +398,8 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         self.assertInResponse('Remove 14 rows')
         self.project.engine.remove_all()
         # {28}
-        self.project.split_column(column_name, separator='|')
-        self.assertInResponse('Split 4 cell(s) in column ' + column_name)
+        self.project.split_column('Column', separator='|')
+        self.assertInResponse('Split 4 cell(s) in column Column')
 
 
 class TutorialTestWebScraping(refinetest.RefineTestCase):
