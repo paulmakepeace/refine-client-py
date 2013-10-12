@@ -96,9 +96,9 @@ class RefineServer(object):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         response = json.loads(self.urlopen(*args, **kwargs).read())
         if 'code' in response and response['code'] not in ('ok', 'pending'):
-            raise Exception(
-                response['code'] + ': ' +
-                response.get('message', response.get('stack', response)))
+            error_message = ('server ' + response['code'] + ': ' +
+                             response.get('message', response.get('stack', response)))
+            raise Exception(error_message)
         return response
 
     def get_version(self):
@@ -145,16 +145,79 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
-    def new_project(self, project_file=None, project_url=None,
-                    project_name=None,
-                    split_into_columns=True,
-                    separator='',
-                    ignore_initial_non_blank_lines=0,
-                    header_lines=1,  # use 0 if your data has no header
-                    skip_initial_data_rows=0,
-                    limit=None,  # no more than this number of rows
-                    guess_value_type=True,  # numbers, dates, etc.
-                    ignore_quotes=False):
+    new_project_defaults = {
+        'text/line-based/*sv': {
+            'encoding': '',
+            'separator': ",",
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'guess_cell_value_types': True,
+            'process_quotes': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based': {
+            'encoding': '',
+            'lines_per_row': 1,
+            'ignore_lines': -1,
+            'limit': -1,
+            'skip_data_lines': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/fixed-width': {
+            'encoding': '',
+            'column_widths': [20],
+            'ignore_lines': -1,
+            'header_lines': 0,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'guess_cell_value_types': False,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/pc-axis': {
+            'encoding': '',
+            'limit': -1,
+            'skip_data_lines': -1,
+            'include_file_sources': False},
+        'text/rdf+n3': {'encoding': ''},
+        'text/xml/ods': {
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'binary/xls': {
+            'xml_based': False,
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False}
+    }
+
+    def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
+                    encoding='',
+                    separator=',',
+                    ignore_lines=-1,
+                    header_lines=1,
+                    skip_data_lines=0,
+                    limit=-1,
+                    store_blank_rows=True,
+                    guess_cell_value_types=True,
+                    process_quotes=True,
+                    store_blank_cells_as_nulls=True,
+                    include_file_sources=False,
+                    **opts):
 
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
@@ -166,13 +229,18 @@ class Refine:
                 return ''
             return str(opt)
         options = {
-            'split-into-columns': s(split_into_columns),
+            'format': project_format,
+            'encoding': s(encoding),
             'separator': s(separator),
-            'ignore': s(ignore_initial_non_blank_lines),
+            'ignore': s(ignore_lines),
             'header-lines': s(header_lines),
-            'skip': s(skip_initial_data_rows), 'limit': s(limit),
-            'guess-value-type': s(guess_value_type),
-            'ignore-quotes': s(ignore_quotes),
+            'skip': s(skip_data_lines), 'limit': s(limit),
+            'guess-cell-value-types': s(guess_cell_value_types),
+            # don't know these:
+            'process-quotes': s(process_quotes),
+            'store-blank-rows': s(store_blank_rows),
+            'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
+            'include-file-sources': s(include_file_sources),
         }
         if project_url is not None:
             options['url'] = project_url
