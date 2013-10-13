@@ -147,10 +147,11 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
+    # These aren't used yet but are included for reference
     new_project_defaults = {
         'text/line-based/*sv': {
             'encoding': '',
-            'separator': ",",
+            'separator': ',',
             'ignore_lines': -1,
             'header_lines': 1,
             'skip_data_lines': 0,
@@ -226,7 +227,7 @@ class Refine:
 
         def s(opt):
             if isinstance(opt, bool):
-                return 'on' if opt else ''
+                return 'true' if opt else 'false'
             if opt is None:
                 return ''
             return str(opt)
@@ -234,16 +235,17 @@ class Refine:
             'format': project_format,
             'encoding': s(encoding),
             'separator': s(separator),
-            'ignore': s(ignore_lines),
+            'ignore-lines': s(ignore_lines),
             'header-lines': s(header_lines),
-            'skip': s(skip_data_lines), 'limit': s(limit),
-            'guess-cell-value-types': s(guess_cell_value_types),
-            # don't know these:
+            'skip-data-lines': s(skip_data_lines),
+            'limit': s(limit),
+            'guess-value-type': s(guess_cell_value_types),
             'process-quotes': s(process_quotes),
             'store-blank-rows': s(store_blank_rows),
             'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
             'include-file-sources': s(include_file_sources),
         }
+
         if project_url is not None:
             options['url'] = project_url
         elif project_file is not None:
