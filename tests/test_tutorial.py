@@ -22,6 +22,7 @@ from tests import refinetest
 
 class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+    project_options = {'guess_cell_value_types': True}
 
     def test_get_rows(self):
         # Section "2. Exploration using Facets": {3}
@@ -129,6 +130,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+    project_options = {'guess_cell_value_types': True}
 
     def test_editing(self):
         # Section "3. Cell Editing": {1}
@@ -287,7 +289,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
     project_options = {'header_lines': 0}
 
     def test_transpose_fixed_number_of_rows_into_columns(self):
-        if self.server.version == '2.5':
+        if self.server.version not in ('2.0', '2.1'):
             self.project.rename_column('Column 1', 'Column')
         # Section "5. Structural Editing,
         #             Transpose Fixed Number of Rows into Columns"
@@ -297,7 +299,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         self.project.transpose_rows_into_columns('Column', 4)
         self.assertInResponse('Transpose every 4 cells in column Column')
         # {9} - renaming column triggers a bug in Refine <= 2.1
-        if self.server.version in ('2.5',):
+        if self.server.version not in ('2.0', '2.1'):
             self.project.rename_column('Column 2', 'Address')
             self.project.rename_column('Column 3', 'Address 2')
             self.project.rename_column('Column 4', 'Status')
@@ -362,7 +364,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        if self.server.version == '2.5':
+        if self.server.version not in ('2.0', '2.1') :
             self.project.rename_column('Column 1', 'Column')
         self.project.add_column(
             'Column', 'First Line', 'if(value.contains(" on "), value, null)')
