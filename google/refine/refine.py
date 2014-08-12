@@ -234,9 +234,9 @@ class Refine:
 
         # the new APIs requires a json in the 'option' POST or GET argument
         # POST is broken at the moment, so we send it in the URL
-        new_style_options = {
+        new_style_options = dict(opts, **{
             'encoding': s(encoding),
-        }
+        })
         params = {
             'options': json.dumps(new_style_options),
         }
