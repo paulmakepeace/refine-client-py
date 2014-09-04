@@ -231,9 +231,19 @@ class Refine:
             if opt is None:
                 return ''
             return str(opt)
+
+        # the new APIs requires a json in the 'option' POST or GET argument
+        # POST is broken at the moment, so we send it in the URL
+        new_style_options = dict(opts, **{
+            'encoding': s(encoding),
+        })
+        params = {
+            'options': json.dumps(new_style_options),
+        }
+
+        # old style options
         options = {
             'format': project_format,
-            'encoding': s(encoding),
             'separator': s(separator),
             'ignore-lines': s(ignore_lines),
             'header-lines': s(header_lines),
@@ -258,7 +268,9 @@ class Refine:
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
-        response = self.server.urlopen('create-project-from-upload', options)
+        response = self.server.urlopen(
+            'create-project-from-upload', options, params
+        )
         # expecting a redirect to the new project containing the id in the url
         url_params = urlparse.parse_qs(
             urlparse.urlparse(response.geturl()).query)
