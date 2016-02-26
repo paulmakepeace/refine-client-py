@@ -23,12 +23,12 @@ import json
 import gzip
 import os
 import re
-import StringIO
+from io import StringIO
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import urllib2_file
-import urllib2
-import urlparse
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 from google.refine import facet
 from google.refine import history
@@ -74,17 +74,17 @@ class RefineServer(object):
             else:
                 params['project'] = project_id
         if params:
-            url += '?' + urllib.urlencode(params)
-        req = urllib2.Request(url)
+            url += '?' + urllib.parse.urlencode(params)
+        req = urllib.request.Request(url)
         if data:
             req.add_data(data)  # data = urllib.urlencode(data)
         #req.add_header('Accept-Encoding', 'gzip')
         try:
-            response = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+            response = urllib.request.urlopen(req)
+        except urllib.error.HTTPError as e:
             raise Exception('HTTP %d "%s" for %s\n\t%s' % (e.code, e.msg, e.geturl(), data))
-        except urllib2.URLError as e:
-            raise urllib2.URLError(
+        except urllib.error.URLError as e:
+            raise urllib.error.URLError(
                 '%s for %s. No Refine server reachable/running; ENV set?' %
                 (e.reason, self.server))
         if response.info().get('Content-Encoding', None) == 'gzip':
@@ -272,8 +272,8 @@ class Refine:
             'create-project-from-upload', options, params
         )
         # expecting a redirect to the new project containing the id in the url
-        url_params = urlparse.parse_qs(
-            urlparse.urlparse(response.geturl()).query)
+        url_params = urllib.parse.parse_qs(
+            urllib.parse.urlparse(response.geturl()).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
             return RefineProject(self.server, project_id)
@@ -429,7 +429,7 @@ class RefineProject:
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
-        url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
+        url = ('export-rows/' + urllib.parse.quote(self.project_name()) + '.' +
                export_format)
         return self.do_raw(url, data={'format': export_format})
 

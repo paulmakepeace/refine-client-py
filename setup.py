@@ -25,7 +25,7 @@ def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 setup(name='refine-client',
-      version='0.2.1',
+      version='0.2.2',
       description=('The OpenRefine Python Client Library provides an '
                    'interface to communicating with an OpenRefine server.'),
       long_description=read('README.rst'),

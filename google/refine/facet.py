@@ -40,11 +40,11 @@ class Facet(object):
         self.type = facet_type
         self.name = column
         self.column_name = column
-        for k, v in options.items():
+        for k, v in list(options.items()):
             setattr(self, k, v)
 
     def as_dict(self):
-        return dict([(to_camel(k), v) for k, v in self.__dict__.items()
+        return dict([(to_camel(k), v) for k, v in list(self.__dict__.items())
                      if v is not None])
 
 
@@ -159,8 +159,8 @@ class FacetResponse(object):
     """Class for unpacking an individual facet response."""
     def __init__(self, facet):
         self.name = None
-        for k, v in facet.items():
-            if isinstance(k, bool) or isinstance(k, basestring):
+        for k, v in list(facet.items()):
+            if isinstance(k, bool) or isinstance(k, str):
                 setattr(self, from_camel(k), v)
         self.choices = {}
 
@@ -268,7 +268,7 @@ class Sorting(object):
             criteria = [criteria]
         for criterion in criteria:
             # A string criterion defaults to a string sort on that column
-            if isinstance(criterion, basestring):
+            if isinstance(criterion, str):
                 criterion = {
                     'column': criterion,
                     'valueType': 'string',

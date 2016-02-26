@@ -53,14 +53,14 @@ PARSER.add_option('-f', '--apply', dest='apply',
 
 def list_projects():
     """Query the Refine server and list projects by ID: name."""
-    projects = refine.Refine(refine.RefineServer()).list_projects().items()
+    projects = list(refine.Refine(refine.RefineServer()).list_projects().items())
 
     def date_to_epoch(json_dt):
         """Convert a JSON date time into seconds-since-epoch."""
         return time.mktime(time.strptime(json_dt, '%Y-%m-%dT%H:%M:%SZ'))
     projects.sort(key=lambda v: date_to_epoch(v[1]['modified']), reverse=True)
     for project_id, project_info in projects:
-        print('{0:>14}: {1}'.format(project_id, project_info['name']))
+        print(('{0:>14}: {1}'.format(project_id, project_info['name'])))
 
 
 def export_project(project, options):
@@ -96,8 +96,8 @@ def main():
         if options.apply:
             response = project.apply_operations(options.apply)
             if response != 'ok':
-                print >>sys.stderr, 'Failed to apply %s: %s' % (options.apply,
-                                                                response)
+                print('Failed to apply %s: %s' % (options.apply,
+                                                                response), file=sys.stderr)
         if options.export:
             export_project(project, options)
 
