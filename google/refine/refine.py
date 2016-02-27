@@ -75,10 +75,11 @@ class RefineServer(object):
                 params['project'] = project_id
         if params:
             url += '?' + urllib.parse.urlencode(params)
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, data = data, headers={'Accept-Encoding': 'gzip'})
         if data:
-            req.add_data(data)  # data = urllib.urlencode(data)
-        #req.add_header('Accept-Encoding', 'gzip')
+            req = urllib.request.Request(url, data = data, headers={'Accept-Encoding': 'gzip'})
+        else:
+            req = urllib.request.Request(url, headers={'Accept-Encoding': 'gzip'})
         try:
             response = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
