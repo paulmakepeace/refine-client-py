@@ -26,9 +26,9 @@ import re
 from io import StringIO
 import time
 import urllib.request, urllib.parse, urllib.error
-import urllib2_file
-import urllib.request, urllib.error, urllib.parse
-import urllib.parse
+# import urllib2_file
+# import urllib.request, urllib.error, urllib.parse
+# import urllib.parse
 
 from google.refine import facet
 from google.refine import history
