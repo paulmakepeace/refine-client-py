@@ -6,6 +6,8 @@ MAINTAINER felixlohmeier <felixlohmeier@opencultureconsulting.com>
 # Install python, pip, wget, unzip and bash
 RUN apk add --no-cache \
 	bash \
+	curl \
+	grep \
 	python \
 	py-pip \
 	wget \
