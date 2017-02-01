@@ -16,18 +16,18 @@ RUN apk add --no-cache \
 # Install dependency urllib2_file
 RUN pip install urllib2_file==0.2.1
 
-# Download and build refine-client-py
+# Download and build openrefine-client-master
 WORKDIR /app
 RUN wget --no-check-certificate https://github.com/felixlohmeier/openrefine-client/archive/master.zip
 RUN unzip master.zip && rm master.zip
-RUN python refine-client-py-master/setup.py build
-RUN python refine-client-py-master/setup.py install
+RUN python openrefine-client-master/setup.py build
+RUN python openrefine-client-master/setup.py install
 
 # Change docker WORKDIR (shall be mounted)
 WORKDIR /data
 
 # Execute refine.py
-ENTRYPOINT ["/app/refine-client-py-master/refine.py"]
+ENTRYPOINT ["/app/openrefine-client-master/refine.py"]
 
 # Default command: print help
 CMD ["-h"]
