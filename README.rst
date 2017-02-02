@@ -5,6 +5,11 @@ OpenRefine Python Client Library
 The OpenRefine Python Client Library provides an interface to
 communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 
+If you are looking for a command line interface to OpenRefine then you might be interested in the docker variation of this library:
+`felixlohmeier/openrefine-client<https://hub.docker.com/r/felixlohmeier/openrefine-client/>`_. You will find examples for batch processing (e.g. for usage in shell scripts) there.
+
+If you are familiar with python and want to go into more depth, then read on!
+
 Currently, the following API is supported:
 
 - project creation/import, deletion, export
