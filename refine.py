@@ -513,11 +513,11 @@ def main():
     """Main."""
 
     # get environment variables in docker network
-    docker_host = os.environ.get('OPENREFINE_PORT_3333_TCP_ADDR')
+    docker_host = os.environ.get('OPENREFINE_SERVER_PORT_3333_TCP_ADDR')
     if docker_host:
         os.environ["OPENREFINE_HOST"] = docker_host
         refine.REFINE_HOST = docker_host
-    docker_port = os.environ.get('OPENREFINE_PORT_3333_TCP_PORT')
+    docker_port = os.environ.get('OPENREFINE_SERVER_PORT_3333_TCP_PORT')
     if docker_port:
         os.environ["OPENREFINE_HOST"] = docker_port
         refine.REFINE_PORT = docker_port

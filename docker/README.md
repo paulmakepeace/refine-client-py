@@ -46,7 +46,7 @@ There are some client libraries for OpenRefine that communicate with the [OpenRe
 
 2) start server
 
- ```docker run --d --name=openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine -i 0.0.0.0 -m 4G -d /data```
+ ```docker run -d --name=openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine -i 0.0.0.0 -m 4G -d /data```
 
 3) create project (import file)
 
