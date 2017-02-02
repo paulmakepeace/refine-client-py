@@ -4,23 +4,32 @@ There are some client libraries for OpenRefine that communicate with the [OpenRe
 
 ### basic usage
 
-1) start server:
-```docker run -d --name=openrefine-server felixlohmeier/openrefine```
+**1) start server:**
+> docker run -d --name=openrefine-server felixlohmeier/openrefine
 
-2) run client with one of the following commands:
+**2) run client with one of the following commands:**
 
-- list projects: ```docker run --rm --link openrefine-server felixlohmeier/openrefine-client --list```
-- create project from file: ```docker run --rm --link openrefine-server felixlohmeier/openrefine-client --create [FILE] [PROJECTID]```
-- apply rules from json file: ```docker run --rm --link openrefine-server felixlohmeier/openrefine-client --apply [FILE.json] [PROJECTID]```
-- export project to file: ```docker run --rm --link openrefine-server felixlohmeier/openrefine-client --export [PROJECTID] --output=FILE.tsv```
-- check help screen for more options: ```docker run --rm --link openrefine-server felixlohmeier/openrefine-client --help```
+list projects:
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --list
 
-3) cleanup:
-```docker stop openrefine-server && docker rm openrefine-server```
+create project from file:
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --create [FILE] [PROJECTID]
+
+apply rules from json file:
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --apply [FILE.json] [PROJECTID]
+
+export project to file:
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --export [PROJECTID] --output=FILE.tsv
+
+check help screen for more options:
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --help
+
+**3) cleanup:**
+> docker stop openrefine-server && docker rm openrefine-server
 
 ### example for customized run commands in interactive mode (e.g. for usage in terminals)
 
-1) start server in terminal A:
+**1) start server in terminal A:**
 
 ```docker run --rm --name=openrefine-server -p 80:3333 -v /home/felix/refine:/data:z felixlohmeier/openrefine -i 0.0.0.0 -m 4G -d /data```
 
@@ -33,7 +42,7 @@ There are some client libraries for OpenRefine that communicate with the [OpenRe
 * set refine workspace to /data
 * OpenRefine should be available at http://localhost
 
-2) start client in terminal B (prints help screen):
+**2) start client in terminal B (prints help screen):**
 
 ```docker run --rm --link openrefine-server -v /home/felix/refine:/data:z felixlohmeier/openrefine-client```
 
@@ -44,31 +53,31 @@ There are some client libraries for OpenRefine that communicate with the [OpenRe
 
 ### example for customized run commands in detached mode (e.g. for usage in shell scripts)
 
-1) define variables (bring your own example data)
+**1) define variables (bring your own example data)**
 > workingdir=/home/felix/refine
 > inputfile=example.csv
 > jsonfile=test.json
 
-2) start server
+**2) start server**
 
  ```docker run -d --name=openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine -i 0.0.0.0 -m 4G -d /data```
 
-3) create project (import file)
+**3) create project (import file)**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine-client --create $inputfile```
 
-4) get project id
+**4) get project id**
 
 ```project=($(docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --list | cut -c 2-14))```
 
-5) apply transformations from json file
+**5) apply transformations from json file**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --apply ${jsonfile} ${project}```
 
-6) export project to file
+**6) export project to file**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --export --output=${project}.tsv ${project}```
 
-7) cleanup
+**7) cleanup**
 
 ```docker stop -t=500 openrefine-server && docker rm openrefine-server```
