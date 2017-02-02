@@ -16,7 +16,7 @@ Features
 Command line interface:
 
 - list projects: refine.py --list
-- create project from file: refine.py --create [FILE] [PROJECTID]
+- create project from file: refine.py --create [FILE]
 - apply rules from json file: refine.py --apply [FILE.json] [PROJECTID]
 - export project to file: refine.py --export [PROJECTID] --output=FILE.tsv
 

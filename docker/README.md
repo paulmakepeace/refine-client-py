@@ -13,7 +13,7 @@ list projects:
 > docker run --rm --link openrefine-server felixlohmeier/openrefine-client --list
 
 create project from file:
-> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --create [FILE] [PROJECTID]
+> docker run --rm --link openrefine-server felixlohmeier/openrefine-client --create [FILE]
 
 apply rules from json file:
 > docker run --rm --link openrefine-server felixlohmeier/openrefine-client --apply [FILE.json] [PROJECTID]
