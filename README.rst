@@ -17,7 +17,7 @@ Command line interface:
 
 - list projects: refine.py --list
 - create project from file: refine.py --create [FILE]
-- apply rules from json file: refine.py --apply [FILE.json] [PROJECTID]
+- apply `rules from json file <http://kb.refinepro.com/2012/06/google-refine-json-and-my-notepad-or.html>`_: refine.py --apply [FILE.json] [PROJECTID]
 - export project to file: refine.py --export [PROJECTID] --output=FILE.tsv
 
 Currently, the following API is supported:

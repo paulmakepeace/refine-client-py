@@ -15,7 +15,7 @@ list projects:
 create project from file:
 > docker run --rm --link openrefine-server felixlohmeier/openrefine-client --create [FILE]
 
-apply rules from json file:
+apply [rules from json file](http://kb.refinepro.com/2012/06/google-refine-json-and-my-notepad-or.html):
 > docker run --rm --link openrefine-server felixlohmeier/openrefine-client --apply [FILE.json] [PROJECTID]
 
 export project to file:
