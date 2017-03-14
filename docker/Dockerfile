@@ -9,7 +9,7 @@ RUN apk add --no-cache \
 	wget \
 	unzip \
 	curl \
-    grep \
+    grep
 
 # Download and build openrefine-client-master
 WORKDIR /app
