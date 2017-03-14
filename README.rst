@@ -5,8 +5,8 @@ OpenRefine Python Client Library
 The OpenRefine Python Client Library provides an interface to
 communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 
-If you are looking for a ready to use command line interface to OpenRefine then you might be interested in the docker variation of this library:
-`felixlohmeier/openrefine-client <https://hub.docker.com/r/felixlohmeier/openrefine-client/>`_. You will find examples for batch processing (e.g. for usage in shell scripts) there.
+If you are looking for a ready to use command line interface to OpenRefine for batch processing then you might be interested in the following bash shell script:
+`felixlohmeier/openrefine-batch <https://github.com/felixlohmeier/openrefine-batch>`_
 
 If you are familiar with python and want to go into more depth, then read on!
 
@@ -70,12 +70,6 @@ Installation
 
 (Someone with more familiarity with python's byzantine collection of installation
 frameworks is very welcome to improve/"best practice" all this.)
-
-#. Install dependencies, which currently is ``urllib2_file``:
-
-   ``sudo pip install -r requirements.txt``
-
-   (If you don't have ``pip`` visit `pip-installer.org <http://www.pip-installer.org/en/latest/installing.html#install-or-upgrade-pip>`_)
 
 #. Ensure you have a Refine server running somewhere and, if necessary, set
    the environment vars as above.
