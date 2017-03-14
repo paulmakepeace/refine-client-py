@@ -2,6 +2,8 @@
 
 There are some client libraries for OpenRefine that communicate with the [OpenRefine API](https://github.com/OpenRefine/OpenRefine/wiki/OpenRefine-API). I have prepared a docker container on top of the [Python Library from PaulMakepeace](https://github.com/PaulMakepeace/refine-client-py/) and extended the CLI with some options to create new OpenRefine projects from files.
 
+If you are looking for a ready to use command line interface to OpenRefine for batch processing then you might be interested in the following bash shell script: [felixlohmeier/openrefine-batch](https://github.com/felixlohmeier/openrefine-batch)
+
 ### basic usage
 
 **1) start server:**
@@ -62,22 +64,26 @@ check help screen for more options:
 
  ```docker run -d --name=openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine -i 0.0.0.0 -m 4G -d /data```
 
-**3) create project (import file)**
+**3) wait until server is ready**
+
+```until docker run --rm --link openrefine-server --entrypoint /usr/bin/curl felixlohmeier/openrefine-client --silent -N http://openrefine-server:3333 | cat | grep -q -o "OpenRefine" ; do sleep 1; done```
+
+**4) create project (import file)**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data:z felixlohmeier/openrefine-client --create $inputfile```
 
-**4) get project id**
+**5) get project id**
 
 ```project=($(docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --list | cut -c 2-14))```
 
-**5) apply transformations from json file**
+**6) apply transformations from json file**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --apply ${jsonfile} ${project}```
 
-**6) export project to file**
+**7) export project to file**
 
 ```docker run --rm --link openrefine-server -v ${workingdir}:/data felixlohmeier/openrefine-client --export --output=${project}.tsv ${project}```
 
-**7) cleanup**
+**8) cleanup**
 
 ```docker stop -t=500 openrefine-server && docker rm openrefine-server```
