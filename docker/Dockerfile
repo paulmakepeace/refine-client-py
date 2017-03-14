@@ -7,7 +7,7 @@ MAINTAINER felixlohmeier <felixlohmeier@opencultureconsulting.com>
 RUN apk add --no-cache \
 	python \
 	wget \
-	unzip
+	unzip \
 	curl \
     grep \
 
