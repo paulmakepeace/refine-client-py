@@ -20,6 +20,7 @@ RUN unzip master.zip && rm master.zip
 WORKDIR /data
 
 # Execute refine.py
+RUN chmod +x /app/openrefine-client-master/refine.py
 ENTRYPOINT ["/app/openrefine-client-master/refine.py"]
 
 # Default command: print help
