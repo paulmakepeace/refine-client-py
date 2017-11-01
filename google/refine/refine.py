@@ -26,7 +26,7 @@ import re
 import StringIO
 import time
 import urllib
-import urllib2_file
+from google.urllib2_file import urllib2_file
 import urllib2
 import urlparse
 
