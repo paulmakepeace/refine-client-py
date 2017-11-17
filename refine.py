@@ -466,7 +466,7 @@ def create_project(options, file_fullpath):
 
     if 'project' in url_params:
         project_id = url_params['project'][0]
-        print('New project: ' + project_id)
+        print 'New project: ' + project_id
     else:
         raise Exception('Project not created')
 
@@ -480,7 +480,7 @@ def create_project(options, file_fullpath):
             if 'processes' in url_params and len(url_params['processes']) > 0:
                 time.sleep(polling_delay)
             else:
-                print('done')
+                print 'done'
                 return
    
     # check number of rows
@@ -491,7 +491,7 @@ def create_project(options, file_fullpath):
     response_body = response.read()
     response_json = json.loads(response_body)
     if 'total' in response_body and response_json['total'] > 0:
-        print('Number of rows:', response_json['total'])
+        print 'Number of rows:', response_json['total']
     else:
         raise Exception('Project contains 0 rows. Please check --help for mandatory arguments for xml, json, xls and ods')
 

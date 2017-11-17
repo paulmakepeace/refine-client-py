@@ -3,5 +3,4 @@ dist
 *.pyc
 .*
 refine_client.egg-info
-refine.spec
 README.html
