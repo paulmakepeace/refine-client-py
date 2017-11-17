@@ -94,8 +94,6 @@ group5.add_option('--sheets', dest='sheets',
 PARSER.add_option_group(group5)
 
 group6 = optparse.OptionGroup(PARSER, 'More create options (optional, only together with --format)')
-group6.add_option('--projectName', dest='projectName',
-                  help='(all formats), default: (filename)')
 group6.add_option('--limit', dest='limit',
                   help='(all formats), default: -1')
 group6.add_option('--includeFileSources', dest='includeFileSources',
@@ -116,8 +114,6 @@ group6.add_option('--skipDataLines', dest='skipDataLines',
                   help='(csv, tsv, line-based, fixed-width, xlsx, ods), default: 0')
 group6.add_option('--storeBlankRows', dest='storeBlankRows',
                   help='(csv, tsv, line-based, fixed-width, xlsx, ods), default: true')
-group6.add_option('--separator', dest='separator',
-                  help='(csv, tsv), default: csv: , tsv: \\t')
 group6.add_option('--processQuotes', dest='processQuotes',
                   help='(csv, tsv), default: true')
 group6.add_option('--storeBlankCellsAsNulls',
@@ -170,9 +166,6 @@ def create_project(options, file_fullpath):
         encoding = ''
         if options.encoding:
             encoding = options.encoding
-        separator = ','
-        if options.separator:
-            separator = options.separator
         ignoreLines = '-1'
         if options.ignoreLines:
             ignoreLines = options.ignoreLines
@@ -201,7 +194,7 @@ def create_project(options, file_fullpath):
         if options.includeFileSources:
             includeFileSources = options.includeFileSources
         input_options = '{"encoding":"' + encoding + '"' \
-            + ',"separator":"' + separator + '"' \
+            + ',"separator":","' \
             + ',"ignoreLines":' + ignoreLines \
             + ',"headerLines":' + headerLines \
             + ',"skipDataLines":' + skipDataLines \
@@ -219,9 +212,6 @@ def create_project(options, file_fullpath):
         encoding = ''
         if options.encoding:
             encoding = options.encoding
-        separator = '\\t'
-        if options.separator:
-            separator = options.separator
         ignoreLines = '-1'
         if options.ignoreLines:
             ignoreLines = options.ignoreLines
@@ -250,7 +240,7 @@ def create_project(options, file_fullpath):
         if options.includeFileSources:
             includeFileSources = options.includeFileSources
         input_options = '{"encoding":"' + encoding + '"' \
-            + ',"separator":"' + separator + '"' \
+            + ',"separator":"\\t"' \
             + ',"ignoreLines":' + ignoreLines \
             + ',"headerLines":' + headerLines \
             + ',"skipDataLines":' + skipDataLines \
@@ -447,14 +437,11 @@ def create_project(options, file_fullpath):
             + ',"includeFileSources":' + includeFileSources \
             + '}'
 
-    file_name = os.path.split(file_fullpath)[-1]
-    projectName = file_name
-    if options.projectName:
-        projectName = options.projectName
     data = {}
+    file_name = os.path.split(file_fullpath)[-1]
     data['project-file'] = {'fd': open(file_fullpath),
                             'filename': file_name}
-    data['project-name'] = projectName
+    data['project-name'] = file_name
 
     response = urllib2.urlopen(servernewproject
                                + '/command/core/create-project-from-upload?format='
