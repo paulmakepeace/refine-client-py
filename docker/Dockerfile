@@ -3,13 +3,17 @@ MAINTAINER felixlohmeier <felixlohmeier@opencultureconsulting.com>
 # The OpenRefine Python Client Library from PaulMakepeace provides an interface to communicating with an OpenRefine server. This fork extends the CLI with some options to create new OpenRefine projects from files.
 # Source: https://github.com/felixlohmeier/openrefine-client
 
-# Install python, wget, unzip, curl and grep
+# Install python, pip, wget, unzip, curl and grep
 RUN apk add --no-cache \
 	python \
+	py-pip \
 	wget \
 	unzip \
 	curl \
     grep
+
+# Install dependency urllib2_file
+RUN pip install urllib2_file==0.2.1
 
 # Download and build openrefine-client-master
 WORKDIR /app
