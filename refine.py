@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 """
-Script to provide a command line interface to a Refine server.
-
-Examples,
-
-refine --list    # show list of Refine projects, ID: name
-refine --export 1234... > project.tsv
-refine --export --output=project.xls 1234...
-refine --apply trim.json 1234...
+Script to provide a command line interface to a OpenRefine server.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
@@ -34,25 +27,111 @@ import time
 from google.refine import refine
 
 
-PARSER = optparse.OptionParser(
-    usage='usage: %prog [--help | OPTIONS] [project ID/URL]')
-PARSER.add_option('-H', '--host', dest='host',
-                  help='OpenRefine hostname')
-PARSER.add_option('-P', '--port', dest='port',
-                  help='OpenRefine port')
-PARSER.add_option('-o', '--output', dest='output',
-                  help='Output filename')
-# Options that are more like commands
-PARSER.add_option('-l', '--list', dest='list', action='store_true',
+class myParser(optparse.OptionParser):
+
+    def format_epilog(self, formatter):
+        return self.epilog
+
+PARSER = \
+    myParser(description='Script to provide a command line interface to an OpenRefine server.',
+             usage='usage: %prog [--help | OPTIONS]',
+             epilog="""
+Examples:
+  --list # show list of projects (id: name)
+  --list -H 127.0.0.1 -P 80 # specify hostname and port
+  --info 2161595260364 # show metadata of project 
+  --info "christmas gifts"
+  --create example.csv # create new project from file example.csv
+  --create example.tsv --encoding=UTF-8
+  --create example.xml --recordPath=collection --recordPath=record
+  --create example.json --recordPath=_ --recordPath=_
+  --create example.xlsx --sheets=0
+  --create example.ods --sheets=0
+  --apply trim.json 2161595260364 # apply rules in trim.json to project 1234...
+  --apply trim.json "christmas gifts"
+  --export 2161595260364 > project.tsv # export project 2161595260364 in tsv format
+  --export "christmas gifts" > project.tsv
+  --export --output=project.xlsx 2161595260364 # export project in xlsx format
+  --export --output=project.xlsx "christmas gifts"
+  --delete 2161595260364 # delete project 
+  --delete "christmas gifts"
+""")
+
+group1 = optparse.OptionGroup(PARSER, 'Connection options')
+group1.add_option('-H', '--host', dest='host', metavar='127.0.0.1',
+                  help='OpenRefine hostname (default: 127.0.0.1)')
+group1.add_option('-P', '--port', dest='port', metavar='3333',
+                  help='OpenRefine port (default: 3333)')
+PARSER.add_option_group(group1)
+
+group2 = optparse.OptionGroup(PARSER, 'Commands')
+group2.add_option('-c', '--create', dest='create', metavar='[FILE]',
+                  help='Create project from file. The filename ending (e.g. .csv) defines the input format (csv,tsv,xml,json,txt,xls,xlsx,ods)')
+group2.add_option('-l', '--list', dest='list', action='store_true',
                   help='List projects')
-PARSER.add_option('-E', '--export', dest='export', action='store_true',
-                  help='Export project')
-PARSER.add_option('-f', '--apply', dest='apply',
-                  help='Apply a JSON commands file to a project')
+PARSER.add_option_group(group2)
+
+group3 = optparse.OptionGroup(PARSER, 'Commands with argument [PROJECTID/PROJECTNAME]')
+group3.add_option('-d', '--delete', dest='delete', action='store_true',
+                  help='Delete project')
+group3.add_option('-f', '--apply', dest='apply', metavar='[FILE]',
+                  help='Apply JSON rules to OpenRefine project')
+group3.add_option('-E', '--export', dest='export', action='store_true',
+                  help='Export project in tsv format to stdout.')
+group3.add_option('-o', '--output', dest='output', metavar='[FILE]',
+                  help='Export project to file. The filename ending (e.g. .tsv) defines the output format (csv,tsv,xls,xlsx,html)')
+group3.add_option('--info', dest='info', action='store_true',
+                  help='show project metadata')
+PARSER.add_option_group(group3)
+
+group4 = optparse.OptionGroup(PARSER, 'Create options')
+group4.add_option('--columnWidths', dest='columnWidths',
+                  help='(txt/fixed-width) please provide widths separated by comma (e.g. 7,5)')
+group4.add_option('--encoding', dest='encoding',
+                  help='(csv,tsv,txt), please provide short encoding name (e.g. UTF-8)')
+group4.add_option('--guessCellValueTypes', dest='guessCellValueTypes',
+                  help='(xml,csv,tsv,txt,json), default: false')
+group4.add_option('--headerLines', dest='headerLines',
+                  help='(csv,tsv,txt/fixed-width,xls,xlsx,ods), default: 1, default txt/fixed-width: 0')
+group4.add_option('--ignoreLines', dest='ignoreLines',
+                  help='(csv,tsv,txt,xls,xlsx,ods), default: -1')
+group4.add_option('--includeFileSources', dest='includeFileSources',
+                  help='(all formats), default: false')
+group4.add_option('--limit', dest='limit',
+                  help='(all formats), default: -1')
+group4.add_option('--linesPerRow', dest='linesPerRow',
+                  help='(txt/line-based), default: 1')
+group4.add_option('--processQuotes', dest='processQuotes',
+                  help='(csv,tsv), default: true')
+group4.add_option('--projectName', dest='project_name',
+                  help='(all formats), default: filename')
+group4.add_option('--recordPath', dest='recordPath', action='append',
+                  help='(xml,json), please provide path in multiple arguments without slashes, e.g. /collection/record/ should be entered like this: --recordPath=collection --recordPath=record, default xml: record, default json: _ _')
+group4.add_option('--separator', dest='separator',
+                  help='(csv,tsv), default csv: , default tsv: \\t')
+group4.add_option('--sheets', dest='sheets',
+                  help='(xls,xlsx,ods), please provide sheets separated by comma (e.g. 0,1), default: 0 (first sheet)')
+group4.add_option('--skipDataLines', dest='skipDataLines',
+                  help='(csv,tsv,txt,xls,xlsx,ods), default: 0, default line-based: -1')
+group4.add_option('--storeBlankRows', dest='storeBlankRows',
+                  help='(csv,tsv,txt,xls,xlsx,ods), default: true')
+group4.add_option('--storeBlankCellsAsNulls',
+                  dest='storeBlankCellsAsNulls',
+                  help='(csv,tsv,txt,xls,xlsx,ods), default: true')
+group4.add_option('--storeEmptyStrings', dest='storeEmptyStrings',
+                  help='(xml,json), default: true')
+group4.add_option('--trimStrings', dest='trimStrings',
+                  help='(xml,json), default: false')
+PARSER.add_option_group(group4)
+
+group5 = optparse.OptionGroup(PARSER, 'Legacy options')
+group5.add_option('--format', dest='input_format',
+help='Specify input format (csv,tsv,xml,json,line-based,fixed-width,xls,xlsx,ods)')
+PARSER.add_option_group(group5)
 
 
 def list_projects():
-    """Query the Refine server and list projects by ID: name."""
+    """Query the OpenRefine server and list projects by ID: name."""
     projects = refine.Refine(refine.RefineServer()).list_projects().items()
 
     def date_to_epoch(json_dt):
@@ -62,12 +141,20 @@ def list_projects():
     for project_id, project_info in projects:
         print('{0:>14}: {1}'.format(project_id, project_info['name']))
 
+def info(project):
+    projects = refine.Refine(refine.RefineServer()).list_projects().items()
+    for project_id, project_info in projects:
+        if project == project_id:
+            print('{0}: {1}'.format('id', project_id))
+            print('{0}: {1}'.format('name', project_info['name']))
+            print('{0}: {1}'.format('created', project_info['created']))
+            print('{0}: {1}'.format('modified', project_info['modified']))
 
 def export_project(project, options):
     """Dump a project to stdout or options.output file."""
     export_format = 'tsv'
     if options.output:
-        ext = os.path.splitext(options.output)[1][1:]     # 'xls'
+        ext = os.path.splitext(options.output)[1][1:]
         if ext:
             export_format = ext.lower()
         output = open(options.output, 'wb')
@@ -79,7 +166,7 @@ def export_project(project, options):
 
 #noinspection PyPep8Naming
 def main():
-    """Main."""
+    """Command line interface."""
 
     # get environment variables in docker network
     docker_host = os.environ.get('OPENREFINE_SERVER_PORT_3333_TCP_ADDR')
@@ -92,27 +179,74 @@ def main():
         refine.REFINE_PORT = docker_port
 
     options, args = PARSER.parse_args()
+    commands_dict = { group2_arg.dest : getattr(options, group2_arg.dest) for group2_arg in group2.option_list }
+    commands_dict.update({ group3_arg.dest : getattr(options, group3_arg.dest) for group3_arg in group3.option_list })
+    commands_dict = { k: v for k, v in commands_dict.items() if v != None }
+    if not commands_dict:
+        PARSER.print_usage()
+        return
+    if args and not str.isdigit(args[0]):
+        projects = refine.Refine(refine.RefineServer()).list_projects().items()
+        idlist = []
+        for project_id, project_info in projects:
+            if args[0] == project_info['name']:
+                idlist.append(str(project_id))
+        if len(idlist) > 1:
+            raise Exception('Found at least two projects. Please specify project by id.')
+        else:
+            args[0] = idlist[0]
 
     if options.host:
         refine.REFINE_HOST = options.host
     if options.port:
         refine.REFINE_PORT = options.port
-
-    if not options.list and len(args) != 1:
-        PARSER.print_usage()
     if options.list:
         list_projects()
-    if args:
+    if options.create:
+        # general defaults are defined in google/refine/refine.py new_project
+        # additional defaults for each file type
+        defaults = {}
+        defaults['xml'] = { 'project_format' : 'text/xml', 'recordPath' : 'record' }
+        defaults['csv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : ',' }
+        defaults['tsv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : '\t' }
+        defaults['line-based'] = { 'project_format' : 'text/line-based', 'skipDataLines' : -1 }
+        defaults['fixed-width'] = { 'project_format' : 'text/line-based/fixed-width', 'headerLines' : 0 }
+        defaults['json'] = { 'project_format' : 'text/json', 'recordPath' : ('_', '_') }
+        defaults['xls'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
+        defaults['xlsx'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
+        defaults['ods'] = { 'project_format' : 'text/xml/ods', 'sheets' : 0 }
+        # guess format from file extension (or legacy option --format)
+        input_format = os.path.splitext(options.create)[1][1:].lower()
+        if input_format == 'txt' and options.columnWidths:
+            input_format = 'fixed_width'
+        if input_format == 'txt' and not options.columnWidths:
+            input_format = 'line_based'
+        if options.input_format:
+            input_format = options.input_format
+        # defaults for selected format
+        input_dict = defaults[input_format]
+        # user input
+        input_user = { group4_arg.dest : getattr(options, group4_arg.dest) for group4_arg in group4.option_list }
+        input_user = { k: v for k, v in input_user.items() if v != None }
+        # merge defaults with user input
+        input_dict.update(input_user)
+        input_dict['project_file'] = options.create
+        print(input_dict)
+        refine.Refine(refine.RefineServer()).new_project(**input_dict)
+    if options.delete:
+        refine.RefineProject(refine.RefineServer(),args[0]).delete()
+    if options.apply:
         project = refine.RefineProject(args[0])
-        if options.apply:
-            response = project.apply_operations(options.apply)
-            if response != 'ok':
-                print >>sys.stderr, 'Failed to apply %s: %s' % (options.apply,
-                                                                response)
-        if options.export:
-            export_project(project, options)
-
+        response = project.apply_operations(options.apply)
+        if response != 'ok':
+            print >> sys.stderr, 'Failed to apply %s: %s' \
+                % (options.apply, response)
+    if options.export or options.output:
+        project = refine.RefineProject(args[0])
+        export_project(project, options)
         return project
+    if options.info:
+        info(args[0])
 
 if __name__ == '__main__':
     # return project so that it's available interactively, python -i refine.py
