@@ -5,20 +5,27 @@ OpenRefine Python Client Library
 The OpenRefine Python Client Library provides an interface to
 communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 
-If you are looking for a ready to use command line interface to OpenRefine then you might be interested in the docker variation of this library:
-`felixlohmeier/openrefine-client <https://hub.docker.com/r/felixlohmeier/openrefine-client/>`_. You will find examples for batch processing (e.g. for usage in shell scripts) there.
-
-If you are familiar with python and want to go into more depth, then read on!
-
-Features
-=============
+Usage
+=====
 
 Command line interface:
 
-- list projects: refine.py --list
-- create project from file: refine.py --create [FILE]
-- apply `rules from json file <http://kb.refinepro.com/2012/06/google-refine-json-and-my-notepad-or.html>`_: refine.py --apply [FILE.json] [PROJECTID]
-- export project to file: refine.py --export [PROJECTID] --output=FILE.tsv
+- list all projects: ``python refine.py --list``
+- create project from file: ``python refine.py --create [FILE]``
+- apply `rules from json file <http://kb.refinepro.com/2012/06/google-refine-json-and-my-notepad-or.html>`_: ``python refine.py --apply [FILE.json] [PROJECTID/PROJECTNAME]``
+- export project to file: ``python refine.py --export [PROJECTID/PROJECTNAME] --output=FILE.tsv``
+- show project metadata: ``python refine.py --info [PROJECTID/PROJECTNAME]``
+- delete project: ``python refine.py --delete [PROJECTID/PROJECTNAME]``
+- check ``python refine.py --help`` for further options...
+
+If you are familiar with python you may try all functions interactively (``python -i refine.py``) or use this library in your own python scripts. Some Examples:
+
+* show version of OpenRefine server: ``refine.RefineServer().get_version()``
+* show total rows of project 2151545447855: ``refine.RefineProject(refine.RefineServer(),'2151545447855').do_json('get-rows')['total']``
+* compute clusters of project 2151545447855 and column key: ``refine.RefineProject(refine.RefineServer(),'2151545447855').compute_clusters('key')``
+
+Features
+=============
 
 Currently, the following API is supported:
 
@@ -117,6 +124,8 @@ One aspect of development is watching HTTP transactions. To that end, I found
 <http://www.tuffcode.com/>`_ invaluable. The latter won't URL-decode nor nicely
 format JSON but the `Online JavaScript Beautifier <http://jsbeautifier.org/>`_
 will.
+
+Executables may be built with `pyinstaller <http://www.pyinstaller.org>`_.
 
 History
 =======
