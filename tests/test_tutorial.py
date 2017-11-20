@@ -22,7 +22,7 @@ from tests import refinetest
 
 class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
-    project_options = {'guess_cell_value_types': True}
+    project_options = {'guessCellValueTypes': True}
 
     def test_get_rows(self):
         # Section "2. Exploration using Facets": {3}
@@ -130,7 +130,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
-    project_options = {'guess_cell_value_types': True}
+    project_options = {'guessCellValueTypes': True}
 
     def test_editing(self):
         # Section "3. Cell Editing": {1}
@@ -286,7 +286,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
     project_format = 'text/line-based'
-    project_options = {'header_lines': 0}
+    project_options = {'headerLines': 0}
 
     def test_transpose_fixed_number_of_rows_into_columns(self):
         if self.server.version not in ('2.0', '2.1'):
@@ -360,7 +360,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
     project_format = 'text/line-based'
-    project_options = {'header_lines': 0}
+    project_options = {'headerLines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
