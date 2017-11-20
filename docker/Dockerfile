@@ -23,7 +23,7 @@ RUN unzip tmp.zip && rm tmp.zip
 WORKDIR /data
 
 # Execute refine.py
-ENTRYPOINT ["/app/openrefine-client-master/python refine.py"]
+ENTRYPOINT ["/app/openrefine-client-master/refine.py"]
 
 # Default command: print help
 CMD ["-h"]
