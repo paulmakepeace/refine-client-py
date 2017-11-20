@@ -89,19 +89,19 @@ group4.add_option('--columnWidths', dest='columnWidths',
                   help='(txt/fixed-width) please provide widths separated by comma (e.g. 7,5)')
 group4.add_option('--encoding', dest='encoding',
                   help='(csv,tsv,txt), please provide short encoding name (e.g. UTF-8)')
-group4.add_option('--guessCellValueTypes', dest='guessCellValueTypes',
-                  help='(xml,csv,tsv,txt,json), default: false')
-group4.add_option('--headerLines', dest='headerLines',
+group4.add_option('--guessCellValueTypes', dest='guessCellValueTypes', metavar='true/false', choices=('true', 'false'),
+                  help='(xml,csv,tsv,txt,json, default: false)')
+group4.add_option('--headerLines', dest='headerLines', type="int",
                   help='(csv,tsv,txt/fixed-width,xls,xlsx,ods), default: 1, default txt/fixed-width: 0')
-group4.add_option('--ignoreLines', dest='ignoreLines',
+group4.add_option('--ignoreLines', dest='ignoreLines', type="int",
                   help='(csv,tsv,txt,xls,xlsx,ods), default: -1')
-group4.add_option('--includeFileSources', dest='includeFileSources',
+group4.add_option('--includeFileSources', dest='includeFileSources', metavar='true/false', choices=('true', 'false'),
                   help='(all formats), default: false')
-group4.add_option('--limit', dest='limit',
+group4.add_option('--limit', dest='limit', type="int",
                   help='(all formats), default: -1')
-group4.add_option('--linesPerRow', dest='linesPerRow',
+group4.add_option('--linesPerRow', dest='linesPerRow', type="int",
                   help='(txt/line-based), default: 1')
-group4.add_option('--processQuotes', dest='processQuotes',
+group4.add_option('--processQuotes', dest='processQuotes', metavar='true/false', choices=('true', 'false'),
                   help='(csv,tsv), default: true')
 group4.add_option('--projectName', dest='project_name',
                   help='(all formats), default: filename')
@@ -109,18 +109,17 @@ group4.add_option('--recordPath', dest='recordPath', action='append',
                   help='(xml,json), please provide path in multiple arguments without slashes, e.g. /collection/record/ should be entered like this: --recordPath=collection --recordPath=record, default xml: record, default json: _ _')
 group4.add_option('--separator', dest='separator',
                   help='(csv,tsv), default csv: , default tsv: \\t')
-group4.add_option('--sheets', dest='sheets',
-                  help='(xls,xlsx,ods), please provide sheets separated by comma (e.g. 0,1), default: 0 (first sheet)')
-group4.add_option('--skipDataLines', dest='skipDataLines',
+group4.add_option('--sheets', dest='sheets', action='append', type="int",
+                  help='(xls,xlsx,ods), please provide sheets in multiple arguments, e.g. --sheets=0 --sheets=1, default: 0 (first sheet)')
+group4.add_option('--skipDataLines', dest='skipDataLines', type="int",
                   help='(csv,tsv,txt,xls,xlsx,ods), default: 0, default line-based: -1')
-group4.add_option('--storeBlankRows', dest='storeBlankRows',
+group4.add_option('--storeBlankRows', dest='storeBlankRows', metavar='true/false', choices=('true', 'false'),
                   help='(csv,tsv,txt,xls,xlsx,ods), default: true')
-group4.add_option('--storeBlankCellsAsNulls',
-                  dest='storeBlankCellsAsNulls',
+group4.add_option('--storeBlankCellsAsNulls', dest='storeBlankCellsAsNulls', metavar='true/false', choices=('true', 'false'),
                   help='(csv,tsv,txt,xls,xlsx,ods), default: true')
-group4.add_option('--storeEmptyStrings', dest='storeEmptyStrings',
+group4.add_option('--storeEmptyStrings', dest='storeEmptyStrings', metavar='true/false', choices=('true', 'false'),
                   help='(xml,json), default: true')
-group4.add_option('--trimStrings', dest='trimStrings',
+group4.add_option('--trimStrings', dest='trimStrings', metavar='true/false', choices=('true', 'false'),
                   help='(xml,json), default: false')
 PARSER.add_option_group(group4)
 
@@ -227,11 +226,15 @@ def main():
         input_dict = defaults[input_format]
         # user input
         input_user = { group4_arg.dest : getattr(options, group4_arg.dest) for group4_arg in group4.option_list }
-        input_user = { k: v for k, v in input_user.items() if v != None }
+        input_user['strings'] = { k: v for k, v in input_user.items() if v != None and v not in ['true', 'false'] }
+        input_user['trues'] = { k: True for k, v in input_user.items() if v == 'true' }
+        input_user['falses'] = { k: False for k, v in input_user.items() if v == 'false' }
+        input_user_eval = input_user['strings']
+        input_user_eval.update(input_user['trues'])
+        input_user_eval.update(input_user['falses'])
         # merge defaults with user input
-        input_dict.update(input_user)
+        input_dict.update(input_user_eval)
         input_dict['project_file'] = options.create
-        print(input_dict)
         refine.Refine(refine.RefineServer()).new_project(**input_dict)
     if options.delete:
         refine.RefineProject(refine.RefineServer(),args[0]).delete()
