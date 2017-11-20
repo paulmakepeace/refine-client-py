@@ -8,7 +8,9 @@ communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 Download
 ========
 
-One-file-executable for Linux: `openrefine-client_0-3-2_linux-64bit <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.2/openrefine-client_0-3-2_linux-64bit>`_ (5 MB)
+One-file-executables:
+* Linux: `openrefine-client_0-3-2_linux-64bit <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.2/openrefine-client_0-3-2_linux-64bit>`_ (4,9 MB)
+* Windows: `openrefine-client_0-3-2_windows <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.2/openrefine-client_0-3-2_windows>`_ (5,1 MB)
 
 For native Python installation on Windows, Mac or Linux see `Installation <#installation>`_ below.
 
