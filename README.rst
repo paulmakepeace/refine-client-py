@@ -5,6 +5,13 @@ OpenRefine Python Client Library
 The OpenRefine Python Client Library provides an interface to
 communicating with an `OpenRefine <http://openrefine.org/>`_ server.
 
+Download
+========
+
+One-file-executable for Linux: `openrefine-client_0-3-2_linux-64bit <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.2/openrefine-client_0-3-2_linux-64bit>`_ (5 MB)
+
+For native Python installation on Windows, Mac or Linux see `Installation <#installation>`_ below.
+
 Usage
 =====
 
