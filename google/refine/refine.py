@@ -38,11 +38,11 @@ REFINE_PORT = os.environ.get('OPENREFINE_PORT', os.environ.get('GOOGLE_REFINE_PO
 
 
 class RefineServer(object):
-    """Communicate with a Refine server."""
+    """Communicate with a OpenRefine server."""
 
     @staticmethod
     def url():
-        """Return the URL to the Refine server."""
+        """Return the URL to the OpenRefine server."""
         server = 'http://' + REFINE_HOST
         if REFINE_PORT != '80':
             server += ':' + REFINE_PORT
@@ -55,7 +55,7 @@ class RefineServer(object):
         self.__version = None     # see version @property below
 
     def urlopen(self, command, data=None, params=None, project_id=None):
-        """Open a Refine URL and with optional query params and POST data.
+        """Open a OpenRefine URL and with optional query params and POST data.
 
         data: POST data dict
         param: query params dict
@@ -85,7 +85,7 @@ class RefineServer(object):
             raise Exception('HTTP %d "%s" for %s\n\t%s' % (e.code, e.msg, e.geturl(), data))
         except urllib2.URLError as e:
             raise urllib2.URLError(
-                '%s for %s. No Refine server reachable/running; ENV set?' %
+                '%s for %s. No OpenRefine server reachable/running; ENV set?' %
                 (e.reason, self.server))
         if response.info().get('Content-Encoding', None) == 'gzip':
             # Need a seekable filestream for gzip
@@ -95,7 +95,7 @@ class RefineServer(object):
         return response
 
     def urlopen_json(self, *args, **kwargs):
-        """Open a Refine URL, optionally POST data, and return parsed JSON."""
+        """Open a OpenRefine URL, optionally POST data, and return parsed JSON."""
         response = json.loads(self.urlopen(*args, **kwargs).read())
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             error_message = ('server ' + response['code'] + ': ' +
@@ -118,7 +118,7 @@ class RefineServer(object):
 
 
 class Refine:
-    """Class representing a connection to a Refine server."""
+    """Class representing a connection to a OpenRefine server."""
     def __init__(self, server):
         if isinstance(server, RefineServer):
             self.server = server
@@ -144,26 +144,13 @@ class Refine:
         return projects[project_id]['name']
 
     def open_project(self, project_id):
-        """Open a Refine project."""
+        """Open a OpenRefine project."""
         return RefineProject(self.server, project_id)
 
-    def new_project(self,
-                    project_file=None,
-                    project_name=None,
-                    project_format='',
-                    guessCellValueTypes=False,
-                    headerLines=1,
-                    ignoreLines=-1,
-                    includeFileSources=False,
-                    limit=-1,
-                    linesPerRow=1,
-                    processQuotes=True,
-                    skipDataLines=0,
-                    storeBlankCellsAsNulls=True,
-                    storeBlankRows=True,
-                    storeEmptyStrings=True,
-                    trimStrings=False,
-                    **opts):
+    def new_project(self, project_file=None, project_name=None,
+                    project_format='', **kwargs):
+        """Create a OpenRefine project."""
+        defaults = { 'guessCellValueTypes' : False, 'headerLines' : 1, 'ignoreLines' : -1, 'includeFileSources' : False, 'limit' : -1, 'linesPerRow' : 1, 'processQuotes' : True, 'separator' : ',', 'skipDataLines' : 0, 'storeBlankCellsAsNulls' : True, 'storeBlankRows' : True, 'storeEmptyStrings' : True, 'trimStrings' : False }
 
         # options
         options = { 'format': project_format }
@@ -179,8 +166,9 @@ class Refine:
         options['project-name'] = project_name
 
         # params (the API requires a json in the 'option' POST argument)
-        new_style_options = dict(opts)
-        params = { 'options': json.dumps(new_style_options) }
+        params = defaults
+        params.update(kwargs)
+        params = { 'options': json.dumps(params) }
 
         # submit
         response = self.server.urlopen(
@@ -263,7 +251,7 @@ class RefineProject:
                 server = RefineServer(server)
         self.server = server
         if not project_id:
-            raise Exception('Missing Refine project ID')
+            raise Exception('Missing OpenRefine project ID')
         self.project_id = project_id
         self.engine = facet.Engine()
         self.sorting = facet.Sorting()
