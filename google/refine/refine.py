@@ -342,6 +342,12 @@ class RefineProject:
                export_format)
         return self.do_raw(url, data={'format': export_format})
 
+    def export_templating(self, export_format='txt', engine='', prefix='', template='', rowSeparator='', suffix=''):
+        """Return a fileobject of a project's data."""
+        url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
+               export_format)
+        return self.do_raw(url, data={'format': 'template', 'template': template, 'engine': engine, 'prefix': prefix, 'suffix': suffix, 'separator': rowSeparator } )
+
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
         return csv.reader(self.export(**kwargs), dialect='excel-tab')

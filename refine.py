@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 """
 Script to provide a command line interface to a OpenRefine server.
 """
@@ -23,9 +23,12 @@ import optparse
 import os
 import sys
 import time
+import json
 
 from google.refine import refine
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 class myParser(optparse.OptionParser):
 
@@ -53,6 +56,7 @@ Examples:
   --export "christmas gifts" > project.tsv
   --export --output=project.xlsx 2161595260364 # export project in xlsx format
   --export --output=project.xlsx "christmas gifts"
+  --export "My Address Book" --template='{ "friend" : {{jsonize(cells["friend"].value)}}, "address" : {{jsonize(cells["address"].value)}} }' --prefix='{ "rows" : [' --rowSeparator ',' --suffix '] }' --filterQuery="^mary$"
   --delete 2161595260364 # delete project 
   --delete "christmas gifts"
 """)
@@ -128,6 +132,29 @@ group5.add_option('--format', dest='input_format',
 help='Specify input format (csv,tsv,xml,json,line-based,fixed-width,xls,xlsx,ods)')
 PARSER.add_option_group(group5)
 
+group6= optparse.OptionGroup(PARSER, 'Templating export options')
+group6.add_option('--template', dest='template',
+help='mandatory; (big) text string that you enter in the *row template* textfield in the export/templating menu in the browser app)')
+group6.add_option('--mode', dest='mode', metavar='row-based/record-based', choices=('row-based', 'record-based'),
+help='engine mode (default: row-based)')
+group6.add_option('--prefix', dest='prefix',
+help='text string that you enter in the *prefix* textfield in the browser app')
+group6.add_option('--rowSeparator', dest='rowSeparator',
+help='text string that you enter in the *row separator* textfield in the browser app')
+group6.add_option('--suffix', dest='suffix',
+help='text string that you enter in the *suffix* textfield in the browser app')
+group6.add_option('--filterQuery', dest='filterQuery', metavar='REGEX',
+help='Simple RegEx text filter on filterColumn, e.g. ^12015$'),
+group6.add_option('--filterColumn', dest='filterColumn', metavar='COLUMNNAME',
+help='column name for filterQuery (default: name of first column)')
+group6.add_option('--facets', dest='facets',
+help='facets config in json format (may be extracted with browser dev tools in browser app)')
+group6.add_option('--splitToFiles', dest='splitToFiles', metavar='true/false', choices=('true', 'false'),
+help='will split each row/record into a single file; it specifies a presumably unique character series for splitting; --prefix and --suffix will be applied to all files; filename-prefix can be specified with --output (default: %Y%m%d)')
+group6.add_option('--suffixById', dest='suffixById', metavar='true/false', choices=('true', 'false'),
+help='enhancement option for --splitToFiles; will generate filename-suffix from values in key column (default: row number)')
+PARSER.add_option_group(group6)
+
 
 def list_projects():
     """Query the OpenRefine server and list projects by ID: name."""
@@ -140,14 +167,52 @@ def list_projects():
     for project_id, project_info in projects:
         print('{0:>14}: {1}'.format(project_id, project_info['name']))
 
-def info(project):
+def info(project_id):
+    """Show project metadata"""
     projects = refine.Refine(refine.RefineServer()).list_projects().items()
-    for project_id, project_info in projects:
-        if project == project_id:
-            print('{0}: {1}'.format('id', project_id))
-            print('{0}: {1}'.format('name', project_info['name']))
-            print('{0}: {1}'.format('created', project_info['created']))
-            print('{0}: {1}'.format('modified', project_info['modified']))
+    for projects_id, projects_info in projects:
+        if project_id == projects_id:
+            print('{0}: {1}'.format('id', projects_id))
+            print('{0}: {1}'.format('name', projects_info['name']))
+            print('{0}: {1}'.format('created', projects_info['created']))
+            print('{0}: {1}'.format('modified', projects_info['modified']))
+
+def create_project(options):
+    """Create a new project from options.create file."""
+    # general defaults are defined in google/refine/refine.py new_project
+    # additional defaults for each file type
+    defaults = {}
+    defaults['xml'] = { 'project_format' : 'text/xml', 'recordPath' : 'record' }
+    defaults['csv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : ',' }
+    defaults['tsv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : '\t' }
+    defaults['line-based'] = { 'project_format' : 'text/line-based', 'skipDataLines' : -1 }
+    defaults['fixed-width'] = { 'project_format' : 'text/line-based/fixed-width', 'headerLines' : 0 }
+    defaults['json'] = { 'project_format' : 'text/json', 'recordPath' : ('_', '_') }
+    defaults['xls'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
+    defaults['xlsx'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
+    defaults['ods'] = { 'project_format' : 'text/xml/ods', 'sheets' : 0 }
+    # guess format from file extension (or legacy option --format)
+    input_format = os.path.splitext(options.create)[1][1:].lower()
+    if input_format == 'txt' and options.columnWidths:
+        input_format = 'fixed-width'
+    if input_format == 'txt' and not options.columnWidths:
+        input_format = 'line-based'
+    if options.input_format:
+        input_format = options.input_format
+    # defaults for selected format
+    input_dict = defaults[input_format]
+    # user input
+    input_user = { group4_arg.dest : getattr(options, group4_arg.dest) for group4_arg in group4.option_list }
+    input_user['strings'] = { k: v for k, v in input_user.items() if v != None and v not in ['true', 'false'] }
+    input_user['trues'] = { k: True for k, v in input_user.items() if v == 'true' }
+    input_user['falses'] = { k: False for k, v in input_user.items() if v == 'false' }
+    input_user_eval = input_user['strings']
+    input_user_eval.update(input_user['trues'])
+    input_user_eval.update(input_user['falses'])
+    # merge defaults with user input
+    input_dict.update(input_user_eval)
+    input_dict['project_file'] = options.create
+    refine.Refine(refine.RefineServer()).new_project(**input_dict)
 
 def export_project(project, options):
     """Dump a project to stdout or options.output file."""
@@ -159,8 +224,72 @@ def export_project(project, options):
         output = open(options.output, 'wb')
     else:
         output = sys.stdout
-    output.writelines(project.export(export_format=export_format))
-    output.close()
+    if options.template:
+        templateconfig = { group6_arg.dest : getattr(options, group6_arg.dest) for group6_arg in group6.option_list if group6_arg.dest in ['prefix', 'template', 'rowSeparator', 'suffix'] }
+        if options.mode == 'record-based':
+            engine = { 'facets':[], 'mode':'record-based' }
+        else:
+            engine = { 'facets':[], 'mode':'row-based' }
+        if options.facets:
+            engine['facets'].append(json.loads(options.facets))
+        if options.filterQuery:
+            if not options.filterColumn:
+                filterColumn = project.get_models()['columnModel']['keyColumnName']
+            else:
+                filterColumn = options.filterColumn
+            textFilter = { 'type':'text', 'name':filterColumn, 'columnName':filterColumn, 'mode':'regex', 'caseSensitive':False, 'query':options.filterQuery }
+            engine['facets'].append(textFilter)
+        templateconfig.update({ 'engine': json.dumps(engine) })
+        if options.splitToFiles == 'true':
+            # common config for row-based and record-based
+            prefix = templateconfig['prefix']
+            suffix = templateconfig['suffix']
+            split = '===|||THISISTHEBEGINNINGOFANEWRECORD|||==='
+            keyColumn = project.get_models()['columnModel']['keyColumnName']
+            if not options.output:
+                filename = time.strftime('%Y%m%d')
+            else:
+                filename = options.output
+            if options.suffixById:
+                ids_template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, v, "")}}'
+                ids_templateconfig = { 'engine': json.dumps(engine), 'template': ids_template, 'rowSeparator':'\n' }
+                ids = [line.rstrip('\n') for line in project.export_templating(**ids_templateconfig) if line.rstrip('\n')]
+        if options.splitToFiles == 'true' and not options.mode == 'record-based':
+            # row-based: split-character into template
+            template = split + templateconfig['template']
+            templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
+            records = project.export_templating(**templateconfig).read().split(split)
+            del records[0] # skip first blank line
+            if options.suffixById:
+                for index, record in enumerate(records):
+                    output = open(filename + '_' + ids[index], 'wb')
+                    output.writelines([prefix, record, suffix])
+            else:
+                zeros = len(str(len(records)))
+                for index, record in enumerate(records):
+                    output = open(filename + '_' + str(index+1).zfill(zeros), 'wb')
+                    output.writelines([prefix, record, suffix])
+        if options.splitToFiles == 'true' and options.mode == 'record-based':
+            # record-based: split-character into template if key column is not blank (=record)
+            template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, "' + split + '", "")}}' + templateconfig['template']
+            templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
+            records = project.export_templating(**templateconfig).read().split(split)
+            del records[0] # skip first blank entry
+            if options.suffixById:
+                for index, record in enumerate(records):
+                    output = open(filename + '_' + ids[index], 'wb')
+                    output.writelines([prefix, record, suffix])
+            else:
+                zeros = len(str(len(records)))
+                for index, record in enumerate(records):
+                    output = open(filename + '_' + str(index+1).zfill(zeros), 'wb')
+                    output.writelines([prefix, record, suffix])
+        else:
+            output.writelines(project.export_templating(**templateconfig))
+            output.close()
+    else:
+        output.writelines(project.export(export_format=export_format))
+        output.close()
 
 
 #noinspection PyPep8Naming
@@ -184,6 +313,10 @@ def main():
     if not commands_dict:
         PARSER.print_usage()
         return
+    if options.host:
+        refine.REFINE_HOST = options.host
+    if options.port:
+        refine.REFINE_PORT = options.port
     if args and not str.isdigit(args[0]):
         projects = refine.Refine(refine.RefineServer()).list_projects().items()
         idlist = []
@@ -195,61 +328,28 @@ def main():
         else:
             args[0] = idlist[0]
 
-    if options.host:
-        refine.REFINE_HOST = options.host
-    if options.port:
-        refine.REFINE_PORT = options.port
     if options.list:
         list_projects()
     if options.create:
-        # general defaults are defined in google/refine/refine.py new_project
-        # additional defaults for each file type
-        defaults = {}
-        defaults['xml'] = { 'project_format' : 'text/xml', 'recordPath' : 'record' }
-        defaults['csv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : ',' }
-        defaults['tsv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : '\t' }
-        defaults['line-based'] = { 'project_format' : 'text/line-based', 'skipDataLines' : -1 }
-        defaults['fixed-width'] = { 'project_format' : 'text/line-based/fixed-width', 'headerLines' : 0 }
-        defaults['json'] = { 'project_format' : 'text/json', 'recordPath' : ('_', '_') }
-        defaults['xls'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
-        defaults['xlsx'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
-        defaults['ods'] = { 'project_format' : 'text/xml/ods', 'sheets' : 0 }
-        # guess format from file extension (or legacy option --format)
-        input_format = os.path.splitext(options.create)[1][1:].lower()
-        if input_format == 'txt' and options.columnWidths:
-            input_format = 'fixed_width'
-        if input_format == 'txt' and not options.columnWidths:
-            input_format = 'line_based'
-        if options.input_format:
-            input_format = options.input_format
-        # defaults for selected format
-        input_dict = defaults[input_format]
-        # user input
-        input_user = { group4_arg.dest : getattr(options, group4_arg.dest) for group4_arg in group4.option_list }
-        input_user['strings'] = { k: v for k, v in input_user.items() if v != None and v not in ['true', 'false'] }
-        input_user['trues'] = { k: True for k, v in input_user.items() if v == 'true' }
-        input_user['falses'] = { k: False for k, v in input_user.items() if v == 'false' }
-        input_user_eval = input_user['strings']
-        input_user_eval.update(input_user['trues'])
-        input_user_eval.update(input_user['falses'])
-        # merge defaults with user input
-        input_dict.update(input_user_eval)
-        input_dict['project_file'] = options.create
-        refine.Refine(refine.RefineServer()).new_project(**input_dict)
+        create_project(options)
     if options.delete:
-        refine.RefineProject(refine.RefineServer(),args[0]).delete()
+        project = refine.RefineProject(args[0])
+        project.delete()
     if options.apply:
         project = refine.RefineProject(args[0])
         response = project.apply_operations(options.apply)
         if response != 'ok':
             print >> sys.stderr, 'Failed to apply %s: %s' \
                 % (options.apply, response)
+        return project
     if options.export or options.output:
         project = refine.RefineProject(args[0])
         export_project(project, options)
         return project
     if options.info:
         info(args[0])
+        project = refine.RefineProject(args[0])
+        return project
 
 if __name__ == '__main__':
     # return project so that it's available interactively, python -i refine.py
