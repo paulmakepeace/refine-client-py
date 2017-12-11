@@ -152,7 +152,7 @@ help='facets config in json format (may be extracted with browser dev tools in b
 group6.add_option('--splitToFiles', dest='splitToFiles', metavar='true/false', choices=('true', 'false'),
 help='will split each row/record into a single file; it specifies a presumably unique character series for splitting; --prefix and --suffix will be applied to all files; filename-prefix can be specified with --output (default: %Y%m%d)')
 group6.add_option('--suffixById', dest='suffixById', metavar='true/false', choices=('true', 'false'),
-help='enhancement option for --splitToFiles; will generate filename-suffix from values in key column (default: row number)')
+help='enhancement option for --splitToFiles; will generate filename-suffix from values in key column')
 PARSER.add_option_group(group6)
 
 
@@ -217,7 +217,7 @@ def create_project(options):
 def export_project(project, options):
     """Dump a project to stdout or options.output file."""
     export_format = 'tsv'
-    if options.output:
+    if options.output and not options.splitToFiles == 'true':
         ext = os.path.splitext(options.output)[1][1:]
         if ext:
             export_format = ext.lower()
@@ -249,40 +249,32 @@ def export_project(project, options):
             if not options.output:
                 filename = time.strftime('%Y%m%d')
             else:
-                filename = options.output
+                filename = os.path.splitext(options.output)[0]
+                ext = os.path.splitext(options.output)[1][1:]
+            if not ext:
+                ext = 'txt'
             if options.suffixById:
                 ids_template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, v, "")}}'
                 ids_templateconfig = { 'engine': json.dumps(engine), 'template': ids_template, 'rowSeparator':'\n' }
                 ids = [line.rstrip('\n') for line in project.export_templating(**ids_templateconfig) if line.rstrip('\n')]
-        if options.splitToFiles == 'true' and not options.mode == 'record-based':
-            # row-based: split-character into template
-            template = split + templateconfig['template']
-            templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
-            records = project.export_templating(**templateconfig).read().split(split)
-            del records[0] # skip first blank line
-            if options.suffixById:
-                for index, record in enumerate(records):
-                    output = open(filename + '_' + ids[index], 'wb')
-                    output.writelines([prefix, record, suffix])
+            if options.mode == 'record-based':
+                # record-based: split-character into template if key column is not blank (=record)
+                template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, "' + split + '", "")}}' + templateconfig['template']
+                templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
             else:
-                zeros = len(str(len(records)))
-                for index, record in enumerate(records):
-                    output = open(filename + '_' + str(index+1).zfill(zeros), 'wb')
-                    output.writelines([prefix, record, suffix])
-        if options.splitToFiles == 'true' and options.mode == 'record-based':
-            # record-based: split-character into template if key column is not blank (=record)
-            template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, "' + split + '", "")}}' + templateconfig['template']
-            templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
+                # row-based: split-character into template
+                template = split + templateconfig['template']
+                templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
             records = project.export_templating(**templateconfig).read().split(split)
             del records[0] # skip first blank entry
             if options.suffixById:
                 for index, record in enumerate(records):
-                    output = open(filename + '_' + ids[index], 'wb')
+                    output = open(filename + '_' + ids[index] + '.' + ext, 'wb')
                     output.writelines([prefix, record, suffix])
             else:
                 zeros = len(str(len(records)))
                 for index, record in enumerate(records):
-                    output = open(filename + '_' + str(index+1).zfill(zeros), 'wb')
+                    output = open(filename + '_' + str(index+1).zfill(zeros) + '.' + ext, 'wb')
                     output.writelines([prefix, record, suffix])
         else:
             output.writelines(project.export_templating(**templateconfig))
