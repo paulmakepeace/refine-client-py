@@ -13,26 +13,26 @@ from google.refine import refine
 class RefineRowsTest(unittest.TestCase):
     def test_rows_response(self):
         rr = refine.RowsResponseFactory({
-            u'gender': 3, u'state': 2, u'purchase': 4, u'email': 0,
-            u'name': 1})
+            'gender': 3, 'state': 2, 'purchase': 4, 'email': 0,
+            'name': 1})
         response = rr({
-            u'rows': [{
-                u'i': 0,
-                u'cells': [
-                    {u'v': u'danny.baron@example1.com'},
-                    {u'v': u'Danny Baron'},
-                    {u'v': u'CA'},
-                    {u'v': u'M'},
-                    {u'v': u'TV'}
+            'rows': [{
+                'i': 0,
+                'cells': [
+                    {'v': 'danny.baron@example1.com'},
+                    {'v': 'Danny Baron'},
+                    {'v': 'CA'},
+                    {'v': 'M'},
+                    {'v': 'TV'}
                 ],
-                u'starred': False,
-                u'flagged': False
+                'starred': False,
+                'flagged': False
             }],
-            u'start': 0,
-            u'limit': 1,
-            u'mode': u'row-based',
-            u'filtered': 10,
-            u'total': 10,
+            'start': 0,
+            'limit': 1,
+            'mode': 'row-based',
+            'filtered': 10,
+            'total': 10,
         })
         self.assertEqual(len(response.rows), 1)
         # test iteration

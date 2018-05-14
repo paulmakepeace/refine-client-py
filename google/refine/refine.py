@@ -20,15 +20,11 @@ Client library to communicate with a Refine server.
 
 import csv
 import json
-import gzip
 import os
 import re
-import StringIO
 import time
-import urllib
-import urllib2_file
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error, urllib.response
+import requests
 
 from google.refine import facet
 from google.refine import history
@@ -41,20 +37,23 @@ class RefineServer(object):
     """Communicate with a Refine server."""
 
     @staticmethod
-    def url():
+    def server_url():
         """Return the URL to the Refine server."""
         server = 'http://' + REFINE_HOST
         if REFINE_PORT != '80':
             server += ':' + REFINE_PORT
         return server
 
+    def url(self, command):
+        return self.server + '/command/core/' + command
+
     def __init__(self, server=None):
         if server is None:
-            server = self.url()
+            server = self.server_url()
         self.server = server[:-1] if server.endswith('/') else server
         self.__version = None     # see version @property below
 
-    def urlopen(self, command, data=None, params=None, project_id=None):
+    def urlopen(self, command, data=None, params=None, project_id=None, files=None):
         """Open a Refine URL and with optional query params and POST data.
 
         data: POST data dict
@@ -62,41 +61,24 @@ class RefineServer(object):
         project_id: project ID as string
 
         Returns urllib2.urlopen iterable."""
-        url = self.server + '/command/core/' + command
-        if data is None:
-            data = {}
-        if params is None:
-            params = {}
+        url = self.url(command)
         if project_id:
             # XXX haven't figured out pattern on qs v body
             if 'delete' in command or data:
                 data['project'] = project_id
             else:
                 params['project'] = project_id
-        if params:
-            url += '?' + urllib.urlencode(params)
-        req = urllib2.Request(url)
-        if data:
-            req.add_data(data)  # data = urllib.urlencode(data)
-        #req.add_header('Accept-Encoding', 'gzip')
-        try:
-            response = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
-            raise Exception('HTTP %d "%s" for %s\n\t%s' % (e.code, e.msg, e.geturl(), data))
-        except urllib2.URLError as e:
-            raise urllib2.URLError(
-                '%s for %s. No Refine server reachable/running; ENV set?' %
-                (e.reason, self.server))
-        if response.info().get('Content-Encoding', None) == 'gzip':
-            # Need a seekable filestream for gzip
-            gzip_fp = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
-            # XXX Monkey patch response's filehandle. Better way?
-            urllib.addbase.__init__(response, gzip_fp)
+        if files:
+            response = requests.post(url, data=data, params=params, files=files)
+        else:
+            response = requests.post(url, data=data, params=params)
         return response
 
-    def urlopen_json(self, *args, **kwargs):
+    def urlopen_json(self, url, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
-        response = json.loads(self.urlopen(*args, **kwargs).read())
+        url = self.url(url)
+        response = requests.get(url, *args, **kwargs)
+        response = response.json()
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             error_message = ('server ' + response['code'] + ': ' +
                              response.get('message', response.get('stack', response)))
@@ -209,6 +191,7 @@ class Refine:
     }
 
     def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
+                    project_file_name=None,
                     encoding='',
                     separator=',',
                     ignore_lines=-1,
@@ -234,46 +217,56 @@ class Refine:
 
         # the new APIs requires a json in the 'option' POST or GET argument
         # POST is broken at the moment, so we send it in the URL
-        new_style_options = dict(opts, **{
-            'encoding': s(encoding),
-        })
+        # new_style_options = dict(opts, **{
+        #     'encoding': s(encoding),
+        # })
+        # options = {
+        #     'separator': s(separator),
+        #     'ignore-lines': s(ignore_lines),
+        #     'header-lines': s(header_lines),
+        #     'skip-data-lines': s(skip_data_lines),
+        #     'limit': s(limit),
+        #     'guess-value-type': s(guess_cell_value_types),
+        #     'process-quotes': s(process_quotes),
+        #     'store-blank-rows': s(store_blank_rows),
+        #     'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
+        #     'include-file-sources': s(include_file_sources),
+        # }
+
+        # options = {
+        #
+        # }
+        # params = {
+        #     'format': project_format,
+        #     'options': json.dumps(options),
+        # }
+
         params = {
-            'options': json.dumps(new_style_options),
+
         }
 
-        # old style options
-        options = {
-            'format': project_format,
-            'separator': s(separator),
-            'ignore-lines': s(ignore_lines),
-            'header-lines': s(header_lines),
-            'skip-data-lines': s(skip_data_lines),
-            'limit': s(limit),
-            'guess-value-type': s(guess_cell_value_types),
-            'process-quotes': s(process_quotes),
-            'store-blank-rows': s(store_blank_rows),
-            'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
-            'include-file-sources': s(include_file_sources),
+        files = {
+            'project-file': (project_file_name, open(project_file, 'rb'))
         }
 
-        if project_url is not None:
-            options['url'] = project_url
-        elif project_file is not None:
-            options['project-file'] = {
-                'fd': open(project_file),
-                'filename': project_file,
-            }
+        # if project_url is not None:
+        #     options['server_url'] = project_url
+        # elif project_file is not None:
+        #     options['project-file'] = {
+        #         'fd': open(project_file),
+        #         'filename': project_file,
+        #     }
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
-        options['project-name'] = project_name
+        params['project-name'] = project_name
         response = self.server.urlopen(
-            'create-project-from-upload', options, params
+            'create-project-from-upload', params=params, files=files
         )
-        # expecting a redirect to the new project containing the id in the url
-        url_params = urlparse.parse_qs(
-            urlparse.urlparse(response.geturl()).query)
+        # expecting a redirect to the new project containing the id in the server_url
+        url_params = urllib.parse.parse_qs(
+            urllib.parse.urlparse(response.url).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
             return RefineProject(self.server, project_id)
@@ -369,15 +362,18 @@ class RefineProject:
         return self.server.urlopen(command, project_id=self.project_id,
                                    data=data)
 
-    def do_json(self, command, data=None, include_engine=True):
+    def do_json(self, command, data=None, params=None, include_engine=True):
         """Issue a command to the server, parse & return decoded JSON."""
+        if params is None:
+            params = {}
+        params['project'] = self.project_id
         if include_engine:
-            if data is None:
-                data = {}
-            data['engine'] = self.engine.as_json()
-        response = self.server.urlopen_json(command,
-                                            project_id=self.project_id,
-                                            data=data)
+            params['engine'] = self.engine.as_json()
+        if command == 'delete-project':
+            response = self.server.urlopen(command, params=params, data=data)
+            response = response.json()
+        else:
+            response = self.server.urlopen_json(command, params=params, data=data)
         if 'historyEntry' in response:
             # **response['historyEntry'] won't work as keys are unicode :-/
             he = response['historyEntry']
@@ -386,11 +382,18 @@ class RefineProject:
         return response
 
     def get_models(self):
-        """Fill out column metadata.
+        """
+        Fill out column metadata.
 
         Column structure is a list of columns in their order.
         The cellIndex is an index for that column's data into the list returned
-        from get_rows()."""
+        from get_rows().
+
+        {"columnModel":{"columns":[],"columnGroups":[]},"recordModel":{"hasRecords":false},"overlayModels":{},
+        "scripting":{"grel":{"name":"General Refine Expression Language (GREL)","defaultExpression":"value"},
+        "jython":{"name":"Python / Jython","defaultExpression":"return value"},"clojure":{"name":"Clojure",
+        "defaultExpression":"value"}}}
+        """
         response = self.do_json('get-models', include_engine=False)
         column_model = response['columnModel']
         column_index = {}   # map of column name to index into get_rows() data
@@ -399,7 +402,7 @@ class RefineProject:
             name = column['name']
             self.column_order[name] = i
             column_index[name] = column['cellIndex']
-        self.key_column = column_model['keyColumnName']
+        self.key_column = column_model.get('keyColumnName')
         self.has_records = response['recordModel'].get('hasRecords', False)
         self.rows_response_factory = RowsResponseFactory(column_index)
         # TODO: implement rest
@@ -407,8 +410,7 @@ class RefineProject:
 
     def get_preference(self, name):
         """Returns the (JSON) value of a given preference setting."""
-        response = self.server.urlopen_json('get-preference',
-                                            params={'name': name})
+        response = self.server.urlopen_json('get-preference', params={'name': name})
         return json.loads(response['value'])
 
     def wait_until_idle(self, polling_delay=0.5):
@@ -421,7 +423,7 @@ class RefineProject:
 
     def apply_operations(self, file_path, wait=True):
         json_data = open(file_path).read()
-        response_json = self.do_json('apply-operations', {'operations': json_data})
+        response_json = self.do_json('apply-operations', params={'operations': json_data})
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
@@ -429,9 +431,13 @@ class RefineProject:
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
-        url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
+        # TODO: add functionality to be able to export large sets of data
+        # TODO: add functionality only one request will set data size "requirement" to choose what size sets chunking
+        # Probably implement response.raw and export/save it in chunks.
+        url = ('export-rows/' + urllib.parse.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, data={'format': export_format})
+        response = self.do_raw(url, data={'format': export_format})
+        return response.text
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
@@ -463,17 +469,18 @@ class RefineProject:
             self.engine.set_facets(facets)
         if sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
-        response = self.do_json('get-rows', {'sorting': self.sorting.as_json(),
-                                             'start': start, 'limit': limit})
+        response = self.do_json(
+            'get-rows',
+            params={'sorting': self.sorting.as_json(), 'start': start, 'limit': limit}
+        )
         return self.rows_response_factory(response)
 
     def reorder_rows(self, sort_by=None):
         if sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
-        response = self.do_json('reorder-rows',
-                                {'sorting': self.sorting.as_json()})
+        response = self.do_json('reorder-rows', params={'sorting': self.sorting.as_json()})
         # clear sorting
-        self.sorting = facet.Sorting()
+        # self.sorting = facet.Sorting()
         return response
 
     def remove_rows(self, facets=None):
@@ -483,7 +490,7 @@ class RefineProject:
 
     def text_transform(self, column, expression, on_error='set-to-blank',
                        repeat=False, repeat_count=10):
-        response = self.do_json('text-transform', {
+        response = self.do_json('text-transform', params={
             'columnName': column, 'expression': expression,
             'onError': on_error, 'repeat': repeat,
             'repeatCount': repeat_count})
@@ -496,8 +503,7 @@ class RefineProject:
     def mass_edit(self, column, edits, expression='value'):
         """edits is [{'from': ['foo'], 'to': 'bar'}, {...}]"""
         edits = json.dumps(edits)
-        response = self.do_json('mass-edit', {
-            'columnName': column, 'expression': expression, 'edits': edits})
+        response = self.do_json('mass-edit', params={'columnName': column, 'expression': expression, 'edits': edits})
         return response
 
     clusterer_defaults = {
@@ -525,8 +531,7 @@ class RefineProject:
         if function is not None:
             clusterer['function'] = function
         clusterer['column'] = column
-        response = self.do_json('compute-clusters', {
-            'clusterer': json.dumps(clusterer)})
+        response = self.do_json('compute-clusters', params={'clusterer': json.dumps(clusterer)})
         return [[{'value': x['v'], 'count': x['c']} for x in cluster]
                 for cluster in response]
 
@@ -534,8 +539,7 @@ class RefineProject:
         if annotation not in ('starred', 'flagged'):
             raise ValueError('annotation must be one of starred or flagged')
         state = 'true' if state is True else 'false'
-        return self.do_json('annotate-one-row', {'row': row.index,
-                                                 annotation: state})
+        return self.do_json('annotate-one-row', params={'row': row.index, annotation: state})
 
     def flag_row(self, row, flagged=True):
         return self.annotate_one_row(row, 'flagged', flagged)
@@ -547,17 +551,23 @@ class RefineProject:
                    column_insert_index=None, on_error='set-to-blank'):
         if column_insert_index is None:
             column_insert_index = self.column_order[column] + 1
-        response = self.do_json('add-column', {
-            'baseColumnName': column, 'newColumnName': new_column,
-            'expression': expression, 'columnInsertIndex': column_insert_index,
-            'onError': on_error})
+        response = self.do_json(
+            'add-column',
+            params={
+                'baseColumnName': column,
+                'newColumnName': new_column,
+                'expression': expression,
+                'columnInsertIndex': column_insert_index,
+                'onError': on_error
+            }
+        )
         self.get_models()
         return response
 
     def split_column(self, column, separator=',', mode='separator',
                      regex=False, guess_cell_type=True,
                      remove_original_column=True):
-        response = self.do_json('split-column', {
+        response = self.do_json('split-column', params={
             'columnName': column, 'separator': separator, 'mode': mode,
             'regex': regex, 'guessCellType': guess_cell_type,
             'removeOriginalColumn': remove_original_column})
@@ -565,15 +575,14 @@ class RefineProject:
         return response
 
     def rename_column(self, column, new_column):
-        response = self.do_json('rename-column', {'oldColumnName': column,
+        response = self.do_json('rename-column', params={'oldColumnName': column,
                                                   'newColumnName': new_column})
         self.get_models()
         return response
 
     def reorder_columns(self, new_column_order):
         """Takes an array of column names in the new order."""
-        response = self.do_json('reorder-columns', {
-            'columnNames': new_column_order})
+        response = self.do_json('reorder-columns', params={'columnNames': new_column_order})
         self.get_models()
         return response
 
@@ -581,18 +590,17 @@ class RefineProject:
         """Move column to a new position."""
         if index == 'end':
             index = len(self.columns) - 1
-        response = self.do_json('move-column', {'columnName': column,
-                                                'index': index})
+        response = self.do_json('move-column', params={'columnName': column, 'index': index})
         self.get_models()
         return response
 
     def blank_down(self, column):
-        response = self.do_json('blank-down', {'columnName': column})
+        response = self.do_json('blank-down', params={'columnName': column})
         self.get_models()
         return response
 
     def fill_down(self, column):
-        response = self.do_json('fill-down', {'columnName': column})
+        response = self.do_json('fill-down', params={'columnName': column})
         self.get_models()
         return response
 
@@ -601,17 +609,22 @@ class RefineProject:
             combined_column_name, separator=':', prepend_column_name=True,
             ignore_blank_cells=True):
 
-        response = self.do_json('transpose-columns-into-rows', {
-            'startColumnName': start_column, 'columnCount': column_count,
-            'combinedColumnName': combined_column_name,
-            'prependColumnName': prepend_column_name,
-            'separator': separator, 'ignoreBlankCells': ignore_blank_cells})
+        response = self.do_json(
+            'transpose-columns-into-rows',
+            params={
+                'startColumnName': start_column,
+                'columnCount': column_count,
+                'combinedColumnName': combined_column_name,
+                'prependColumnName': prepend_column_name,
+                'separator': separator,
+                'ignoreBlankCells': ignore_blank_cells
+            }
+        )
         self.get_models()
         return response
 
     def transpose_rows_into_columns(self, column, row_count):
-        response = self.do_json('transpose-rows-into-columns', {
-            'columnName': column, 'rowCount': row_count})
+        response = self.do_json('transpose-rows-into-columns', params={'columnName': column, 'rowCount': row_count})
         self.get_models()
         return response
 
@@ -627,8 +640,13 @@ class RefineProject:
            ...
         ]
         """
-        response = self.do_json('guess-types-of-column', {
-            'columnName': column, 'service': service}, include_engine=False)
+        response = self.do_json(
+            'guess-types-of-column',
+            params={
+                'columnName': column,
+                'service': service
+            },
+            include_engine=False)
         return response['types']
 
     def get_reconciliation_services(self):
@@ -639,12 +657,11 @@ class RefineProject:
     def get_reconciliation_service_by_name_or_url(self, name):
         recon_services = self.get_reconciliation_services()
         for recon_service in recon_services:
-            if recon_service['name'] == name or recon_service['url'] == name:
+            if recon_service['name'] == name or recon_service['server_url'] == name:
                 return recon_service
         return None
 
-    def reconcile(self, column, service, reconciliation_type=None,
-                  reconciliation_config=None):
+    def reconcile(self, column, service, reconciliation_type=None, reconciliation_config=None):
         """Perform a reconciliation asynchronously.
 
         config: {
@@ -670,7 +687,7 @@ class RefineProject:
                 raise ValueError('Must have at least one of config or type')
             reconciliation_config = {
                 'mode': 'standard-service',
-                'service': service['url'],
+                'service': service['server_url'],
                 'identifierSpace': service['identifierSpace'],
                 'schemaSpace': service['schemaSpace'],
                 'type': {
@@ -680,5 +697,4 @@ class RefineProject:
                 'autoMatch': True,
                 'columnDetails': [],
             }
-        return self.do_json('reconcile', {
-            'columnName': column, 'config': json.dumps(reconciliation_config)})
+        return self.do_json('reconcile', params={'columnName': column, 'config': json.dumps(reconciliation_config)})

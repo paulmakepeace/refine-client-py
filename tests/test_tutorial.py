@@ -22,15 +22,16 @@ from tests import refinetest
 
 class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+    project_file_name = 'louisiana-elected-officials.csv'
     project_options = {'guess_cell_value_types': True}
 
     def test_get_rows(self):
         # Section "2. Exploration using Facets": {3}
         response = self.project.get_rows(limit=10)
-        self.assertEqual(len(response.rows), 10)
-        self.assertEqual(response.limit, 10)
-        self.assertEqual(response.total, 6958)
-        self.assertEqual(response.filtered, 6958)
+        self.assertEqual(10, len(response.rows))
+        self.assertEqual(10, response.limit)
+        self.assertEqual(6958, response.total)
+        self.assertEqual(6958, response.filtered)
         for row in response.rows:
             self.assertFalse(row.flagged)
             self.assertFalse(row.starred)
@@ -130,6 +131,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+    project_file_name = 'louisiana-elected-officials.csv'
     project_options = {'guess_cell_value_types': True}
 
     def test_editing(self):
@@ -201,6 +203,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
     project_file = 'duplicates.csv'
+    project_file_name = 'duplicates.csv'
 
     def test_duplicate_detection(self):
         # Section "4. Row and Column Editing,
@@ -214,10 +217,11 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         self.assertInResponse('Reorder rows')
         response = self.project.get_rows()
         indexes = [row.index for row in response.rows]
-        self.assertEqual(indexes, range(10))
+        self.assertEqual(indexes, list(range(10)))
         # {10}
         self.project.add_column(
-            'email', 'count', 'facetCount(value, "value", "email")')
+            'email', 'count', 'facetCount(value, "value", "email")'
+        )
         self.assertInResponse('column email by filling 10 rows')
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
@@ -241,17 +245,18 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         response = self.project.get_rows()
         email_counts = [(row['email'], row['count']) for row in response.rows]
         self.assertEqual(email_counts, [
-            (u'arthur.duff@example4.com', 2),
-            (u'ben.morisson@example6.org', 1),
-            (u'ben.tyler@example3.org', 1),
-            (u'danny.baron@example1.com', 3),
-            (u'jean.griffith@example5.org', 1),
-            (u'melanie.white@example2.edu', 2)
+            ('arthur.duff@example4.com', 2),
+            ('ben.morisson@example6.org', 1),
+            ('ben.tyler@example3.org', 1),
+            ('danny.baron@example1.com', 3),
+            ('jean.griffith@example5.org', 1),
+            ('melanie.white@example2.edu', 2)
         ])
 
 
 class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
     project_file = 'us_economic_assistance.csv'
+    project_file_name = 'us_economic_assistance.csv'
 
     def test_transpose_columns_into_rows(self):
         # Section "5. Structural Editing, Transpose Columns into Rows"
@@ -285,6 +290,7 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
 class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
+    project_file_name = 'fixed-rows.csv'
     project_format = 'text/line-based'
     project_options = {'header_lines': 0}
 
@@ -359,6 +365,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
 class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
+    project_file_name = 'variable-rows.csv'
     project_format = 'text/line-based'
     project_options = {'header_lines': 0}
 
@@ -406,6 +413,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
 
 class TutorialTestWebScraping(refinetest.RefineTestCase):
     project_file = 'eli-lilly.csv'
+    project_file_name = 'eli-lilly.csv'
 
     filter_expr_1 = """
         forEach(

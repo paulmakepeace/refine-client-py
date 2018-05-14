@@ -13,11 +13,11 @@ from google.refine.history import *
 class HistoryTest(unittest.TestCase):
     def test_init(self):
         response = {
-            u"code": "ok",
-            u"historyEntry": {
-                u"id": 1303851435223,
-                u"description": "Split 4 cells",
-                u"time": "2011-04-26T16:45:08Z"
+            "code": "ok",
+            "historyEntry": {
+                "id": 1303851435223,
+                "description": "Split 4 cells",
+                "time": "2011-04-26T16:45:08Z"
             }
         }
         he = response['historyEntry']

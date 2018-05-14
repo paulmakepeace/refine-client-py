@@ -11,6 +11,7 @@ OPENREFINE_HOST and OPENREFINE_PORT.
 
 import csv
 import unittest
+import io
 
 from google.refine import refine
 from tests import refinetest
@@ -22,7 +23,7 @@ class RefineServerTest(refinetest.RefineTestCase):
         if refine.REFINE_PORT != '80':
             server_url += ':' + refine.REFINE_PORT
         self.assertEqual(self.server.server, server_url)
-        self.assertEqual(refine.RefineServer.url(), server_url)
+        self.assertEqual(refine.RefineServer.server_url(), server_url)
         # strip trailing /
         server = refine.RefineServer('http://refine.example/')
         self.assertEqual(server.server, 'http://refine.example')
@@ -37,11 +38,12 @@ class RefineServerTest(refinetest.RefineTestCase):
             self.assertTrue(item in version_info)
 
     def test_version(self):
-        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5'))
+        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5', '2.8'))
 
 
 class RefineTest(refinetest.RefineTestCase):
     project_file = 'duplicates.csv'
+    project_file_name = 'duplicates.csv'
 
     def test_new_project(self):
         self.assertTrue(isinstance(self.project, refine.RefineProject))
@@ -50,7 +52,7 @@ class RefineTest(refinetest.RefineTestCase):
         self.project.wait_until_idle()  # should just return
 
     def test_get_models(self):
-        self.assertEqual(self.project.key_column, 'email')
+        self.assertEqual('email', self.project.key_column)
         self.assertTrue('email' in self.project.columns)
         self.assertTrue('email' in self.project.column_order)
         self.assertEqual(self.project.column_order['name'], 1)
@@ -59,21 +61,22 @@ class RefineTest(refinetest.RefineTestCase):
         self.assertTrue(self.project.delete())
 
     def test_open_export(self):
-        fp = refine.RefineProject(self.project.project_url()).export()
-        line = fp.next()
-        self.assertTrue('email' in line)
-        for line in fp:
-            self.assertTrue('M' in line or 'F' in line)
-        fp.close()
+        content = refine.RefineProject(self.project.project_url()).export()
+        self.assertTrue('email' in content)
+        for line in content:
+            self.assertTrue('M' in content or 'F' in content)
 
     def test_open_export_csv(self):
         fp = refine.RefineProject(self.project.project_url()).export()
-        csv_fp = csv.reader(fp, dialect='excel-tab')
-        row = csv_fp.next()
-        self.assertTrue(row[0] == 'email')
-        for row in csv_fp:
+        fp = fp.split('\n')
+        export = []
+        for row in fp:
+            export.append(row.split('\t'))
+        self.assertTrue(export[0][0] == 'email')
+        export.pop(0)
+        export.pop(len(export)-1)
+        for row in export:
             self.assertTrue(row[3] == 'F' or row[3] == 'M')
-        fp.close()
 
 
 if __name__ == '__main__':

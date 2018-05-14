@@ -40,18 +40,18 @@ class Facet(object):
         self.type = facet_type
         self.name = column
         self.column_name = column
-        for k, v in options.items():
+        for k, v in list(options.items()):
             setattr(self, k, v)
 
     def as_dict(self):
-        return dict([(to_camel(k), v) for k, v in self.__dict__.items()
+        return dict([(to_camel(k), v) for k, v in list(self.__dict__.items())
                      if v is not None])
 
 
 class TextFilterFacet(Facet):
     def __init__(self, column, query, **options):
         super(TextFilterFacet, self).__init__(
-            column, query=query, case_sensitive=False, facet_type='text',
+            column, query = query, case_sensitive=False, facet_type='text',
             mode='text', **options)
 
 
@@ -159,8 +159,8 @@ class FacetResponse(object):
     """Class for unpacking an individual facet response."""
     def __init__(self, facet):
         self.name = None
-        for k, v in facet.items():
-            if isinstance(k, bool) or isinstance(k, basestring):
+        for k, v in list(facet.items()):
+            if isinstance(k, bool) or isinstance(k, str):
                 setattr(self, from_camel(k), v)
         self.choices = {}
 
@@ -235,10 +235,11 @@ class Engine(object):
 
     def as_json(self):
         """Return a JSON string suitable for use as a POST parameter."""
-        return json.dumps({
-            'facets': [f.as_dict() for f in self.facets],  # XXX how with json?
+        # TODO: Rename this from as_json to dict?
+        return {
+            'facets': [f.as_dict() for f in self.facets],
             'mode': self.mode,
-        })
+        }
 
     def add_facet(self, facet):
         # Record the facet's object id so facet response can be looked up by id
@@ -268,7 +269,7 @@ class Sorting(object):
             criteria = [criteria]
         for criterion in criteria:
             # A string criterion defaults to a string sort on that column
-            if isinstance(criterion, basestring):
+            if isinstance(criterion, str):
                 criterion = {
                     'column': criterion,
                     'valueType': 'string',
