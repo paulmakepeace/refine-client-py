@@ -60,8 +60,7 @@ class TextFacet(Facet):
                  omit_blank=False, omit_error=False, select_blank=False,
                  select_error=False, invert=False, **options):
         super(TextFacet, self).__init__(
-            column,
-            facet_type='list',
+            column, facet_type='list',
             omit_blank=omit_blank,
             omit_error=omit_error,
             select_blank=select_blank,
@@ -226,6 +225,11 @@ class Engine(object):
         for facet in facets:
             self.add_facet(facet)
 
+    def add_facet(self, facet):
+        # Record the facet's object id so facet response can be looked up by id
+        self.facet_index_by_id[id(facet)] = len(self.facets)
+        self.facets.append(facet)
+
     def facets_response(self, response):
         """Unpack a compute-facets response."""
         return FacetsResponse(self, response)
@@ -240,11 +244,6 @@ class Engine(object):
             'facets': [f.as_dict() for f in self.facets],
             'mode': self.mode,
         }
-
-    def add_facet(self, facet):
-        # Record the facet's object id so facet response can be looked up by id
-        self.facet_index_by_id[id(facet)] = len(self.facets)
-        self.facets.append(facet)
 
     def remove_all(self):
         """Remove all facets."""

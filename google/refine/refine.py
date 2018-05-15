@@ -61,6 +61,7 @@ class RefineServer(object):
         project_id: project ID as string
 
         Returns requests.Response object."""
+        # TODO: command to direct post or get request
         url = self.url(command)
         if project_id:
             if 'delete' in command or data:
@@ -74,6 +75,7 @@ class RefineServer(object):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         url = self.url(url)
         response = requests.get(url, *args, **kwargs)
+        # TODO: Update this to use the response.raise_for_status()
         if response.status_code is not 200:
             response = requests.post(url, *args, **kwargs)
         response = response.json()
@@ -201,6 +203,8 @@ class Refine:
                     store_blank_cells_as_nulls=True,
                     include_file_sources=False,
                     **opts):
+        # TODO: Ability to add Creator, Subject, Custom Metadata
+        # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
 
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
@@ -365,12 +369,14 @@ class RefineProject:
             params = {}
         params['project'] = self.project_id
         if include_engine:
-            params['engine'] = self.engine.as_json()
+            if data is None:
+                data = {}
+            data['engine'] = str(self.engine.as_json())
         if command == 'delete-project':
             response = self.server.urlopen(command, params=params)
             response = response.json()
         else:
-            response = self.server.urlopen_json(command, params=params)
+            response = self.server.urlopen_json(command, params=params, data=data)
         if 'historyEntry' in response:
             # **response['historyEntry'] won't work as keys are unicode :-/
             he = response['historyEntry']

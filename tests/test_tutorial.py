@@ -161,11 +161,11 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertTrue(not response)
         # {7}
         clusters = self.project.compute_clusters('Office Title', 'knn')
-        self.assertEqual(len(clusters), 7)
+        self.assertEqual(7, len(clusters))
         first_cluster = clusters[0]
-        self.assertEqual(len(first_cluster), 2)
-        self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
-        self.assertEqual(first_cluster[0]['count'], 233)
+        self.assertEqual(2, len(first_cluster))
+        self.assertEqual('RSCC Member', first_cluster[0]['value'])
+        self.assertEqual(233, first_cluster[0]['count'])
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
         self.project.mass_edit('Office Title', [{
