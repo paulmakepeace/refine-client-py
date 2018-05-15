@@ -132,7 +132,7 @@ class ReconJudgmentFacet(TextFacet):
 
 
 # Capitalize 'From' to get around python's reserved word.
-#noinspection PyPep8Naming
+# noinspection PyPep8Naming
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, expression='value',
                  select_blank=True, select_error=True, select_non_numeric=True,

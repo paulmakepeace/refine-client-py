@@ -140,7 +140,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {2}
         self.project.text_transform(column='Zip Code 2',
                                     expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
+        self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')

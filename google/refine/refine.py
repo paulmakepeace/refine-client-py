@@ -60,28 +60,25 @@ class RefineServer(object):
         param: query params dict
         project_id: project ID as string
 
-        Returns urllib2.urlopen iterable."""
+        Returns requests.Response object."""
         url = self.url(command)
         if project_id:
-            # XXX haven't figured out pattern on qs v body
             if 'delete' in command or data:
                 data['project'] = project_id
             else:
                 params['project'] = project_id
-        if files:
-            response = requests.post(url, data=data, params=params, files=files)
-        else:
-            response = requests.post(url, data=data, params=params)
+        response = requests.post(url, data=data, params=params, files=files)
         return response
 
     def urlopen_json(self, url, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
         url = self.url(url)
         response = requests.get(url, *args, **kwargs)
+        if response.status_code is not 200:
+            response = requests.post(url, *args, **kwargs)
         response = response.json()
         if 'code' in response and response['code'] not in ('ok', 'pending'):
-            error_message = ('server ' + response['code'] + ': ' +
-                             response.get('message', response.get('stack', response)))
+            error_message = ('server ' + response['code'] + ': ' + response.get('message', response.get('stack', response)))
             raise Exception(error_message)
         return response
 
@@ -370,10 +367,10 @@ class RefineProject:
         if include_engine:
             params['engine'] = self.engine.as_json()
         if command == 'delete-project':
-            response = self.server.urlopen(command, params=params, data=data)
+            response = self.server.urlopen(command, params=params)
             response = response.json()
         else:
-            response = self.server.urlopen_json(command, params=params, data=data)
+            response = self.server.urlopen_json(command, params=params)
         if 'historyEntry' in response:
             # **response['historyEntry'] won't work as keys are unicode :-/
             he = response['historyEntry']
@@ -488,12 +485,14 @@ class RefineProject:
             self.engine.set_facets(facets)
         return self.do_json('remove-rows')
 
-    def text_transform(self, column, expression, on_error='set-to-blank',
-                       repeat=False, repeat_count=10):
+    def text_transform(self, column, expression, on_error='set-to-blank', repeat=False, repeat_count=10):
         response = self.do_json('text-transform', params={
-            'columnName': column, 'expression': expression,
-            'onError': on_error, 'repeat': repeat,
-            'repeatCount': repeat_count})
+            'columnName': column,
+            'expression': expression,
+            'onError': on_error,
+            'repeat': repeat,
+            'repeatCount': repeat_count
+        })
         return response
 
     def edit(self, column, edit_from, edit_to):
@@ -547,8 +546,7 @@ class RefineProject:
     def star_row(self, row, starred=True):
         return self.annotate_one_row(row, 'starred', starred)
 
-    def add_column(self, column, new_column, expression='value',
-                   column_insert_index=None, on_error='set-to-blank'):
+    def add_column(self, column, new_column, expression='value', column_insert_index=None, on_error='set-to-blank'):
         if column_insert_index is None:
             column_insert_index = self.column_order[column] + 1
         response = self.do_json(
