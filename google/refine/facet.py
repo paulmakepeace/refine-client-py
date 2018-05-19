@@ -239,11 +239,11 @@ class Engine(object):
 
     def as_json(self):
         """Return a JSON string suitable for use as a POST parameter."""
-        # TODO: Rename this from as_json to dict?
-        return {
+        d = {
             'facets': [f.as_dict() for f in self.facets],
             'mode': self.mode,
         }
+        return str(d)
 
     def remove_all(self):
         """Remove all facets."""
@@ -280,7 +280,8 @@ class Sorting(object):
             self.criteria.append(criterion)
 
     def as_json(self):
-        return json.dumps({'criteria': self.criteria})
+        d = {'criteria': self.criteria}
+        return str(d)
 
     def __len__(self):
         return len(self.criteria)

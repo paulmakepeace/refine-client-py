@@ -69,20 +69,22 @@ class RefineServer(object):
             else:
                 params['project'] = project_id
         response = requests.post(url, data=data, params=params, files=files)
+        if response.status_code is not 200:
+            response = requests.get(url, data=data, params=params, files=files)
         return response
 
-    def urlopen_json(self, url, *args, **kwargs):
+    def urlopen_json(self, command, *args, **kwargs):
         """Open a Refine URL, optionally POST data, and return parsed JSON."""
-        url = self.url(url)
-        response = requests.get(url, *args, **kwargs)
-        # TODO: Update this to use the response.raise_for_status()
-        if response.status_code is not 200:
-            response = requests.post(url, *args, **kwargs)
+        response = self.urlopen(command, *args, **kwargs)
         response = response.json()
+        self.check_response_ok(response)
+        return response
+
+    @staticmethod
+    def check_response_ok(response):
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             error_message = ('server ' + response['code'] + ': ' + response.get('message', response.get('stack', response)))
             raise Exception(error_message)
-        return response
 
     def get_version(self):
         """Return version data.
@@ -234,29 +236,12 @@ class Refine:
         #     'include-file-sources': s(include_file_sources),
         # }
 
-        # options = {
-        #
-        # }
-        # params = {
-        #     'format': project_format,
-        #     'options': json.dumps(options),
-        # }
-
-        params = {
-
-        }
+        params = self.default_params(project_format)
 
         files = {
             'project-file': (project_file_name, open(project_file, 'rb'))
         }
 
-        # if project_url is not None:
-        #     options['server_url'] = project_url
-        # elif project_file is not None:
-        #     options['project-file'] = {
-        #         'fd': open(project_file),
-        #         'filename': project_file,
-        #     }
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
@@ -273,6 +258,9 @@ class Refine:
             return RefineProject(self.server, project_id)
         else:
             raise Exception('Project not created')
+
+    def default_params(self, project_format):
+        return self.new_project_defaults[project_format]
 
 
 def RowsResponseFactory(column_index):
@@ -371,7 +359,7 @@ class RefineProject:
         if include_engine:
             if data is None:
                 data = {}
-            data['engine'] = str(self.engine.as_json())
+            data['engine'] = self.engine.as_json()
         if command == 'delete-project':
             response = self.server.urlopen(command, params=params)
             response = response.json()
@@ -470,11 +458,13 @@ class RefineProject:
     def get_rows(self, facets=None, sort_by=None, start=0, limit=10):
         if facets:
             self.engine.set_facets(facets)
-        if sort_by is not None:
+        if sort_by is None:
+            self.sorting = facet.Sorting([])
+        elif sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
-        response = self.do_json(
-            'get-rows',
-            params={'sorting': self.sorting.as_json(), 'start': start, 'limit': limit}
+        response = self.do_json('get-rows',
+            params={'start': start, 'limit': limit},
+            data={'sorting': self.sorting.as_json()},
         )
         return self.rows_response_factory(response)
 
@@ -527,16 +517,16 @@ class RefineProject:
         },
     }
 
-    def compute_clusters(self, column, clusterer_type='binning',
-                         function=None, params=None):
+    def compute_clusters(self, column, clusterer_type='binning', function=None, params=None):
         """Returns a list of clusters of {'value': ..., 'count': ...}."""
         clusterer = self.clusterer_defaults[clusterer_type]
         if params is not None:
             clusterer['params'] = params
         if function is not None:
             clusterer['function'] = function
+
         clusterer['column'] = column
-        response = self.do_json('compute-clusters', params={'clusterer': json.dumps(clusterer)})
+        response = self.do_json('compute-clusters', data={'clusterer': str(clusterer)})
         return [[{'value': x['v'], 'count': x['c']} for x in cluster]
                 for cluster in response]
 
@@ -579,8 +569,7 @@ class RefineProject:
         return response
 
     def rename_column(self, column, new_column):
-        response = self.do_json('rename-column', params={'oldColumnName': column,
-                                                  'newColumnName': new_column})
+        response = self.do_json('rename-column', params={'oldColumnName': column, 'newColumnName': new_column})
         self.get_models()
         return response
 
@@ -701,4 +690,4 @@ class RefineProject:
                 'autoMatch': True,
                 'columnDetails': [],
             }
-        return self.do_json('reconcile', params={'columnName': column, 'config': json.dumps(reconciliation_config)})
+        return self.do_json('reconcile', params={'columnName': column, 'config': str(reconciliation_config)})

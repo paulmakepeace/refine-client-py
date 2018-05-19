@@ -85,13 +85,14 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[2].choices), 76)
         # {12} - XXX not sure how to interpret bins & baseBins yet
+        self.project.text_transform('Office Level', 'value.toNumber()')
         office_level_facet = facet.NumericFacet('Office Level')
         self.project.engine.add_facet(office_level_facet)
         # {13}
         office_level_facet.From = 300   # from reserved word
         office_level_facet.to = 320
         response = self.project.get_rows()
-        self.assertEqual(response.filtered, 1907)
+        self.assertEqual(1907, response.filtered)
         response = self.project.compute_facets()
         ot = response.facets[office_title_facet]
         self.assertEqual(len(ot.choices), 21)
@@ -138,9 +139,11 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # Section "3. Cell Editing": {1}
         self.project.engine.remove_all()    # redundant due to setUp
         # {2}
+        self.project.text_transform(column='Zip Code 2', expression='value.toNumber()')
+        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
         self.project.text_transform(column='Zip Code 2',
                                     expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 1441 cells in column Zip Code 2')
+        self.assertInResponse('transform on 6958 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
@@ -161,11 +164,11 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertTrue(not response)
         # {7}
         clusters = self.project.compute_clusters('Office Title', 'knn')
-        self.assertEqual(7, len(clusters))
+        self.assertEqual(len(clusters), 7)
         first_cluster = clusters[0]
-        self.assertEqual(2, len(first_cluster))
-        self.assertEqual('RSCC Member', first_cluster[0]['value'])
-        self.assertEqual(233, first_cluster[0]['count'])
+        self.assertEqual(len(first_cluster), 2)
+        self.assertEqual(first_cluster[0]['value'], 'DPEC Member at Large')
+        self.assertEqual(first_cluster[0]['count'], 6)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
         self.project.mass_edit('Office Title', [{
@@ -196,9 +199,9 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
-        self.assertEqual(response.facets[0].choices[True].count, 3)
+        self.assertEqual(response.facets[0].choices[True].count, 2)
         self.project.remove_rows()
-        self.assertInResponse('3 rows')
+        self.assertInResponse('2 rows')
 
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
@@ -219,9 +222,7 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         indexes = [row.index for row in response.rows]
         self.assertEqual(indexes, list(range(10)))
         # {10}
-        self.project.add_column(
-            'email', 'count', 'facetCount(value, "value", "email")'
-        )
+        self.project.add_column('email', 'count', 'facetCount(value, "value", "email")')
         self.assertInResponse('column email by filling 10 rows')
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
@@ -235,7 +236,7 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         self.assertTrue(self.project.has_records)
         response = self.project.get_rows()
         emails = [1 if row['email'] else 0 for row in response.rows]
-        self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
+        self.assertEqual([1, 0, 1, 1, 1, 0, 0, 1, 1, 0], emails)
         # {12}
         blank_facet = facet.BlankFacet('email', selection=True)
         # {13}

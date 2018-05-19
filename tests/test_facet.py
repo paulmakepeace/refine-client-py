@@ -80,7 +80,7 @@ class EngineTest(unittest.TestCase):
     def test_serialize(self):
         engine = Engine()
         engine_json = engine.as_json()
-        self.assertEqual(engine_json, {'facets': [], 'mode': 'row-based'})
+        self.assertEqual(engine_json, "{'facets': [], 'mode': 'row-based'}")
         facet = TextFacet(column='column')
         self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
         facet = NumericFacet(column='column', From=1, to=5)
@@ -111,7 +111,7 @@ class EngineTest(unittest.TestCase):
 class SortingTest(unittest.TestCase):
     def test_sorting(self):
         sorting = Sorting()
-        self.assertEqual(sorting.as_json(), '{"criteria": []}')
+        self.assertEqual(sorting.as_json(), "{'criteria': []}")
         sorting = Sorting('email')
         c = sorting.criteria[0]
         self.assertEqual(c['column'], 'email')
