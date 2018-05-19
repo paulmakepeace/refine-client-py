@@ -130,6 +130,24 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
+    @staticmethod
+    def set_project_name(project_name, project_file):
+        # expecting a redirect to the new project containing the id in the server_url
+        if project_name is None:
+            # make a name for itself by stripping extension and directories
+            project_name = (project_file or 'New project').rsplit('.', 1)[0]
+            project_name = os.path.basename(project_name)
+        return project_name
+
+    @staticmethod
+    def get_project_id(url):
+        url_params = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+        if 'project' in url_params:
+            project_id = url_params['project'][0]
+            return project_id
+        else:
+            raise Exception('Project not created')
+
     def set_options(self, file_format, **kwargs):
         options = self.default_options(file_format)
         for key, value in kwargs.items():
@@ -210,33 +228,21 @@ class Refine:
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
 
-        params = {}
-
+        params = {
+            'project_name': self.set_project_name(project_name, project_file)
+        }
         data = {
             'format': project_format,
             'options': self.set_options(project_format, **opts)
         }
-
         files = {
             'project-file': (project_file_name, open(project_file, 'rb'))
         }
 
-        if project_name is None:
-            # make a name for itself by stripping extension and directories
-            project_name = (project_file or 'New project').rsplit('.', 1)[0]
-            project_name = os.path.basename(project_name)
-        params['project-name'] = project_name
         response = self.server.urlopen('create-project-from-upload', params=params, data=data, files=files)
-        # expecting a redirect to the new project containing the id in the server_url
-        url_params = urllib.parse.parse_qs(urllib.parse.urlparse(response.url).query)
-        if 'project' in url_params:
-            project_id = url_params['project'][0]
-            return RefineProject(self.server, project_id)
-        else:
-            raise Exception('Project not created')
 
-    # def default_params(self, project_format):
-    #     return self.new_project_defaults[project_format]
+        project_id = self.get_project_id(response.url)
+        return RefineProject(self.server, project_id)
 
 
 def RowsResponseFactory(column_index):
