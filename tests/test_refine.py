@@ -38,7 +38,7 @@ class RefineServerTest(refinetest.RefineTestCase):
             self.assertTrue(item in version_info)
 
     def test_version(self):
-        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5', '2.8'))
+        self.assertTrue(self.server.version in ('2.8',))
 
 
 class RefineTest(refinetest.RefineTestCase):
@@ -78,6 +78,37 @@ class RefineTest(refinetest.RefineTestCase):
         for row in export:
             self.assertTrue(row[3] == 'F' or row[3] == 'M')
 
+    # Not sure what I am dong wrong here
+    # def test_invalid_type_raises_InvalidFileFormatError(self):
+    #     self.assertRaises(self.refine.default_options('Bad Type'), refine.InvalidFileFormat)
+
+    def test_default_options(self):
+        options = self.refine.default_options('text/line-based')
+        expected = {
+                'encoding': '',
+                'lines_per_row': 1,
+                'ignore_lines': -1,
+                'limit': -1,
+                'skip_data_lines': -1,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False
+            }
+        self.assertEqual(options, expected)
+
+    def test_options_set_properly(self):
+        options = self.refine.set_options('text/line-based', lines_per_row=2, limit=5)
+        expected = {
+                'encoding': '',
+                'lines_per_row': 2,
+                'ignore_lines': -1,
+                'limit': 5,
+                'skip_data_lines': -1,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False
+            }
+        self.assertEqual(options, expected)
 
 if __name__ == '__main__':
     unittest.main()

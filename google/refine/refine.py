@@ -130,113 +130,92 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
-    # These aren't used yet but are included for reference
-    new_project_defaults = {
-        'text/line-based/*sv': {
-            'encoding': '',
-            'separator': ',',
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'guess_cell_value_types': True,
-            'process_quotes': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based': {
-            'encoding': '',
-            'lines_per_row': 1,
-            'ignore_lines': -1,
-            'limit': -1,
-            'skip_data_lines': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based/fixed-width': {
-            'encoding': '',
-            'column_widths': [20],
-            'ignore_lines': -1,
-            'header_lines': 0,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'guess_cell_value_types': False,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based/pc-axis': {
-            'encoding': '',
-            'limit': -1,
-            'skip_data_lines': -1,
-            'include_file_sources': False},
-        'text/rdf+n3': {'encoding': ''},
-        'text/xml/ods': {
-            'sheets': [],
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'binary/xls': {
-            'xml_based': False,
-            'sheets': [],
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False}
-    }
+    def set_options(self, file_format, **kwargs):
+        options = self.default_options(file_format)
+        for key, value in kwargs.items():
+            options[key] = value
+        return options
+
+    @staticmethod
+    def default_options(file_format):
+        new_project_defaults = {
+            'text/line-based/*sv': {
+                'encoding': '',
+                'separator': ',',
+                'ignore_lines': -1,
+                'header_lines': 1,
+                'skip_data_lines': 0,
+                'limit': -1,
+                'store_blank_rows': True,
+                'guess_cell_value_types': True,
+                'process_quotes': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False},
+            'text/line-based': {
+                'encoding': '',
+                'lines_per_row': 1,
+                'ignore_lines': -1,
+                'limit': -1,
+                'skip_data_lines': -1,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False},
+            'text/line-based/fixed-width': {
+                'encoding': '',
+                'column_widths': [20],
+                'ignore_lines': -1,
+                'header_lines': 0,
+                'skip_data_lines': 0,
+                'limit': -1,
+                'guess_cell_value_types': False,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False},
+            'text/line-based/pc-axis': {
+                'encoding': '',
+                'limit': -1,
+                'skip_data_lines': -1,
+                'include_file_sources': False},
+            'text/rdf+n3': {'encoding': ''},
+            'text/xml/ods': {
+                'sheets': [],
+                'ignore_lines': -1,
+                'header_lines': 1,
+                'skip_data_lines': 0,
+                'limit': -1,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False},
+            'binary/xls': {
+                'xml_based': False,
+                'sheets': [],
+                'ignore_lines': -1,
+                'header_lines': 1,
+                'skip_data_lines': 0,
+                'limit': -1,
+                'store_blank_rows': True,
+                'store_blank_cells_as_nulls': True,
+                'include_file_sources': False}
+        }
+        if file_format in new_project_defaults.keys():
+            return new_project_defaults[file_format]
+        else:
+            raise InvalidFileFormat
 
     def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
-                    project_file_name=None,
-                    encoding='',
-                    separator=',',
-                    ignore_lines=-1,
-                    header_lines=1,
-                    skip_data_lines=0,
-                    limit=-1,
-                    store_blank_rows=True,
-                    guess_cell_value_types=True,
-                    process_quotes=True,
-                    store_blank_cells_as_nulls=True,
-                    include_file_sources=False,
-                    **opts):
+                    project_file_name=None, **opts):
         # TODO: Ability to add Creator, Subject, Custom Metadata
         # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
 
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('One (only) of project_file and project_url must be set')
 
-        def s(opt):
-            if isinstance(opt, bool):
-                return 'true' if opt else 'false'
-            if opt is None:
-                return ''
-            return str(opt)
+        params = {}
 
-        # the new APIs requires a json in the 'option' POST or GET argument
-        # POST is broken at the moment, so we send it in the URL
-        # new_style_options = dict(opts, **{
-        #     'encoding': s(encoding),
-        # })
-        # options = {
-        #     'separator': s(separator),
-        #     'ignore-lines': s(ignore_lines),
-        #     'header-lines': s(header_lines),
-        #     'skip-data-lines': s(skip_data_lines),
-        #     'limit': s(limit),
-        #     'guess-value-type': s(guess_cell_value_types),
-        #     'process-quotes': s(process_quotes),
-        #     'store-blank-rows': s(store_blank_rows),
-        #     'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
-        #     'include-file-sources': s(include_file_sources),
-        # }
-
-        params = self.default_params(project_format)
+        data = {
+            'format': project_format,
+            'options': self.set_options(project_format, **opts)
+        }
 
         files = {
             'project-file': (project_file_name, open(project_file, 'rb'))
@@ -247,20 +226,17 @@ class Refine:
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         params['project-name'] = project_name
-        response = self.server.urlopen(
-            'create-project-from-upload', params=params, files=files
-        )
+        response = self.server.urlopen('create-project-from-upload', params=params, data=data, files=files)
         # expecting a redirect to the new project containing the id in the server_url
-        url_params = urllib.parse.parse_qs(
-            urllib.parse.urlparse(response.url).query)
+        url_params = urllib.parse.parse_qs(urllib.parse.urlparse(response.url).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
             return RefineProject(self.server, project_id)
         else:
             raise Exception('Project not created')
 
-    def default_params(self, project_format):
-        return self.new_project_defaults[project_format]
+    # def default_params(self, project_format):
+    #     return self.new_project_defaults[project_format]
 
 
 def RowsResponseFactory(column_index):
@@ -691,3 +667,7 @@ class RefineProject:
                 'columnDetails': [],
             }
         return self.do_json('reconcile', params={'columnName': column, 'config': str(reconciliation_config)})
+
+
+class InvalidFileFormat(ValueError):
+    pass
