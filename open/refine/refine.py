@@ -59,7 +59,7 @@ class RefineServer(object):
 
         Returns requests.Response object."""
         # TODO: command to direct post or get request
-        url = self.url(command)
+        url = self.server + f'/command/core/{command}'
         if project_id:
             if 'delete' in command or data:
                 data['project'] = project_id
@@ -76,9 +76,6 @@ class RefineServer(object):
         response = response.json()
         self.check_response_ok(response)
         return response
-
-    def url(self, command):
-        return self.server + '/command/core/' + command
 
     @staticmethod
     def check_response_ok(response):
