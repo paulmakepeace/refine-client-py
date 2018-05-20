@@ -133,17 +133,13 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
     project_file_name = 'louisiana-elected-officials.csv'
-    project_options = {'guess_cell_value_types': True}
 
     def test_editing(self):
         # Section "3. Cell Editing": {1}
         self.project.engine.remove_all()    # redundant due to setUp
         # {2}
-        self.project.text_transform(column='Zip Code 2', expression='value.toNumber()')
-        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
-        self.project.text_transform(column='Zip Code 2',
-                                    expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 6958 cells in column Zip Code 2')
+        self.project.text_transform(column='Zip Code 2', expression='value.toString()[0, 5]')
+        self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
