@@ -592,6 +592,11 @@ class RefineProject:
         self.get_models()
         return response
 
+    def get_operations(self):
+        response = self.do_json('get-operations')
+        self.get_models()
+        return response
+
     # Reconciliation
     # http://code.google.com/p/google-refine/wiki/ReconciliationServiceApi
     def guess_types_of_column(self, column, service):

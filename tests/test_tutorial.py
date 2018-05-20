@@ -167,10 +167,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(first_cluster[0]['count'], 6)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
-        self.project.mass_edit('Office Title', [{
-            'from': ['Council Member', 'Councilmember'],
-            'to': 'Council Member'
-        }])
+        self.project.mass_edit('Office Title', [{'from': ['Council Member', 'Councilmember'], 'to': 'Council Member'}])
         self.assertInResponse('372')
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[office_title_facet].choices), 65)
