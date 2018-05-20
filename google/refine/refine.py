@@ -540,13 +540,16 @@ class RefineProject:
         self.get_models()
         return response
 
-    def split_column(self, column, separator=',', mode='separator',
-                     regex=False, guess_cell_type=True,
-                     remove_original_column=True):
-        response = self.do_json('split-column', params={
-            'columnName': column, 'separator': separator, 'mode': mode,
-            'regex': regex, 'guessCellType': guess_cell_type,
-            'removeOriginalColumn': remove_original_column})
+    def split_column(self, column, separator=',', mode='separator', regex=False, guess_cell_type=True, remove_original_column=True):
+        response = self.do_json('split-column',
+            params={
+                'columnName': column,
+                'separator': separator,
+                'mode': mode,
+                'regex': regex,
+                'guessCellType': guess_cell_type,
+                'removeOriginalColumn': remove_original_column
+            })
         self.get_models()
         return response
 
@@ -557,7 +560,9 @@ class RefineProject:
 
     def reorder_columns(self, new_column_order):
         """Takes an array of column names in the new order."""
-        response = self.do_json('reorder-columns', params={'columnNames': new_column_order})
+        if new_column_order is not str:
+            new_column_order = str(new_column_order)
+        response = self.do_json('reorder-columns', data={'columnNames': new_column_order})
         self.get_models()
         return response
 

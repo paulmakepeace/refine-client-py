@@ -358,8 +358,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         self.project.text_transform('Column 1', 'value.partition(" on ")[2]')
         self.assertInResponse('4 cells')
         # {19}
-        self.project.reorder_columns(['Transaction', 'Amount', 'Sender',
-                                      'Recipient'])
+        self.project.reorder_columns(['Transaction', 'Amount', 'Sender', 'Recipient'])
         self.assertInResponse('Reorder columns')
 
 
