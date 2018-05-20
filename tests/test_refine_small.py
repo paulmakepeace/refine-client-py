@@ -7,7 +7,7 @@ test_refine_small.py
 
 import unittest
 
-from google.refine import refine
+from open.refine import refine
 
 
 class RefineRowsTest(unittest.TestCase):

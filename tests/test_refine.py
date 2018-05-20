@@ -13,7 +13,7 @@ import csv
 import unittest
 import io
 
-from google.refine import refine
+from open.refine import refine
 from tests import refinetest
 
 
