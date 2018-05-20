@@ -44,9 +44,6 @@ class RefineServer(object):
             server += ':' + REFINE_PORT
         return server
 
-    def url(self, command):
-        return self.server + '/command/core/' + command
-
     def __init__(self, server=None):
         if server is None:
             server = self.server_url()
@@ -80,6 +77,9 @@ class RefineServer(object):
         self.check_response_ok(response)
         return response
 
+    def url(self, command):
+        return self.server + '/command/core/' + command
+
     @staticmethod
     def check_response_ok(response):
         if 'code' in response and response['code'] not in ('ok', 'pending'):
@@ -88,7 +88,6 @@ class RefineServer(object):
 
     def get_version(self):
         """Return version data.
-
         {"revision":"r1836","full_version":"2.0 [r1836]",
          "full_name":"Google Refine 2.0 [r1836]","version":"2.0"}"""
         return self.urlopen_json('get-version')
@@ -108,6 +107,50 @@ class Refine:
         else:
             self.server = RefineServer(server)
 
+    def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
+                    project_file_name=None, **opts):
+        # TODO: Ability to add Creator, Subject, Custom Metadata
+        # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
+        if (project_file and project_url) or (not project_file and not project_url):
+            raise ValueError('One (only) of project_file and project_url must be set')
+        params = {
+            'project_name': self.set_project_name(project_name, project_file)
+        }
+        data = {
+            'format': project_format,
+            'options': self.set_options(project_format, **opts)
+        }
+        files = {
+            'project-file': (project_file_name, open(project_file, 'rb'))
+        }
+        response = self.server.urlopen('create-project-from-upload', params=params, data=data, files=files)
+        project_id = self.get_project_id(response.url)
+        return RefineProject(self.server, project_id)
+
+    @staticmethod
+    def set_project_name(project_name, project_file):
+        # expecting a redirect to the new project containing the id in the server_url
+        if project_name is None:
+            # make a name for itself by stripping extension and directories
+            project_name = (project_file or 'New project').rsplit('.', 1)[0]
+            project_name = os.path.basename(project_name)
+        return project_name
+
+    def set_options(self, file_format, **kwargs):
+        options = self.default_options(file_format)
+        for key, value in kwargs.items():
+            options[key] = value
+        return options
+
+    def get_project_name(self, project_id):
+        """Returns project name given project_id."""
+        projects = self.list_projects()
+        return projects[project_id]['name']
+
+    def open_project(self, project_id):
+        """Open a Refine project."""
+        return RefineProject(self.server, project_id)
+
     def list_projects(self):
         """Return a dict of projects indexed by id.
 
@@ -121,24 +164,6 @@ class Refine:
         # projects with the same name.
         return self.server.urlopen_json('get-all-project-metadata')['projects']
 
-    def get_project_name(self, project_id):
-        """Returns project name given project_id."""
-        projects = self.list_projects()
-        return projects[project_id]['name']
-
-    def open_project(self, project_id):
-        """Open a Refine project."""
-        return RefineProject(self.server, project_id)
-
-    @staticmethod
-    def set_project_name(project_name, project_file):
-        # expecting a redirect to the new project containing the id in the server_url
-        if project_name is None:
-            # make a name for itself by stripping extension and directories
-            project_name = (project_file or 'New project').rsplit('.', 1)[0]
-            project_name = os.path.basename(project_name)
-        return project_name
-
     @staticmethod
     def get_project_id(url):
         url_params = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
@@ -147,12 +172,6 @@ class Refine:
             return project_id
         else:
             raise Exception('Project not created')
-
-    def set_options(self, file_format, **kwargs):
-        options = self.default_options(file_format)
-        for key, value in kwargs.items():
-            options[key] = value
-        return options
 
     @staticmethod
     def default_options(file_format):
@@ -220,34 +239,9 @@ class Refine:
         else:
             raise InvalidFileFormat
 
-    def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
-                    project_file_name=None, **opts):
-        # TODO: Ability to add Creator, Subject, Custom Metadata
-        # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
-
-        if (project_file and project_url) or (not project_file and not project_url):
-            raise ValueError('One (only) of project_file and project_url must be set')
-
-        params = {
-            'project_name': self.set_project_name(project_name, project_file)
-        }
-        data = {
-            'format': project_format,
-            'options': self.set_options(project_format, **opts)
-        }
-        files = {
-            'project-file': (project_file_name, open(project_file, 'rb'))
-        }
-
-        response = self.server.urlopen('create-project-from-upload', params=params, data=data, files=files)
-
-        project_id = self.get_project_id(response.url)
-        return RefineProject(self.server, project_id)
-
 
 def RowsResponseFactory(column_index):
     """Factory for the parsing the output from get_rows().
-
     Uses the project's model's row cell index so that a row can be used
     as a dict by column name."""
 
@@ -294,7 +288,6 @@ def RowsResponseFactory(column_index):
 
 class RefineProject:
     """An OpenRefine project."""
-
     def __init__(self, server, project_id=None):
         if not isinstance(server, RefineServer):
             if '/project?project=' in server:
@@ -321,18 +314,6 @@ class RefineProject:
         # following filled in by get_reconciliation_services
         self.recon_services = None
 
-    def project_name(self):
-        return Refine(self.server).get_project_name(self.project_id)
-
-    def project_url(self):
-        """Return a URL to the project."""
-        return '%s/project?project=%s' % (self.server.server, self.project_id)
-
-    def do_raw(self, command, data):
-        """Issue a command to the server & return a response object."""
-        return self.server.urlopen(command, project_id=self.project_id,
-                                   data=data)
-
     def do_json(self, command, data=None, params=None, include_engine=True):
         """Issue a command to the server, parse & return decoded JSON."""
         if params is None:
@@ -353,6 +334,17 @@ class RefineProject:
             self.history_entry = history.HistoryEntry(he['id'], he['time'],
                                                       he['description'])
         return response
+
+    def project_name(self):
+        return Refine(self.server).get_project_name(self.project_id)
+
+    def project_url(self):
+        """Return a URL to the project."""
+        return '%s/project?project=%s' % (self.server.server, self.project_id)
+
+    def do_raw(self, command, data):
+        """Issue a command to the server & return a response object."""
+        return self.server.urlopen(command, project_id=self.project_id, data=data)
 
     def get_models(self):
         """
@@ -378,7 +370,6 @@ class RefineProject:
         self.key_column = column_model.get('keyColumnName')
         self.has_records = response['recordModel'].get('hasRecords', False)
         self.rows_response_factory = RowsResponseFactory(column_index)
-        # TODO: implement rest
         return response
 
     def get_preference(self, name):
@@ -407,8 +398,7 @@ class RefineProject:
         # TODO: add functionality to be able to export large sets of data
         # TODO: add functionality only one request will set data size "requirement" to choose what size sets chunking
         # Probably implement response.raw and export/save it in chunks.
-        url = ('export-rows/' + urllib.parse.quote(self.project_name()) + '.' +
-               export_format)
+        url = ('export-rows/' + urllib.parse.quote(self.project_name()) + '.' + export_format)
         response = self.do_raw(url, data={'format': export_format})
         return response.text
 
@@ -444,10 +434,7 @@ class RefineProject:
             self.sorting = facet.Sorting([])
         elif sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
-        response = self.do_json('get-rows',
-            params={'start': start, 'limit': limit},
-            data={'sorting': self.sorting.as_json()},
-        )
+        response = self.do_json('get-rows', params={'start': start, 'limit': limit}, data={'sorting': self.sorting.as_json()})
         return self.rows_response_factory(response)
 
     def reorder_rows(self, sort_by=None):
