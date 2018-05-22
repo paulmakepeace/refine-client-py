@@ -109,7 +109,7 @@ class Refine:
         # TODO: Ability to add Creator, Subject, Custom Metadata
         # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
         if (project_file and project_url) or (not project_file and not project_url):
-            raise ValueError('One (only) of project_file and project_url must be set')
+            raise ValueError('Either a project_file or project_url must be set. Both cannot be used.')
         params = {
             'project_name': self.set_project_name(project_name, project_file)
         }
@@ -121,7 +121,9 @@ class Refine:
             'project-file': (project_file_name, open(project_file, 'rb'))
         }
         response = self.server.urlopen('create-project-from-upload', params=params, data=data, files=files)
+        response.raise_for_status()
         project_id = self.get_project_id(response.url)
+        files['project-file'][1].close()
         return RefineProject(self.server, project_id)
 
     @staticmethod
@@ -382,13 +384,25 @@ class RefineProject:
             else:
                 return
 
-    def apply_operations(self, file_path, wait=True):
-        json_data = open(file_path).read()
-        response_json = self.do_json('apply-operations', params={'operations': json_data})
+    def apply_operations(self, operations=None, file_path=None, wait=True):
+        json_data = self.json_data(operations, file_path)
+        response_json = self.do_json('apply-operations', data={'operations': json_data})
+
         if response_json['code'] == 'pending' and wait:
             self.wait_until_idle()
             return 'ok'
         return response_json['code']  # can be 'ok' or 'pending'
+
+    @staticmethod
+    def json_data(operations, file_path):
+        if operations:
+            if type(operations) is not list:
+                operations = [operations]
+            return json.dumps(operations)
+        elif file_path:
+            return open(file_path).read()
+        else:
+            raise ValueError("Operation(s) not specified.")
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""

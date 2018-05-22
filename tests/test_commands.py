@@ -39,6 +39,86 @@ class TestCommands(refinetest.RefineTestCase):
         response = self.project.get_operations()
         self.assertTrue(len(response.get("entries")) == 4)
 
+    def test_apply_operations(self):
+        operations_list = [
+            {'op': 'core/column-addition',
+                 'description': 'Create column zip type at index 15 based on column Zip Code 2 using expression grel:value.type()',
+                 'engineConfig':
+                     {
+                         'mode': 'row-based',
+                         'facets': []
+                     },
+                 'newColumnName': 'zip type',
+                 'columnInsertIndex': 15,
+                 'baseColumnName': 'Zip Code 2',
+                 'expression': 'grel:value.type()',
+                 'onError': 'set-to-blank'},
+            {
+                'op': 'core/column-addition',
+                 'description': 'Create column testing at index 15 based on column Zip Code 2 using expression grel:value.toString()[0,5]',
+                 'engineConfig':
+                     {
+                         'mode': 'row-based',
+                         'facets': []
+                     },
+                 'newColumnName': 'testing',
+                 'columnInsertIndex': 15,
+                 'baseColumnName': 'Zip Code 2',
+                 'expression': 'grel:value.toString()[0,5]',
+                 'onError': 'set-to-blank'},
+            {
+                'op': 'core/column-addition',
+                'description': 'Create column the same? at index 16 based on column testing using expression grel:cells["Zip Code 2"].value == value',
+                'engineConfig':
+                    {
+                        'mode': 'row-based',
+                        'facets': []
+                    },
+                'newColumnName': 'the same?',
+                'columnInsertIndex': 16,
+                'baseColumnName': 'testing',
+                'expression': 'grel:cells["Zip Code 2"].value == value',
+                'onError': 'set-to-blank'},
+            {
+                'op': 'core/text-transform',
+                'description': 'Text transform on cells in column Office Level using expression grel:value.toNumber()',
+                    'engineConfig':
+                        {
+                            'mode': 'row-based',
+                            'facets':
+                                [
+                                    {
+                                        'omitError': False,
+                                        'expression': 'value',
+                                        'selectBlank': True,
+                                        'selection': [],
+                                        'selectError': False,
+                                        'invert': False,
+                                        'name': 'the same?',
+                                        'omitBlank': False,
+                                        'type': 'list',
+                                        'columnName': 'the same?'
+                                    }
+                                ]
+                        },
+                'columnName': 'Office Level',
+                'expression': 'grel:value.toNumber()',
+                'onError': 'keep-original',
+                'repeat': False,
+                'repeatCount': 10},
+            {
+                'op': 'core/fill-down',
+                'description': 'Fill down cells in column Salutation',
+                'engineConfig':
+                    {
+                        'mode': 'row-based',
+                        'facets': []}, 'columnName': 'Salutation'
+            }
+        ]
+        self.project.apply_operations(operations=operations_list)
+        response = self.project.get_models()
+        self.assertTrue(response["columnModel"]["columns"][15]["name"] == 'testing')
+
 
 
 if __name__ == '__main__':
