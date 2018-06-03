@@ -38,7 +38,7 @@ class RefineServerTest(refinetest.RefineTestCase):
             self.assertTrue(item in version_info)
 
     def test_version(self):
-        self.assertTrue(self.server.version in ('2.8',))
+        self.assertTrue(self.server.version in ('3.0-beta',))
 
 
 class RefineTest(refinetest.RefineTestCase):
