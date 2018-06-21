@@ -9,9 +9,7 @@ OPENREFINE_HOST and OPENREFINE_PORT.
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
 
-import csv
 import unittest
-import io
 
 from open.refine import refine
 from tests import refinetest
@@ -38,7 +36,7 @@ class RefineServerTest(refinetest.RefineTestCase):
             self.assertTrue(item in version_info)
 
     def test_version(self):
-        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5', '2.8','3.0-beta',))
+        self.assertTrue(self.server.version in ('2.0', '2.1', '2.5', '2.8', '3.0-beta',))
 
 
 class RefineTest(refinetest.RefineTestCase):
@@ -111,6 +109,7 @@ class RefineTest(refinetest.RefineTestCase):
                 'include_file_sources': False
             }
         self.assertEqual(options, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
