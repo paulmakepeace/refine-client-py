@@ -41,34 +41,38 @@ class TestCommands(refinetest.RefineTestCase):
 
     def test_apply_operations(self):
         operations_list = [
-            {'op': 'core/column-addition',
-                 'description': 'Create column zip type at index 15 based on column Zip Code 2 using expression grel:value.type()',
-                 'engineConfig':
-                     {
-                         'mode': 'row-based',
-                         'facets': []
-                     },
-                 'newColumnName': 'zip type',
-                 'columnInsertIndex': 15,
-                 'baseColumnName': 'Zip Code 2',
-                 'expression': 'grel:value.type()',
-                 'onError': 'set-to-blank'},
             {
                 'op': 'core/column-addition',
-                 'description': 'Create column testing at index 15 based on column Zip Code 2 using expression grel:value.toString()[0,5]',
-                 'engineConfig':
-                     {
-                         'mode': 'row-based',
-                         'facets': []
-                     },
-                 'newColumnName': 'testing',
-                 'columnInsertIndex': 15,
-                 'baseColumnName': 'Zip Code 2',
-                 'expression': 'grel:value.toString()[0,5]',
-                 'onError': 'set-to-blank'},
+                'description': 'Create column zip type at index 15 based on column Zip Code 2 using expression '
+                               'grel:value.type()',
+                'engineConfig':
+                    {
+                        'mode': 'row-based',
+                        'facets': []
+                    },
+                'newColumnName': 'zip type',
+                'columnInsertIndex': 15,
+                'baseColumnName': 'Zip Code 2',
+                'expression': 'grel:value.type()',
+                'onError': 'set-to-blank'},
             {
                 'op': 'core/column-addition',
-                'description': 'Create column the same? at index 16 based on column testing using expression grel:cells["Zip Code 2"].value == value',
+                'description': 'Create column testing at index 15 based on column Zip Code 2 using expression '
+                               'grel:value.toString()[0,5]',
+                'engineConfig':
+                    {
+                        'mode': 'row-based',
+                        'facets': []
+                    },
+                'newColumnName': 'testing',
+                'columnInsertIndex': 15,
+                'baseColumnName': 'Zip Code 2',
+                'expression': 'grel:value.toString()[0,5]',
+                'onError': 'set-to-blank'},
+            {
+                'op': 'core/column-addition',
+                'description': 'Create column the same? at index 16 based on column testing using expression '
+                               'grel:cells["Zip Code 2"].value == value',
                 'engineConfig':
                     {
                         'mode': 'row-based',
@@ -118,7 +122,6 @@ class TestCommands(refinetest.RefineTestCase):
         self.project.apply_operations(operations=operations_list)
         response = self.project.get_models()
         self.assertTrue(response["columnModel"]["columns"][15]["name"] == 'testing')
-
 
 
 if __name__ == '__main__':
