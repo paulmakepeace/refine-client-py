@@ -143,7 +143,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
             self.assertInResponse('transform on 6067 cells in column Zip Code 2')
         elif self.server.version in ('2.8',):
             self.assertInResponse('transform on 1441 cells in column Zip Code 2')
-        elif self.server.version in ('3.0-beta'):
+        elif self.server.version in ('3.0-beta',):
             self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
@@ -346,9 +346,9 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         # XXX there seems to be some kind of bug where the model doesn't
         #     match get_rows() output - cellIndex being returned that are
         #     out of range.
-        #self.assertTrue(a_row['Sender'] is None)
-        #self.assertTrue(a_row['Recipient'] is None)
-        #self.assertTrue(a_row['Amount'] is None)
+        # self.assertTrue(a_row['Sender'] is None)
+        # self.assertTrue(a_row['Recipient'] is None)
+        # self.assertTrue(a_row['Amount'] is None)
         # {16}
         for column, expression in (
             ('Sender',
@@ -379,7 +379,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        if self.server.version not in ('2.0', '2.1') :
+        if self.server.version not in ('2.0', '2.1'):
             self.project.rename_column('Column 1', 'Column')
         self.project.add_column(
             'Column', 'First Line', 'if(value.contains(" on "), value, null)')
@@ -497,8 +497,8 @@ class TutorialTestWebScraping(refinetest.RefineTestCase):
         self.project.text_transform('line', expression=self.filter_expr_1)
         self.assertInResponse('Text transform on 4554 cells in column line')
         # {9} - XXX following is generating Java exceptions
-        #filter_expr = self.filter_expr_2 % 16
-        #self.project.add_column('line', 'Name', expression=filter_expr)
+        # filter_expr = self.filter_expr_2 % 16
+        # self.project.add_column('line', 'Name', expression=filter_expr)
         # {10} to the final {19} - nothing new in terms of exercising the API.
 
 
