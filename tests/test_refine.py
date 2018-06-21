@@ -63,7 +63,9 @@ class RefineTest(refinetest.RefineTestCase):
     def test_open_export(self):
         content = refine.RefineProject(self.project.project_url()).export()
         self.assertTrue('email' in content)
-        for line in content:
+        for line in content.splitlines():
+            if line == 'email	name	state	gender	purchase':
+                continue
             self.assertTrue('M' in content or 'F' in content)
 
     def test_open_export_csv(self):
