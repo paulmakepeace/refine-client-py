@@ -142,7 +142,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         if self.server.version in ('2.0', '2.1', '2.5',):
             self.assertInResponse('transform on 6067 cells in column Zip Code 2')
         elif self.server.version in ('2.8',):
-            self.assertInResponse('transform on 1441 cells in column Zip Code 2')
+            self.assertInResponse('transform on 6958 cells in column Zip Code 2')
         elif self.server.version in ('3.0-beta',):
             self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
