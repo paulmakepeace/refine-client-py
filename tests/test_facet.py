@@ -82,9 +82,30 @@ class EngineTest(unittest.TestCase):
         engine_json = engine.as_json()
         self.assertEqual(engine_json, "{'facets': [], 'mode': 'row-based'}")
         facet = TextFacet(column='column')
-        self.assertEqual(facet.as_dict(), {'selectError': False, 'name': 'column', 'selection': [], 'expression': 'value', 'invert': False, 'columnName': 'column', 'selectBlank': False, 'omitBlank': False, 'type': 'list', 'omitError': False})
+        self.assertEqual(facet.as_dict(), {
+            'selectError': False,
+            'name': 'column',
+            'selection': [],
+            'expression': 'value',
+            'invert': False,
+            'columnName': 'column',
+            'selectBlank': False,
+            'omitBlank': False,
+            'type': 'list',
+            'omitError': False
+        })
         facet = NumericFacet(column='column', From=1, to=5)
-        self.assertEqual(facet.as_dict(), {'from': 1, 'to': 5, 'selectBlank': True, 'name': 'column', 'selectError': True, 'expression': 'value',  'selectNumeric': True, 'columnName': 'column', 'selectNonNumeric': True, 'type': 'range'})
+        self.assertEqual(facet.as_dict(), {
+            'from': 1, 'to': 5,
+            'selectBlank': True,
+            'name': 'column',
+            'selectError': True,
+            'expression': 'value',
+            'selectNumeric': True,
+            'columnName': 'column',
+            'selectNonNumeric': True,
+            'type': 'range'
+        })
 
     def test_add_facet(self):
         facet = TextFacet(column='Party Code')
@@ -130,7 +151,11 @@ class SortingTest(unittest.TestCase):
 
 
 class FacetsResponseTest(unittest.TestCase):
-    response = """{"facets":[{"name":"Party Code","expression":"value","columnName":"Party Code","invert":false,"choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},{"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],"blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
+    response = """{"facets":[{
+    "name":"Party Code","expression":"value","columnName":"Party Code","invert":false,
+    "choices":[{"v":{"v":"D","l":"D"},"c":3700,"s":false},{"v":{"v":"R","l":"R"},"c":1613,"s":false},
+    {"v":{"v":"N","l":"N"},"c":15,"s":false},{"v":{"v":"O","l":"O"},"c":184,"s":false}],
+    "blankChoice":{"s":false,"c":1446}}],"mode":"row-based"}"""
 
     def test_facet_response(self):
         party_code_facet = TextFacet('Party Code')
