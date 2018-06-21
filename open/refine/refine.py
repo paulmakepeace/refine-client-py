@@ -23,7 +23,10 @@ import json
 import os
 import re
 import time
-import urllib.request, urllib.parse, urllib.error, urllib.response
+import urllib.request
+import urllib.parse
+import urllib.error
+import urllib.response
 import requests
 
 from open.refine import facet
@@ -80,7 +83,8 @@ class RefineServer(object):
     @staticmethod
     def check_response_ok(response):
         if 'code' in response and response['code'] not in ('ok', 'pending'):
-            error_message = ('server ' + response['code'] + ': ' + response.get('message', response.get('stack', response)))
+            error_message = ('server ' + response['code'] + ': ' +
+                             response.get('message', response.get('stack', response)))
             raise Exception(error_message)
 
     def get_version(self):
@@ -106,8 +110,6 @@ class Refine:
 
     def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
                     project_file_name=None, **opts):
-        # TODO: Ability to add Creator, Subject, Custom Metadata
-        # TODO: What is Custom Metadata? Can I include information that I pass around to even out of the project
         if (project_file and project_url) or (not project_file and not project_url):
             raise ValueError('Either a project_file or project_url must be set. Both cannot be used.')
         params = {
@@ -406,9 +408,6 @@ class RefineProject:
 
     def export(self, export_format='tsv'):
         """Return a fileobject of a project's data."""
-        # TODO: add functionality to be able to export large sets of data
-        # TODO: add functionality only one request will set data size "requirement" to choose what size sets chunking
-        # Probably implement response.raw and export/save it in chunks.
         url = ('export-rows/' + urllib.parse.quote(self.project_name()) + '.' + export_format)
         response = self.do_raw(url, data={'format': export_format})
         return response.text
@@ -445,7 +444,8 @@ class RefineProject:
             self.sorting = facet.Sorting([])
         elif sort_by is not None:
             self.sorting = facet.Sorting(sort_by)
-        response = self.do_json('get-rows', params={'start': start, 'limit': limit}, data={'sorting': self.sorting.as_json()})
+        response = self.do_json('get-rows',
+                                params={'start': start, 'limit': limit}, data={'sorting': self.sorting.as_json()})
         return self.rows_response_factory(response)
 
     def reorder_rows(self, sort_by=None):
@@ -497,13 +497,13 @@ class RefineProject:
         },
     }
 
-    def compute_clusters(self, column, clusterer_type='binning', function=None, params=None):
+    def compute_clusters(self, column, clusterer_type='binning', refine_function=None, params=None):
         """Returns a list of clusters of {'value': ..., 'count': ...}."""
         clusterer = self.clusterer_defaults[clusterer_type]
         if params is not None:
             clusterer['params'] = params
-        if function is not None:
-            clusterer['function'] = function
+        if refine_function is not None:
+            clusterer['function'] = refine_function
 
         clusterer['column'] = column
         response = self.do_json('compute-clusters', data={'clusterer': str(clusterer)})
@@ -538,8 +538,11 @@ class RefineProject:
         self.get_models()
         return response
 
-    def split_column(self, column, separator=',', mode='separator', regex=False, guess_cell_type=True, remove_original_column=True):
-        response = self.do_json('split-column',
+    def split_column(
+            self, column, separator=',', mode='separator', regex=False, guess_cell_type=True,
+            remove_original_column=True):
+        response = self.do_json(
+            'split-column',
             params={
                 'columnName': column,
                 'separator': separator,
