@@ -261,7 +261,7 @@ class Refine:
         elif project_file is not None:
             options['project-file'] = {
                 'fd': open(project_file),
-                'filename': project_file,
+                'filename': os.path.basename(project_file),
             }
         if project_name is None:
             # make a name for itself by stripping extension and directories

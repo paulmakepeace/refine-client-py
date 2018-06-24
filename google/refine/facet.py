@@ -81,7 +81,7 @@ class TextFacet(Facet):
         for s in self.selection:
             if s['v']['v'] == value:
                 return
-        self.selection.append({'v': {'v': value, 'l': value}})
+        self.selection.append({'v': {'v': value, 'l': str(value)}})
         return self
 
     def exclude(self, value):
