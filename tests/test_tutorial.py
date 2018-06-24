@@ -138,7 +138,12 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {2}
         self.project.text_transform(column='Zip Code 2',
                                     expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
+        if self.server.version in ('2.0', '2.1', '2.5',):
+            self.assertInResponse('transform on 6067 cells in column Zip Code 2')
+        elif self.server.version in ('2.8', ' 3.0-beta'):
+            self.assertInResponse('transform on 6958 cells in column Zip Code 2')
+        # elif self.server.version in ('3.0-beta', ):
+        #     self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
@@ -162,8 +167,12 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(len(clusters), 7)
         first_cluster = clusters[0]
         self.assertEqual(len(first_cluster), 2)
-        self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
-        self.assertEqual(first_cluster[0]['count'], 233)
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
+            self.assertEqual(first_cluster[0]['count'], 233)
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertEqual(first_cluster[0]['value'], 'DPEC Member at Large')
+            self.assertEqual(first_cluster[0]['count'], 6)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
         self.project.mass_edit('Office Title', [{
@@ -194,9 +203,15 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
-        self.assertEqual(response.facets[0].choices[True].count, 3)
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertEqual(response.facets[0].choices[True].count, 3)
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertEqual(response.facets[0].choices[True].count, 2)
         self.project.remove_rows()
-        self.assertInResponse('3 rows')
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertInResponse('3 rows')
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertInResponse('2 rows')
 
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
