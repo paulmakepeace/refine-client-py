@@ -21,7 +21,7 @@ OpenRefine history: parsing responses.
 
 class HistoryEntry(object):
     # N.B. e.g. **response['historyEntry'] won't work as keys are unicode :-/
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def __init__(self, history_entry_id=None, time=None, description=None, **kwargs):
         if history_entry_id is None:
             raise ValueError('History entry id must be set')

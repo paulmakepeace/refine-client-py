@@ -18,7 +18,6 @@ OpenRefine Facets, Engine, and Facet Responses.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import json
 import re
 
 
@@ -40,18 +39,18 @@ class Facet(object):
         self.type = facet_type
         self.name = column
         self.column_name = column
-        for k, v in options.items():
+        for k, v in list(options.items()):
             setattr(self, k, v)
 
     def as_dict(self):
-        return dict([(to_camel(k), v) for k, v in self.__dict__.items()
+        return dict([(to_camel(k), v) for k, v in list(self.__dict__.items())
                      if v is not None])
 
 
 class TextFilterFacet(Facet):
     def __init__(self, column, query, **options):
         super(TextFilterFacet, self).__init__(
-            column, query=query, case_sensitive=False, facet_type='text',
+            column, query = query, case_sensitive=False, facet_type='text',
             mode='text', **options)
 
 
@@ -60,8 +59,7 @@ class TextFacet(Facet):
                  omit_blank=False, omit_error=False, select_blank=False,
                  select_error=False, invert=False, **options):
         super(TextFacet, self).__init__(
-            column,
-            facet_type='list',
+            column, facet_type='list',
             omit_blank=omit_blank,
             omit_error=omit_error,
             select_blank=select_blank,
@@ -81,7 +79,7 @@ class TextFacet(Facet):
         for s in self.selection:
             if s['v']['v'] == value:
                 return
-        self.selection.append({'v': {'v': value, 'l': value}})
+        self.selection.append({'v': {'v': value, 'l': str(value)}})
         return self
 
     def exclude(self, value):
@@ -132,7 +130,7 @@ class ReconJudgmentFacet(TextFacet):
 
 
 # Capitalize 'From' to get around python's reserved word.
-#noinspection PyPep8Naming
+# noinspection PyPep8Naming
 class NumericFacet(Facet):
     def __init__(self, column, From=None, to=None, expression='value',
                  select_blank=True, select_error=True, select_non_numeric=True,
@@ -159,8 +157,8 @@ class FacetResponse(object):
     """Class for unpacking an individual facet response."""
     def __init__(self, facet):
         self.name = None
-        for k, v in facet.items():
-            if isinstance(k, bool) or isinstance(k, basestring):
+        for k, v in list(facet.items()):
+            if isinstance(k, bool) or isinstance(k, str):
                 setattr(self, from_camel(k), v)
         self.choices = {}
 
@@ -226,6 +224,11 @@ class Engine(object):
         for facet in facets:
             self.add_facet(facet)
 
+    def add_facet(self, facet):
+        # Record the facet's object id so facet response can be looked up by id
+        self.facet_index_by_id[id(facet)] = len(self.facets)
+        self.facets.append(facet)
+
     def facets_response(self, response):
         """Unpack a compute-facets response."""
         return FacetsResponse(self, response)
@@ -235,15 +238,11 @@ class Engine(object):
 
     def as_json(self):
         """Return a JSON string suitable for use as a POST parameter."""
-        return json.dumps({
-            'facets': [f.as_dict() for f in self.facets],  # XXX how with json?
+        d = {
+            'facets': [f.as_dict() for f in self.facets],
             'mode': self.mode,
-        })
-
-    def add_facet(self, facet):
-        # Record the facet's object id so facet response can be looked up by id
-        self.facet_index_by_id[id(facet)] = len(self.facets)
-        self.facets.append(facet)
+        }
+        return str(d)
 
     def remove_all(self):
         """Remove all facets."""
@@ -268,7 +267,7 @@ class Sorting(object):
             criteria = [criteria]
         for criterion in criteria:
             # A string criterion defaults to a string sort on that column
-            if isinstance(criterion, basestring):
+            if isinstance(criterion, str):
                 criterion = {
                     'column': criterion,
                     'valueType': 'string',
@@ -280,7 +279,8 @@ class Sorting(object):
             self.criteria.append(criterion)
 
     def as_json(self):
-        return json.dumps({'criteria': self.criteria})
+        d = {'criteria': self.criteria}
+        return str(d)
 
     def __len__(self):
         return len(self.criteria)

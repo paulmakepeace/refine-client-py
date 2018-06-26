@@ -56,7 +56,7 @@ Installation
 (Someone with more familiarity with python's byzantine collection of installation
 frameworks is very welcome to improve/"best practice" all this.)
 
-#. Install dependencies, which currently is ``urllib2_file``:
+#. Install dependencies, which currently is ``requests``:
 
    ``sudo pip install -r requirements.txt``
 

@@ -16,21 +16,22 @@ OPENREFINE_HOST and OPENREFINE_PORT.
 
 import unittest
 
-from google.refine import facet
+from open.refine import facet
 from tests import refinetest
 
 
 class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
+    project_file_name = 'louisiana-elected-officials.csv'
     project_options = {'guess_cell_value_types': True}
 
     def test_get_rows(self):
         # Section "2. Exploration using Facets": {3}
         response = self.project.get_rows(limit=10)
-        self.assertEqual(len(response.rows), 10)
-        self.assertEqual(response.limit, 10)
-        self.assertEqual(response.total, 6958)
-        self.assertEqual(response.filtered, 6958)
+        self.assertEqual(10, len(response.rows))
+        self.assertEqual(10, response.limit)
+        self.assertEqual(6958, response.total)
+        self.assertEqual(6958, response.filtered)
         for row in response.rows:
             self.assertFalse(row.flagged)
             self.assertFalse(row.starred)
@@ -84,13 +85,14 @@ class TutorialTestFacets(refinetest.RefineTestCase):
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[2].choices), 76)
         # {12} - XXX not sure how to interpret bins & baseBins yet
+        self.project.text_transform('Office Level', 'value.toNumber()')
         office_level_facet = facet.NumericFacet('Office Level')
         self.project.engine.add_facet(office_level_facet)
         # {13}
         office_level_facet.From = 300   # from reserved word
         office_level_facet.to = 320
         response = self.project.get_rows()
-        self.assertEqual(response.filtered, 1907)
+        self.assertEqual(1907, response.filtered)
         response = self.project.compute_facets()
         ot = response.facets[office_title_facet]
         self.assertEqual(len(ot.choices), 21)
@@ -130,15 +132,19 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
-    project_options = {'guess_cell_value_types': True}
+    project_file_name = 'louisiana-elected-officials.csv'
 
     def test_editing(self):
         # Section "3. Cell Editing": {1}
         self.project.engine.remove_all()    # redundant due to setUp
         # {2}
-        self.project.text_transform(column='Zip Code 2',
-                                    expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
+        self.project.text_transform(column='Zip Code 2', expression='value.toString()[0, 5]')
+        if self.server.version in ('2.0', '2.1', '2.5',):
+            self.assertInResponse('transform on 6067 cells in column Zip Code 2')
+        elif self.server.version in ('2.8',):
+            self.assertInResponse('transform on 1441 cells in column Zip Code 2')
+        elif self.server.version in ('3.0-beta',):
+            self.assertInResponse('transform on 1441 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
@@ -162,14 +168,15 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(len(clusters), 7)
         first_cluster = clusters[0]
         self.assertEqual(len(first_cluster), 2)
-        self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
-        self.assertEqual(first_cluster[0]['count'], 233)
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
+            self.assertEqual(first_cluster[0]['count'], 233)
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertEqual(first_cluster[0]['value'], 'DPEC Member at Large')
+            self.assertEqual(first_cluster[0]['count'], 6)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
-        self.project.mass_edit('Office Title', [{
-            'from': ['Council Member', 'Councilmember'],
-            'to': 'Council Member'
-        }])
+        self.project.mass_edit('Office Title', [{'from': ['Council Member', 'Councilmember'], 'to': 'Council Member'}])
         self.assertInResponse('372')
         response = self.project.compute_facets()
         self.assertEqual(len(response.facets[office_title_facet].choices), 65)
@@ -194,13 +201,20 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
-        self.assertEqual(response.facets[0].choices[True].count, 3)
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertEqual(response.facets[0].choices[True].count, 3)
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertEqual(response.facets[0].choices[True].count, 2)
         self.project.remove_rows()
-        self.assertInResponse('3 rows')
+        if self.server.version in ('2.0', '2.1', '2.5'):
+            self.assertInResponse('3 rows')
+        elif self.server.version in ('2.8', '3.0-beta'):
+            self.assertInResponse('2 rows')
 
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
     project_file = 'duplicates.csv'
+    project_file_name = 'duplicates.csv'
 
     def test_duplicate_detection(self):
         # Section "4. Row and Column Editing,
@@ -214,10 +228,9 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         self.assertInResponse('Reorder rows')
         response = self.project.get_rows()
         indexes = [row.index for row in response.rows]
-        self.assertEqual(indexes, range(10))
+        self.assertEqual(indexes, list(range(10)))
         # {10}
-        self.project.add_column(
-            'email', 'count', 'facetCount(value, "value", "email")')
+        self.project.add_column('email', 'count', 'facetCount(value, "value", "email")')
         self.assertInResponse('column email by filling 10 rows')
         response = self.project.get_rows()
         self.assertEqual(self.project.column_order['email'], 0)  # i.e. 1st
@@ -231,7 +244,7 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         self.assertTrue(self.project.has_records)
         response = self.project.get_rows()
         emails = [1 if row['email'] else 0 for row in response.rows]
-        self.assertEqual(emails, [1, 0, 1, 1, 1, 0, 0, 1, 1, 0])
+        self.assertEqual([1, 0, 1, 1, 1, 0, 0, 1, 1, 0], emails)
         # {12}
         blank_facet = facet.BlankFacet('email', selection=True)
         # {13}
@@ -241,17 +254,18 @@ class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
         response = self.project.get_rows()
         email_counts = [(row['email'], row['count']) for row in response.rows]
         self.assertEqual(email_counts, [
-            (u'arthur.duff@example4.com', 2),
-            (u'ben.morisson@example6.org', 1),
-            (u'ben.tyler@example3.org', 1),
-            (u'danny.baron@example1.com', 3),
-            (u'jean.griffith@example5.org', 1),
-            (u'melanie.white@example2.edu', 2)
+            ('arthur.duff@example4.com', 2),
+            ('ben.morisson@example6.org', 1),
+            ('ben.tyler@example3.org', 1),
+            ('danny.baron@example1.com', 3),
+            ('jean.griffith@example5.org', 1),
+            ('melanie.white@example2.edu', 2)
         ])
 
 
 class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
     project_file = 'us_economic_assistance.csv'
+    project_file_name = 'us_economic_assistance.csv'
 
     def test_transpose_columns_into_rows(self):
         # Section "5. Structural Editing, Transpose Columns into Rows"
@@ -285,6 +299,7 @@ class TutorialTestTransposeColumnsIntoRows(refinetest.RefineTestCase):
 class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
+    project_file_name = 'fixed-rows.csv'
     project_format = 'text/line-based'
     project_options = {'header_lines': 0}
 
@@ -331,9 +346,9 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         # XXX there seems to be some kind of bug where the model doesn't
         #     match get_rows() output - cellIndex being returned that are
         #     out of range.
-        #self.assertTrue(a_row['Sender'] is None)
-        #self.assertTrue(a_row['Recipient'] is None)
-        #self.assertTrue(a_row['Amount'] is None)
+        # self.assertTrue(a_row['Sender'] is None)
+        # self.assertTrue(a_row['Recipient'] is None)
+        # self.assertTrue(a_row['Amount'] is None)
         # {16}
         for column, expression in (
             ('Sender',
@@ -351,20 +366,20 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         self.project.text_transform('Column 1', 'value.partition(" on ")[2]')
         self.assertInResponse('4 cells')
         # {19}
-        self.project.reorder_columns(['Transaction', 'Amount', 'Sender',
-                                      'Recipient'])
+        self.project.reorder_columns(['Transaction', 'Amount', 'Sender', 'Recipient'])
         self.assertInResponse('Reorder columns')
 
 
 class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
+    project_file_name = 'variable-rows.csv'
     project_format = 'text/line-based'
     project_options = {'header_lines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}
-        if self.server.version not in ('2.0', '2.1') :
+        if self.server.version not in ('2.0', '2.1'):
             self.project.rename_column('Column 1', 'Column')
         self.project.add_column(
             'Column', 'First Line', 'if(value.contains(" on "), value, null)')
@@ -406,6 +421,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
 
 class TutorialTestWebScraping(refinetest.RefineTestCase):
     project_file = 'eli-lilly.csv'
+    project_file_name = 'eli-lilly.csv'
 
     filter_expr_1 = """
         forEach(
@@ -481,8 +497,8 @@ class TutorialTestWebScraping(refinetest.RefineTestCase):
         self.project.text_transform('line', expression=self.filter_expr_1)
         self.assertInResponse('Text transform on 4554 cells in column line')
         # {9} - XXX following is generating Java exceptions
-        #filter_expr = self.filter_expr_2 % 16
-        #self.project.add_column('line', 'Name', expression=filter_expr)
+        # filter_expr = self.filter_expr_2 % 16
+        # self.project.add_column('line', 'Name', expression=filter_expr)
         # {10} to the final {19} - nothing new in terms of exercising the API.
 
 
