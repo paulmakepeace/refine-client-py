@@ -10,9 +10,9 @@ Download
 
 One-file-executables:
 
-* Linux: `openrefine-client_0-3-4_linux-64bit <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_linux-64bit>`_ (4,9 MB)
-* Windows: `openrefine-client_0-3-4_windows.exe <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_windows.exe>`_ (5,1 MB)
-* Mac: `openrefine-client_0-3-4_mac <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_mac>`_ (4,6 MB)
+* Linux: `openrefine-client_0-3-4_linux-64bit <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_linux-64bit>`_ (4,7 MB)
+* Windows: `openrefine-client_0-3-4_windows.exe <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_windows.exe>`_ (4,9 MB)
+* Mac: `openrefine-client_0-3-4_mac <https://github.com/opencultureconsulting/openrefine-client/releases/download/v0.3.4/openrefine-client_0-3-4_mac>`_ (4,4 MB)
 
 For native Python installation on Windows, Mac or Linux see `Installation <#installation>`_ below.
 
