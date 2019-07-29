@@ -24,14 +24,15 @@ from setuptools import find_packages
 def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
-setup(name='refine-client',
-      version='0.2.1',
+setup(name='openrefine-client',
+      version='0.3.4',
       description=('The OpenRefine Python Client Library provides an '
-                   'interface to communicating with an OpenRefine server.'),
-      long_description=read('README.rst'),
-      author='Paul Makepeace',
-      author_email='paulm@paulm.com',
-      url='https://github.com/PaulMakepeace/refine-client-py',
+                   'interface to communicating with an OpenRefine server. '
+                   'This fork extends the command line interface (CLI).'),
+      long_description=read('README.md'),
+      author='Felix Lohmeier',
+      author_email='felix.lohmeier@opencultureconsulting.com',
+      url='https://github.com/opencultureconsulting/openrefine-client',
       packages=find_packages(exclude=['tests']),
       install_requires=['urllib2_file'],
       platforms=['Any'],
