@@ -4,9 +4,11 @@ LABEL maintainer="felixlohmeier@opencultureconsulting.com"
 # Source: https://github.com/opencultureconsulting/openrefine-client
 
 # Install python and pip
+# ... and curl for https://github.com/opencultureconsulting/openrefine-batch
 RUN apk add --no-cache \
 	python \
-	py-pip
+	py-pip \
+	curl
 
 # Install dependency urllib2_file
 RUN pip install urllib2_file==0.2.1
