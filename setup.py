@@ -25,7 +25,7 @@ def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 setup(name='openrefine-client',
-      version='0.3.4',
+      version='0.3.5',
       description=('The OpenRefine Python Client Library provides an '
                    'interface to communicating with an OpenRefine server. '
                    'This fork extends the command line interface (CLI).'),
@@ -34,7 +34,11 @@ setup(name='openrefine-client',
       author_email='felix.lohmeier@opencultureconsulting.com',
       url='https://github.com/opencultureconsulting/openrefine-client',
       packages=find_packages(exclude=['tests']),
+      python_requires='>2.6, !=3.*',
       install_requires=['urllib2_file'],
+      entry_points={
+          'console_scripts': [ 'openrefine-client = refine.__main__:main' ]
+      },
       platforms=['Any'],
       classifiers = [
           'Development Status :: 3 - Alpha',

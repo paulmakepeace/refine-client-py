@@ -30,8 +30,8 @@ import urllib2_file
 import urllib2
 import urlparse
 
-from google.refine import facet
-from google.refine import history
+import facet
+import history
 
 REFINE_HOST = os.environ.get('OPENREFINE_HOST', os.environ.get('GOOGLE_REFINE_HOST', '127.0.0.1'))
 REFINE_PORT = os.environ.get('OPENREFINE_PORT', os.environ.get('GOOGLE_REFINE_PORT', '3333'))

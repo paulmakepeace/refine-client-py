@@ -15,7 +15,7 @@ and REFINE_PORT.
 import os
 import unittest
 
-from google.refine import refine
+from refine import refine
 
 PATH_TO_TEST_DATA = os.path.join(os.path.dirname(__file__), 'data')
 

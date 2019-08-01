@@ -16,7 +16,7 @@ OPENREFINE_HOST and OPENREFINE_PORT.
 
 import unittest
 
-from google.refine import facet
+from refine import facet
 from tests import refinetest
 
 
