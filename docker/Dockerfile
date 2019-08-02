@@ -1,13 +1,12 @@
 FROM alpine:latest
 LABEL maintainer="felixlohmeier@opencultureconsulting.com"
-# The OpenRefine Python Client Library from PaulMakepeace provides an interface to communicating with an OpenRefine server. This fork extends the command line interface (CLI) and supports communication between docker containers.
+# The OpenRefine client provides an interface to communicating with an OpenRefine server and supports batch processing. It is focused on the command line interface (CLI) but may also be used as a Python library.
 # Source: https://github.com/opencultureconsulting/openrefine-client
 
 # Install python, pip, unzip, curl and grep
 RUN apk add --no-cache \
 	python \
 	py-pip \
-	unzip \
 	curl \
 	grep
 

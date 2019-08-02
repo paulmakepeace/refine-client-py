@@ -2,6 +2,5 @@ build
 dist
 *.pyc
 .*
-refine_client.egg-info
-refine.spec
-README.html
+openrefine_client.egg-info
+todo
