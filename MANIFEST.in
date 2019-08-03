@@ -1,5 +1,4 @@
 include README.md
-include LICENSE
-prune docker
-prune tests
-prune todo
+include COPYING.txt
+recursive-include tests/data *.csv
+recursive-include tests      *.py
