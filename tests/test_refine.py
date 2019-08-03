@@ -12,7 +12,7 @@ OPENREFINE_HOST and OPENREFINE_PORT.
 import csv
 import unittest
 
-from refine import refine
+from google.refine import refine
 from tests import refinetest
 
 

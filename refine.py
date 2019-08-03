@@ -25,7 +25,7 @@ import sys
 import time
 import json
 
-import refine
+from google.refine import refine
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -37,7 +37,7 @@ class myParser(optparse.OptionParser):
 
 PARSER = \
     myParser(description='Script to provide a command line interface to an OpenRefine server.',
-             usage='usage: openrefine-client [--help | OPTIONS]',
+             usage='usage: %prog [--help | OPTIONS]',
              epilog="""
 Examples:
   --list # show list of projects (id: name)

@@ -1,7 +1,6 @@
 # OpenRefine Python Client with extended command line interface
 
-The [OpenRefine Python Client Library from PaulMakepeace](https://github.com/PaulMakepeace/refine-client-py) provides an interface to communicating with an [OpenRefine](http://openrefine.org) server.
-This fork extends the command line interface (CLI) and supports communication between docker containers.
+The [OpenRefine Python Client Library from PaulMakepeace](https://github.com/PaulMakepeace/refine-client-py) provides an interface to communicating with an [OpenRefine](http://openrefine.org) server. This fork extends the command line interface (CLI) and supports communication between docker containers.
 
 ## Download
 
@@ -32,7 +31,7 @@ Command line interface:
 - delete project: `--delete [PROJECTID/PROJECTNAME]`
 - check `--help` for further options...
 
-If you are familiar with python you may try all functions interactively (`python -i refine/refine.py`) or use this library in your own python scripts. Some Examples:
+If you are familiar with python you may try all functions interactively (`python -i refine.py`) or use this library in your own python scripts. Some Examples:
 
 * show version of OpenRefine server: `refine.RefineServer().get_version()`
 * show total rows of project 2151545447855: `refine.RefineProject(refine.RefineServer(),'2151545447855').do_json('get-rows')['total']`
@@ -46,16 +45,25 @@ The environment variables `OPENREFINE_HOST` and `OPENREFINE_PORT` enable overrid
 
 ## Installation
 
-```pip install openrefine-client```
+Install dependencies, which currently is `urllib2_file`:
 
-(requires Python 2.x, depends on urllib2_file>=0.2.1)
+```
+sudo pip install -r requirements.txt
+```
 
-## Tests
+Ensure you have a Refine server running somewhere and, if necessary, set the environment vars as above.
 
-Ensure you have an OpenRefine server running somewhere and, if necessary, set the environment vars as above.
+Run tests, build, and install:
 
-* all tests: ```python setup.py test```
-* a subset: ```python setup.py test --test-suite tests.test_facet```
+```
+python setup.py test # to do a subset, e.g., --test-suite tests.test_facet
+
+python setup.py build
+
+python setup.py install
+```
+
+There is a Makefile that will do this too, and more.
 
 ## Credits
 

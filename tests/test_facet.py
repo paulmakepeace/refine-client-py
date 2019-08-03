@@ -8,7 +8,7 @@ test_facet.py
 import json
 import unittest
 
-from refine.facet import *
+from google.refine.facet import *
 
 
 class CamelTest(unittest.TestCase):
