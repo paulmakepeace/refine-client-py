@@ -13,7 +13,7 @@ RUN apk add --no-cache \
 # Install dependency urllib2_file
 RUN pip install urllib2_file==0.2.1
 
-# Download and build openrefine-client-master
+# Copy python scripts
 WORKDIR /app
 COPY google google
 COPY refine.py .
