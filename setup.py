@@ -44,7 +44,6 @@ setup(name='openrefine-client',
       keywords='openrefine client batch processing docker etl code4lib',
       classifiers = [
           'Development Status :: 4 - Beta',
-          'Environment :: Console (Text Based)',
           'Intended Audience :: Developers',
           'Intended Audience :: System Administrators',
           'License :: OSI Approved :: GNU General Public License (GPL)',
