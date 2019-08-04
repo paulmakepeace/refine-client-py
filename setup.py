@@ -25,23 +25,34 @@ def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 setup(name='openrefine-client',
-      version='0.3.4',
+      version='0.3.6',
       description=('The OpenRefine Python Client Library provides an '
                    'interface to communicating with an OpenRefine server. '
                    'This fork extends the command line interface (CLI).'),
       long_description=read('README.md'),
+      long_description_content_type='text/markdown',
       author='Felix Lohmeier',
       author_email='felix.lohmeier@opencultureconsulting.com',
       url='https://github.com/opencultureconsulting/openrefine-client',
       packages=find_packages(exclude=['tests']),
       install_requires=['urllib2_file'],
+      python_requires='>2.6, !=3.*',
+      entry_points={
+          'console_scripts': [ 'openrefine-client = google.refine.__main__:main' ]
+      },
       platforms=['Any'],
+      keywords='openrefine client batch processing docker etl code4lib',
       classifiers = [
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
+          'Environment :: Console (Text Based)',
           'Intended Audience :: Developers',
+          'Intended Audience :: System Administrators',
           'License :: OSI Approved :: GNU General Public License (GPL)',
+          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
           'Operating System :: OS Independent',
           'Programming Language :: Python',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.7',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: Text Processing',
       ],

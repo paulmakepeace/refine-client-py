@@ -45,11 +45,13 @@ The environment variables `OPENREFINE_HOST` and `OPENREFINE_PORT` enable overrid
 
 ## Installation
 
-Install dependencies, which currently is `urllib2_file`:
+```
+pip install openrefine-client
+```
 
-```
-sudo pip install -r requirements.txt
-```
+(requires Python 2.x, depends on urllib2_file>=0.2.1)
+
+## Tests
 
 Ensure you have a Refine server running somewhere and, if necessary, set the environment vars as above.
 

@@ -2,6 +2,6 @@ build
 dist
 *.pyc
 .*
-refine_client.egg-info
+openrefine_client.egg-info
 refine.spec
 README.html

@@ -2,3 +2,4 @@ include README.md
 include COPYING.txt
 recursive-include tests/data *.csv
 recursive-include tests      *.py
+prune docker
