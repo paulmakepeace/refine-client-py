@@ -34,7 +34,7 @@ if [ -z "$CURLINFO" ] ; then
 fi
 
 # defaults:
-tags=(3.2-java12 3.2-java11 3.2-java10 3.2-java9 3.2 3.1-java9 3.1 3.1-java7 3.0-java9 3.0 2.8-java9 2.8 2.8-java7 2.7 2.7-java7 2.5-java7 2.5-java6 2.1-java6 2.0-java6)
+tags=(3.2-java12 3.2-java11 3.2-java10 3.2-java9 3.2 3.1-java9 3.1 3.0-java9 3.0 2.8-java9 2.8 2.8-java7 2.7 2.7-java7 2.5-java7 2.5-java6 2.1-java6 2.0-java6)
 pause=false
 
 # help screen
