@@ -24,7 +24,7 @@ import os
 import sys
 
 from google.refine import refine
-from google.refine import client
+from google.refine import cli
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -191,9 +191,9 @@ def main():
             args[0] = idlist[0]
 
     if options.list:
-        client.list_projects()
+        cli.list_projects()
     if options.create:
-        client.create_project(options)
+        cli.create_project(options)
     if options.delete:
         project = refine.RefineProject(args[0])
         project.delete()
@@ -206,10 +206,10 @@ def main():
         return project
     if options.export or options.output:
         project = refine.RefineProject(args[0])
-        client.export_project(project, options)
+        cli.export_project(project, options)
         return project
     if options.info:
-        client.info(args[0])
+        cli.info(args[0])
         project = refine.RefineProject(args[0])
         return project
 

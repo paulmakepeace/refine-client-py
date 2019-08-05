@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-Commands provided for the CLI and interactive usage
+Functions used by the command line interface (CLI)
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
