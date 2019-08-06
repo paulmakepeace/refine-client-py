@@ -1,5 +1,7 @@
 # OpenRefine Python Client with extended command line interface
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/33129bd15cdc4ece88c8012caab8d347)](https://www.codacy.com/app/felixlohmeier/openrefine-client?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=opencultureconsulting/openrefine-client&amp;utm_campaign=Badge_Grade)
+
 The [OpenRefine Python Client Library from PaulMakepeace](https://github.com/PaulMakepeace/refine-client-py) provides an interface to communicating with an [OpenRefine](http://openrefine.org) server. This fork extends the command line interface (CLI) and supports communication between docker containers.
 
 ## Download
