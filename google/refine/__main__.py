@@ -55,7 +55,7 @@ Examples:
   --export "christmas gifts" > project.tsv
   --export --output=project.xlsx 2161595260364 # export project in xlsx format
   --export --output=project.xlsx "christmas gifts"
-  --export "My Address Book" --template='{ "friend" : {{jsonize(cells["friend"].value)}}, "address" : {{jsonize(cells["address"].value)}} }' --prefix='{ "rows" : [' --rowSeparator ',' --suffix '] }' --filterQuery="^mary$"
+  --export "My Address Book" --template='{ "friend" : {{jsonize(cells["friend"].value)}}, "address" : {{jsonize(cells["address"].value)}} }' --prefix='{ "rows" : [' --rowSeparator=',' --suffix='] }' --filterQuery="^mary$"
   --delete 2161595260364 # delete project 
   --delete "christmas gifts"
 """)

@@ -26,7 +26,7 @@ Command line interface:
 - create project from file: `--create [FILE]`
 - apply [rules from json file](http://kb.refinepro.com/2012/06/google-refine-json-and-my-notepad-or.html): `--apply [FILE.json] [PROJECTID/PROJECTNAME]`
 - export project to file: `--export [PROJECTID/PROJECTNAME] --output=FILE.tsv`
-- templating export: `--export "My Address Book" --template='{ "friend" : {{jsonize(cells["friend"].value)}}, "address" : {{jsonize(cells["address"].value)}} }' --prefix='{ "address" : [' --rowSeparator ',' --suffix '] }' --filterQuery="^mary$"`
+- templating export: `--export "My Address Book" --template='{ "friend" : {{jsonize(cells["friend"].value)}}, "address" : {{jsonize(cells["address"].value)}} }' --prefix='{ "address" : [' --rowSeparator=',' --suffix='] }' --filterQuery="^mary$"`
 - show project metadata: `--info [PROJECTID/PROJECTNAME]`
 - delete project: `--delete [PROJECTID/PROJECTNAME]`
 - check `--help` for further options...
