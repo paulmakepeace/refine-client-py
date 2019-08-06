@@ -16,44 +16,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-# check system requirements
-DOCKER="$(which docker 2> /dev/null)"
-if [ -z "$DOCKER" ] ; then
-    echo 1>&2 "This action requires you to have 'docker' installed and present in your PATH. You can download it for free at http://www.docker.com/"
-    exit 1
-fi
-DOCKERINFO="$(docker info 2>/dev/null | grep 'Server Version')"
-if [ -z "$DOCKERINFO" ] ; then
-    echo 1>&2 "This action requires you to start the docker daemon. Try 'sudo systemctl start docker' or 'sudo start docker'. If the docker daemon is already running then maybe some security privileges are missing to run docker commands. Try to run the script with 'sudo ./openrefine-batch-docker.sh ...'"
-    exit 1
-fi
-CURLINFO="$(which curl 2>/dev/null)"
-if [ -z "$CURLINFO" ] ; then
-    echo 1>&2 "This action requires you to have 'curl' installed and present in your PATH."
-    exit 1
-fi
-
 # defaults:
-tags=(3.2-java12 3.2-java11 3.2-java10 3.2-java9 3.2 3.1-java9 3.1 3.0-java9 3.0 2.8-java9 2.8 2.8-java7 2.7 2.7-java7 2.5-java7 2.5-java6 2.1-java6 2.0-java6)
-pause=false
+all=(3.2-java12 3.2-java11 3.2-java10 3.2-java9 3.2 3.1-java9 3.1 3.0-java9 3.0 2.8-java9 2.8 2.8-java7 2.7 2.7-java7 2.5-java7 2.5-java6 2.1-java6 2.0-java6)
+main=(3.2 3.1 3.0 2.8 2.7 2.5-java6 2.1-java6 2.0-java6)
+interactively=false
+port="3333"
 
 # help screen
 function usage () {
     cat <<EOF
-Usage: sudo ./tests.sh [-t TAG] [-a] [-p] [-h]
+Usage: ./tests.sh [-t TAG] [-i] [-p] [-a] [-h]
 
 Script for running tests with different OpenRefine and Java versions.
 It uses docker images from https://hub.docker.com/r/felixlohmeier/openrefine.
 
 Examples:
-sudo ./tests.sh -t 3.2 # run tests with docker tag 3.2
-sudo ./tests.sh -a # run all tests (requires a lot of downloads!)
-sudo ./tests.sh -p # pause before and after tests (to examine OpenRefine GUI manually)
-sudo ./tests.sh -h # this help screen
+./tests.sh -a            # run tests on all OpenRefine versions (from 2.0 up to 3.2)
+./tests.sh -t 3.2        # run tests on tag 3.2
+./tests.sh -t 3.2 -i     # run tests on tag 3.2 interactively (pause before and after tests)
+./tests.sh -t 3.2 -t 2.7 # run tests on tags 3.2 and 2.7
+
+Advanced:
+./tests.sh -j                # run tests on all OpenRefine versions and each with all supported Java versions (requires a lot of docker images to be downloaded!)
+./tests.sh -t 3.1 -i -p 3334 # run tests on tag 3.1 interactively on port 3334
+
+Running tests interactively (-i) allows you to examine OpenRefine GUI at http://localhost:3333.
+Execute the script concurrently in another terminal on another port (-p 3334) to compare changes in the OpenRefine GUI at http://localhost:3333 and http://localhost:3334.
 
 Available tags (java 8 if java not mentioned in tag):
 EOF
-    for t in ${tags[*]} ; do
+    for t in ${all[*]} ; do
         echo "$t"
     done
     exit 1
@@ -65,13 +57,41 @@ if [ "$NUMARGS" -eq 0 ]; then
   usage
 fi
 
+# check system requirements
+DOCKER="$(command -v docker 2> /dev/null)"
+if [ -z "$DOCKER" ] ; then
+    echo 1>&2 "This action requires you to have 'docker' installed and present in your PATH. You can download it for free at http://www.docker.com/"
+    exit 1
+fi
+DOCKERINFO="$(docker info 2>/dev/null | grep 'Server Version')"
+if [ -z "$DOCKERINFO" ]
+then
+    echo "command 'docker info' failed, trying again with sudo..."
+    DOCKERINFO="$(sudo docker info 2>/dev/null | grep 'Server Version')"
+    echo "OK"
+    docker=(sudo docker)
+    if [ -z "$DOCKERINFO" ] ; then
+        echo 1>&2 "This action requires you to start the docker daemon. Try 'sudo systemctl start docker' or 'sudo start docker'. If the docker daemon is already running then maybe some security privileges are missing to run docker commands.'"
+        exit 1
+    fi
+else
+    docker=(docker)
+fi
+CURLINFO="$(command -v curl 2>/dev/null)"
+if [ -z "$CURLINFO" ] ; then
+    echo 1>&2 "This action requires you to have 'curl' installed and present in your PATH."
+    exit 1
+fi
+
 # get user input
-options="at:ph"
+options="t:p:iajh"
 while getopts $options opt; do
    case $opt in
-   a )  ;;
-   t )  tags=(${OPTARG}) ;;
-   p )  pause=true ;;
+   t )  tags+=("${OPTARG}");;
+   p )  port="${OPTARG}";export OPENREFINE_PORT="$port";;
+   i )  interactively=true;;
+   a )  tags=("${main[*]}");;
+   j )  tags=("${all[*]}");;
    h )  usage ;;
    \? ) echo 1>&2 "Unknown option: -$OPTARG"; usage; exit 1;;
    :  ) echo 1>&2 "Missing option argument for -$OPTARG"; usage; exit 1;;
@@ -82,19 +102,29 @@ shift $((OPTIND - 1))
 
 # print config
 echo "Tags: ${tags[*]}"
+echo "Port: $port"
 echo ""
+
+# safe cleanup handler
+cleanup()
+{
+    echo "cleanup..."
+    ${docker[*]} stop "$t"
+}
+trap "cleanup;exit" SIGHUP SIGINT SIGQUIT SIGTERM
 
 # run setup.py tests for each docker tag
 for t in ${tags[*]} ; do
     echo "=== Tests for $t ==="
     echo ""
     echo "Begin: $(date)"
-    sudo docker run -d -p 3333:3333 --rm --name $t felixlohmeier/openrefine:$t
-    until curl --silent -N http://localhost:3333 | cat | grep -q -o "Refine" ; do sleep 1; done
-    if [ $pause = true ]; then read -p "Press [Enter] key to start tests..."; fi
+    ${docker[*]} run -d -p "$port":3333 --rm --name "$t" felixlohmeier/openrefine:"$t"
+    until curl --silent -N http://localhost:"$port" | cat | grep -q -o "Refine" ; do sleep 1; done
+    echo "Refine running at http://localhost:${port}"
+    if [ $interactively = true ]; then read -r -p "Press [Enter] key to start tests..."; fi
     python setup.py test
-    if [ $pause = true ]; then read -p "Press [Enter] key to stop OpenRefine..."; fi
-    sudo docker stop $t
+    if [ $interactively = true ]; then read -r -p "Press [Enter] key to stop OpenRefine..."; fi
+    ${docker[*]} stop "$t"
     echo "End: $(date)"
     echo ""
 done
