@@ -1,0 +1,69 @@
+[
+  {
+    "op": "core/row-reorder",
+    "description": "Reorder rows",
+    "mode": "record-based",
+    "sorting": {
+      "criteria": [
+        {
+          "errorPosition": 1,
+          "caseSensitive": false,
+          "valueType": "string",
+          "column": "email",
+          "blankPosition": 2,
+          "reverse": false
+        }
+      ]
+    }
+  },
+  {
+    "op": "core/column-addition",
+    "description": "Create column count at index 1 based on column email using expression grel:facetCount(value, \"value\", \"email\")",
+    "engineConfig": {
+      "mode": "row-based",
+      "facets": []
+    },
+    "newColumnName": "count",
+    "columnInsertIndex": 1,
+    "baseColumnName": "email",
+    "expression": "grel:facetCount(value, \"value\", \"email\")",
+    "onError": "set-to-blank"
+  },
+  {
+    "op": "core/blank-down",
+    "description": "Blank down cells in column email",
+    "engineConfig": {
+      "mode": "row-based",
+      "facets": []
+    },
+    "columnName": "email"
+  },
+  {
+    "op": "core/row-removal",
+    "description": "Remove rows",
+    "engineConfig": {
+      "mode": "row-based",
+      "facets": [
+        {
+          "omitError": false,
+          "expression": "isBlank(value)",
+          "selectBlank": false,
+          "selection": [
+            {
+              "v": {
+                "v": true,
+                "l": "true"
+              }
+            }
+          ],
+          "selectError": false,
+          "invert": false,
+          "name": "email",
+          "omitBlank": false,
+          "type": "list",
+          "columnName": "email"
+        }
+      ]
+    }
+  }
+]
