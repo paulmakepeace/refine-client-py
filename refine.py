@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 """
-Script to provide a command line interface to a OpenRefine server.
+Script to provide a command line interface to a Refine server.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.

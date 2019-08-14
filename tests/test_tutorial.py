@@ -22,7 +22,7 @@ from tests import refinetest
 
 class TutorialTestFacets(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
-    project_options = {'guessCellValueTypes': True}
+    project_options = {'guess_cell_value_types': True}
 
     def test_get_rows(self):
         # Section "2. Exploration using Facets": {3}
@@ -130,7 +130,7 @@ class TutorialTestFacets(refinetest.RefineTestCase):
 
 class TutorialTestEditing(refinetest.RefineTestCase):
     project_file = 'louisiana-elected-officials.csv'
-    project_options = {'guessCellValueTypes': True}
+    project_options = {'guess_cell_value_types': True}
 
     def test_editing(self):
         # Section "3. Cell Editing": {1}
@@ -138,7 +138,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {2}
         self.project.text_transform(column='Zip Code 2',
                                     expression='value.toString()[0, 5]')
-        self.assertInResponse('transform on 6958 cells in column Zip Code 2')
+        self.assertInResponse('transform on 6067 cells in column Zip Code 2')
         # {3} - XXX history
         # {4}
         office_title_facet = facet.TextFacet('Office Title')
@@ -162,8 +162,8 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(len(clusters), 7)
         first_cluster = clusters[0]
         self.assertEqual(len(first_cluster), 2)
-        self.assertEqual(first_cluster[0]['value'], 'DPEC Member at Large')
-        self.assertEqual(first_cluster[0]['count'], 6)
+        self.assertEqual(first_cluster[0]['value'], 'RSCC Member at Large')
+        self.assertEqual(first_cluster[0]['count'], 233)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
         self.project.mass_edit('Office Title', [{
@@ -194,9 +194,9 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         # {5}, {6}, {7}
         response = self.project.compute_facets(facet.StarredFacet(True))
         self.assertEqual(len(response.facets[0].choices), 2)    # true & false
-        self.assertEqual(response.facets[0].choices[True].count, 2)
+        self.assertEqual(response.facets[0].choices[True].count, 3)
         self.project.remove_rows()
-        self.assertInResponse('2 rows')
+        self.assertInResponse('3 rows')
 
 
 class TutorialTestDuplicateDetection(refinetest.RefineTestCase):
@@ -286,7 +286,7 @@ class TutorialTestTransposeFixedNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'fixed-rows.csv'
     project_format = 'text/line-based'
-    project_options = {'headerLines': 0}
+    project_options = {'header_lines': 0}
 
     def test_transpose_fixed_number_of_rows_into_columns(self):
         if self.server.version not in ('2.0', '2.1'):
@@ -360,7 +360,7 @@ class TutorialTestTransposeVariableNumberOfRowsIntoColumns(
         refinetest.RefineTestCase):
     project_file = 'variable-rows.csv'
     project_format = 'text/line-based'
-    project_options = {'headerLines': 0}
+    project_options = {'header_lines': 0}
 
     def test_transpose_variable_number_of_rows_into_columns(self):
         # {20}, {21}

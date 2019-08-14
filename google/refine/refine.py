@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Client library to communicate with a OpenRefine server.
+Client library to communicate with a Refine server.
 """
 
 # Copyright (c) 2011 Paul Makepeace, Real Programmers. All rights reserved.
@@ -38,11 +38,11 @@ REFINE_PORT = os.environ.get('OPENREFINE_PORT', os.environ.get('GOOGLE_REFINE_PO
 
 
 class RefineServer(object):
-    """Communicate with a OpenRefine server."""
+    """Communicate with a Refine server."""
 
     @staticmethod
     def url():
-        """Return the URL to the OpenRefine server."""
+        """Return the URL to the Refine server."""
         server = 'http://' + REFINE_HOST
         if REFINE_PORT != '80':
             server += ':' + REFINE_PORT
@@ -55,7 +55,7 @@ class RefineServer(object):
         self.__version = None     # see version @property below
 
     def urlopen(self, command, data=None, params=None, project_id=None):
-        """Open a OpenRefine URL and with optional query params and POST data.
+        """Open a Refine URL and with optional query params and POST data.
 
         data: POST data dict
         param: query params dict
@@ -85,7 +85,7 @@ class RefineServer(object):
             raise Exception('HTTP %d "%s" for %s\n\t%s' % (e.code, e.msg, e.geturl(), data))
         except urllib2.URLError as e:
             raise urllib2.URLError(
-                '%s for %s. No OpenRefine server reachable/running; ENV set?' %
+                '%s for %s. No Refine server reachable/running; ENV set?' %
                 (e.reason, self.server))
         if response.info().get('Content-Encoding', None) == 'gzip':
             # Need a seekable filestream for gzip
@@ -95,7 +95,7 @@ class RefineServer(object):
         return response
 
     def urlopen_json(self, *args, **kwargs):
-        """Open a OpenRefine URL, optionally POST data, and return parsed JSON."""
+        """Open a Refine URL, optionally POST data, and return parsed JSON."""
         response = json.loads(self.urlopen(*args, **kwargs).read())
         if 'code' in response and response['code'] not in ('ok', 'pending'):
             error_message = ('server ' + response['code'] + ': ' +
@@ -118,7 +118,7 @@ class RefineServer(object):
 
 
 class Refine:
-    """Class representing a connection to a OpenRefine server."""
+    """Class representing a connection to a Refine server."""
     def __init__(self, server):
         if isinstance(server, RefineServer):
             self.server = server
@@ -144,17 +144,99 @@ class Refine:
         return projects[project_id]['name']
 
     def open_project(self, project_id):
-        """Open a OpenRefine project."""
+        """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
-    def new_project(self, project_file=None, project_name=None,
-                    project_format='', **kwargs):
-        """Create a OpenRefine project."""
-        defaults = { 'guessCellValueTypes' : False, 'headerLines' : 1, 'ignoreLines' : -1, 'includeFileSources' : False, 'limit' : -1, 'linesPerRow' : 1, 'processQuotes' : True, 'separator' : ',', 'skipDataLines' : 0, 'storeBlankCellsAsNulls' : True, 'storeBlankRows' : True, 'storeEmptyStrings' : True, 'trimStrings' : False }
+    # These aren't used yet but are included for reference
+    new_project_defaults = {
+        'text/line-based/*sv': {
+            'encoding': '',
+            'separator': ',',
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'guess_cell_value_types': True,
+            'process_quotes': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based': {
+            'encoding': '',
+            'lines_per_row': 1,
+            'ignore_lines': -1,
+            'limit': -1,
+            'skip_data_lines': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/fixed-width': {
+            'encoding': '',
+            'column_widths': [20],
+            'ignore_lines': -1,
+            'header_lines': 0,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'guess_cell_value_types': False,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/pc-axis': {
+            'encoding': '',
+            'limit': -1,
+            'skip_data_lines': -1,
+            'include_file_sources': False},
+        'text/rdf+n3': {'encoding': ''},
+        'text/xml/ods': {
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'binary/xls': {
+            'xml_based': False,
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False}
+    }
+
+    def new_project(self, project_file=None, project_url=None, project_name=None,
+                    project_format=None, **kwargs):
+        """Create a Refine project."""
+
+        if (project_file and project_url) or (not project_file and not project_url):
+            raise ValueError('One (only) of project_file and project_url must be set')        
+
+        defaults = {'guessCellValueTypes': False,
+                    'headerLines': 1,
+                    'ignoreLines': -1,
+                    'includeFileSources': False,
+                    'limit': -1,
+                    'linesPerRow': 1,
+                    'processQuotes': True,
+                    'project_format': 'text/line-based/*sv',
+                    'separator': ',',
+                    'skipDataLines': 0,
+                    'storeBlankCellsAsNulls': True,
+                    'storeBlankRows': True,
+                    'storeEmptyStrings': True,
+                    'trimStrings': False}
 
         # options
-        options = { 'format': project_format }
-        if project_file is not None:
+        options = {
+            'format': project_format        
+        }
+        if project_url is not None:
+            options['url'] = project_url
+        elif project_file is not None:
             options['project-file'] = {
                 'fd': open(project_file),
                 'filename': project_file,
@@ -165,10 +247,10 @@ class Refine:
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
 
-        # params (the API requires a json in the 'option' POST argument)
-        params = defaults
-        params.update(kwargs)
-        params = { 'options': json.dumps(params) }
+        # params (the API requires a json in the 'options' POST argument)
+        params_dict = dict(defaults)
+        params_dict.update(kwargs)
+        params = { 'options': json.dumps(params_dict) }
 
         # submit
         response = self.server.urlopen(
@@ -179,16 +261,10 @@ class Refine:
             urlparse.urlparse(response.geturl()).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
-            # check number of rows
-            rows = RefineProject(RefineServer(),project_id).do_json('get-rows')['total']
-            if rows > 0:
-                print('{0}: {1}'.format('id', project_id))
-                print('{0}: {1}'.format('rows', rows))
-                return RefineProject(self.server, project_id)
-            else:
-                raise Exception('Project contains 0 rows. Please check --help for mandatory arguments for xml, json, xlsx and ods')
+            return RefineProject(self.server, project_id)            
         else:
             raise Exception('Project not created')
+
 
 def RowsResponseFactory(column_index):
     """Factory for the parsing the output from get_rows().
@@ -251,7 +327,7 @@ class RefineProject:
                 server = RefineServer(server)
         self.server = server
         if not project_id:
-            raise Exception('Missing OpenRefine project ID')
+            raise Exception('Missing Refine project ID')
         self.project_id = project_id
         self.engine = facet.Engine()
         self.sorting = facet.Sorting()
@@ -342,11 +418,17 @@ class RefineProject:
                export_format)
         return self.do_raw(url, data={'format': export_format})
 
-    def export_templating(self, export_format='txt', engine='', prefix='', template='', rowSeparator='', suffix=''):
-        """Return a fileobject of a project's data."""
+    def export_templating(self, export_format='txt', engine='', prefix='',
+                          template='', rowSeparator='', suffix=''):
+        """Return a fileobject of a project's data in templating mode."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
                export_format)
-        return self.do_raw(url, data={'format': 'template', 'template': template, 'engine': engine, 'prefix': prefix, 'suffix': suffix, 'separator': rowSeparator } )
+        return self.do_raw(url, data={'format': 'template',
+                                      'template': template,
+                                      'engine': engine,
+                                      'prefix': prefix,
+                                      'suffix': suffix,
+                                      'separator': rowSeparator})
 
     def export_rows(self, **kwargs):
         """Return an iterable of parsed rows of a project's data."""
