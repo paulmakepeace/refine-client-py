@@ -36,7 +36,7 @@ setup(name='openrefine-client',
       url='https://github.com/opencultureconsulting/openrefine-client',
       packages=find_packages(exclude=['tests']),
       install_requires=['urllib2_file'],
-      python_requires='>2.6, !=3.*',
+      python_requires='>=2.7, !=3.*',
       entry_points={
           'console_scripts': [ 'openrefine-client = google.refine.__main__:main' ]
       },
