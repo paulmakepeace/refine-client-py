@@ -347,11 +347,11 @@ class RefineProject:
                export_format)
         return self.do_raw(url, data={'format': export_format})
 
-    def export_templating(self, export_format='txt', engine='', prefix='',
-                          template='', rowSeparator='', suffix=''):
+    def export_templating(self, engine='', prefix='',
+                          template='', rowSeparator='\n', suffix=''):
         """Return a fileobject of a project's data in templating mode."""
         url = ('export-rows/' + urllib.quote(self.project_name()) + '.' +
-               export_format)
+               'txt')
         return self.do_raw(url, data={'format': 'template',
                                       'template': template,
                                       'engine': engine,
