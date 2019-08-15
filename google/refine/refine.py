@@ -147,73 +147,9 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
-    # These aren't used yet but are included for reference
-    new_project_defaults = {
-        'text/line-based/*sv': {
-            'encoding': '',
-            'separator': ',',
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'guess_cell_value_types': True,
-            'process_quotes': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based': {
-            'encoding': '',
-            'lines_per_row': 1,
-            'ignore_lines': -1,
-            'limit': -1,
-            'skip_data_lines': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based/fixed-width': {
-            'encoding': '',
-            'column_widths': [20],
-            'ignore_lines': -1,
-            'header_lines': 0,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'guess_cell_value_types': False,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'text/line-based/pc-axis': {
-            'encoding': '',
-            'limit': -1,
-            'skip_data_lines': -1,
-            'include_file_sources': False},
-        'text/rdf+n3': {'encoding': ''},
-        'text/xml/ods': {
-            'sheets': [],
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False},
-        'binary/xls': {
-            'xml_based': False,
-            'sheets': [],
-            'ignore_lines': -1,
-            'header_lines': 1,
-            'skip_data_lines': 0,
-            'limit': -1,
-            'store_blank_rows': True,
-            'store_blank_cells_as_nulls': True,
-            'include_file_sources': False}
-    }
-
-    def new_project(self, project_file=None, project_url=None, project_name=None,
-                    project_format=None, **kwargs):
+    def new_project(self, project_file=None, project_name=None,
+                    project_format='text/line-based/*sv', **kwargs):
         """Create a Refine project."""
-
-        if (project_file and project_url) or (not project_file and not project_url):
-            raise ValueError('One (only) of project_file and project_url must be set')        
 
         defaults = {'guessCellValueTypes': False,
                     'headerLines': 1,
@@ -222,7 +158,6 @@ class Refine:
                     'limit': -1,
                     'linesPerRow': 1,
                     'processQuotes': True,
-                    'project_format': 'text/line-based/*sv',
                     'separator': ',',
                     'skipDataLines': 0,
                     'storeBlankCellsAsNulls': True,
@@ -231,26 +166,20 @@ class Refine:
                     'trimStrings': False}
 
         # options
-        options = {
-            'format': project_format        
-        }
-        if project_url is not None:
-            options['url'] = project_url
-        elif project_file is not None:
-            options['project-file'] = {
-                'fd': open(project_file),
-                'filename': project_file,
-            }
+        options = {'format': project_format}
+        if project_file is not None:
+            options['project-file'] = {'fd': open(project_file),
+                                       'filename': project_file}
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
 
-        # params (the API requires a json in the 'options' POST argument)
+        # params
         params_dict = dict(defaults)
         params_dict.update(kwargs)
-        params = { 'options': json.dumps(params_dict) }
+        params = {'options': json.dumps(params_dict)}
 
         # submit
         response = self.server.urlopen(
@@ -261,7 +190,7 @@ class Refine:
             urlparse.urlparse(response.geturl()).query)
         if 'project' in url_params:
             project_id = url_params['project'][0]
-            return RefineProject(self.server, project_id)            
+            return RefineProject(self.server, project_id)
         else:
             raise Exception('Project not created')
 
