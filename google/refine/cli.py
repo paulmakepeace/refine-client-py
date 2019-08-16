@@ -21,6 +21,7 @@ Functions used by the command line interface (CLI)
 
 import json
 import os
+import ssl
 import sys
 import time
 import urllib
@@ -141,7 +142,9 @@ def download(url, output_file=None):
               'Delete existing file or try command --output '
               'to specify a different filename.' % output_file)
         return
-    urllib.urlretrieve(url, output_file)
+    # Workaround for SSL verification problems in one-file-executables
+    context = ssl._create_unverified_context()
+    urllib.urlretrieve(url, output_file, context=context)
     print('Download to file %s complete' % output_file)
 
 
