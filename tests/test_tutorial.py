@@ -162,7 +162,7 @@ class TutorialTestEditing(refinetest.RefineTestCase):
         self.assertEqual(len(clusters), 7)
         first_cluster = clusters[0]
         self.assertEqual(len(first_cluster), 2)
-        self.assertEqual(first_cluster[0]['value'], 'RSCC Member at Large')
+        self.assertEqual(first_cluster[0]['value'], 'RSCC Member')
         self.assertEqual(first_cluster[0]['count'], 233)
         # Not strictly necessary to repeat 'Council Member' but a test
         # of mass_edit, and it's also what the front end sends.
