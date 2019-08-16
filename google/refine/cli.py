@@ -19,136 +19,295 @@ Functions used by the command line interface (CLI)
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
+import json
 import os
 import sys
 import time
-import json
+import urllib
 
 from google.refine import refine
 
-def list_projects():
-    """Query the OpenRefine server and list projects by ID: name."""
+
+def apply(project_id, history_file):
+    """Apply OpenRefine history from json file to project."""
+    project = refine.RefineProject(project_id)
+    response = project.apply_operations(history_file)
+    if response != 'ok':
+        raise Exception('Failed to apply %s to %s: %s' %
+                        (history_file, project_id, response))
+    else:
+        print('File %s has been successfully applied to project %s' %
+              (history_file, project_id))
+
+
+def create(project_file,
+           project_format=None,
+           project_name=None,
+           columnWidths=None,
+           encoding=None,
+           guessCellValueTypes=False,
+           headerLines=None,
+           ignoreLines=None,
+           includeFileSources=False,
+           limit=None,
+           linesPerRow=None,
+           processQuotes=True,
+           projectName=None,
+           recordPath=None,
+           separator=None,
+           sheets=None,
+           skipDataLines=None,
+           storeBlankCellsAsNulls=True,
+           storeBlankRows=True,
+           storeEmptyStrings=True,
+           trimStrings=False
+           ):
+    """Create a new project from file."""
+    # guess format from file extension
+    if not project_format:
+        project_format = os.path.splitext(project_file)[1][1:].lower()
+        if project_format == 'txt':
+            try:
+                columnWidths
+                project_format = 'fixed-width'
+            except NameError:
+                project_format = 'line-based'
+    # defaults for each file type
+    if project_format == 'xml':
+        project_format = 'text/xml'
+        if not recordPath:
+            recordPath = 'record'
+    elif project_format == 'csv':
+        project_format = 'text/line-based/*sv'
+    elif project_format == 'tsv':
+        project_format = 'text/line-based/*sv'
+        if not separator:
+            separator = '\t'
+    elif project_format == 'line-based':
+        project_format = 'text/line-based'
+        if not skipDataLines:
+            skipDataLines = -1
+    elif project_format == 'fixed-width':
+        project_format = 'text/line-based/fixed-width'
+        if not headerLines:
+            headerLines = 0
+    elif project_format == 'json':
+        project_format = 'text/json'
+        if not recordPath:
+            recordPath = ('_', '_')
+    elif project_format == 'xls':
+        project_format = 'binary/text/xml/xls/xlsx'
+        if not sheets:
+            sheets = 0
+    elif project_format == 'xlsx':
+        project_format = 'binary/text/xml/xls/xlsx'
+        if not sheets:
+            sheets = 0
+    elif project_format == 'ods':
+        project_format = 'text/xml/ods'
+        if not sheets:
+            sheets = 0
+    # execute
+    kwargs = {k: v for k, v in vars().items() if v is not None}
+    project = refine.Refine(refine.RefineServer()).new_project(**kwargs)
+    rows = project.do_json('get-rows')['total']
+    if rows > 0:
+        print('{0}: {1}'.format('id', project.project_id))
+        print('{0}: {1}'.format('rows', rows))
+        return project
+    else:
+        raise Exception(
+            'Project contains 0 rows. Please check --help for mandatory '
+            'arguments for xml, json, xlsx and ods')
+
+
+def delete(project_id):
+    """Delete project."""
+    project = refine.RefineProject(project_id)
+    response = project.delete()
+    if response != True:
+        raise Exception('Failed to delete %s: %s' %
+                        (project_id, response))
+    else:
+        print('Project %s has been successfully deleted' % project_id)
+
+
+def download(url, output_file=None):
+    """Integrated download function for your convenience."""
+    if not output_file:
+        output_file = os.path.basename(url)
+    if os.path.exists(output_file):
+        print('Error: File %s already exists.\n'
+              'Delete existing file or try command --output '
+              'to specify a different filename.' % output_file)
+        return
+    urllib.urlretrieve(url, output_file)
+    print('Download to file %s complete' % output_file)
+
+
+def export(project_id, output_file=None, export_format=None):
+    """Dump a project to stdout or file."""
+    project = refine.RefineProject(project_id)
+    if not export_format:
+        export_format = 'tsv'
+    if not output_file:
+        sys.stdout.write(project.export(export_format=export_format).read())
+    else:
+        ext = os.path.splitext(output_file)[1][1:]
+        if ext:
+            export_format = ext.lower()
+        with open(output_file, 'wb') as f:
+            f.write(project.export(export_format).read())
+        print('Export to file %s complete' % output_file)
+
+
+def info(project_id):
+    """Show project metadata"""
+    projects = refine.Refine(refine.RefineServer()).list_projects().items()
+    if project_id in [item[0] for item in projects]:
+        project = refine.RefineProject(project_id)
+        projects = refine.Refine(refine.RefineServer()).list_projects().items()
+        for projects_id, projects_info in projects:
+            if project_id == projects_id:
+                print('{0:>20}: {1}'.format('id', project_id))
+                print('{0:>20}: {1}'.format('url', 'http://' +
+                                            refine.REFINE_HOST + ':' +
+                                            refine.REFINE_PORT +
+                                            '/project?project=' + project_id))
+                for k, v in projects_info.items():
+                    if v:
+                        print('{0:>20}: {1}'.format(k, v))
+        project_model = project.get_models()
+        column_model = project_model['columnModel']
+        columns = [column['name'] for column in column_model['columns']]
+        for (i, v) in enumerate(columns, start=1):
+            print('{0:>20}: {1}'.format('column ' + str(i).zfill(3), v))
+    else:
+        print('Error: No project found with id %s.\n'
+              'Check existing projects with command --list' % (project_id))
+
+
+def ls():
+    """Query the server and list projects sorted by mtime."""
     projects = refine.Refine(refine.RefineServer()).list_projects().items()
 
     def date_to_epoch(json_dt):
         """Convert a JSON date time into seconds-since-epoch."""
         return time.mktime(time.strptime(json_dt, '%Y-%m-%dT%H:%M:%SZ'))
     projects.sort(key=lambda v: date_to_epoch(v[1]['modified']), reverse=True)
-    for project_id, project_info in projects:
-        print('{0:>14}: {1}'.format(project_id, project_info['name']))
-
-def info(project_id):
-    """Show project metadata"""
-    projects = refine.Refine(refine.RefineServer()).list_projects().items()
-    for projects_id, projects_info in projects:
-        if project_id == projects_id:
-            print('{0}: {1}'.format('id', projects_id))
-            print('{0}: {1}'.format('name', projects_info['name']))
-            print('{0}: {1}'.format('created', projects_info['created']))
-            print('{0}: {1}'.format('modified', projects_info['modified']))
-
-def create_project(options):
-    """Create a new project from options.create file."""
-    # general defaults are defined in google/refine/refine.py new_project
-    # additional defaults for each file type
-    defaults = {}
-    defaults['xml'] = { 'project_format' : 'text/xml', 'recordPath' : 'record' }
-    defaults['csv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : ',' }
-    defaults['tsv'] = { 'project_format' : 'text/line-based/*sv', 'separator' : '\t' }
-    defaults['line-based'] = { 'project_format' : 'text/line-based', 'skipDataLines' : -1 }
-    defaults['fixed-width'] = { 'project_format' : 'text/line-based/fixed-width', 'headerLines' : 0 }
-    defaults['json'] = { 'project_format' : 'text/json', 'recordPath' : ('_', '_') }
-    defaults['xls'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
-    defaults['xlsx'] = { 'project_format' : 'binary/text/xml/xls/xlsx', 'sheets' : 0 }
-    defaults['ods'] = { 'project_format' : 'text/xml/ods', 'sheets' : 0 }
-    # guess format from file extension (or legacy option --format)
-    input_format = os.path.splitext(options.create)[1][1:].lower()
-    if input_format == 'txt' and options.columnWidths:
-        input_format = 'fixed-width'
-    if input_format == 'txt' and not options.columnWidths:
-        input_format = 'line-based'
-    if options.input_format:
-        input_format = options.input_format
-    # defaults for selected format
-    input_dict = defaults[input_format]
-    # user input
-    input_user = { group4_arg.dest : getattr(options, group4_arg.dest) for group4_arg in group4.option_list }
-    input_user['strings'] = { k: v for k, v in input_user.items() if v != None and v not in ['true', 'false'] }
-    input_user['trues'] = { k: True for k, v in input_user.items() if v == 'true' }
-    input_user['falses'] = { k: False for k, v in input_user.items() if v == 'false' }
-    input_user_eval = input_user['strings']
-    input_user_eval.update(input_user['trues'])
-    input_user_eval.update(input_user['falses'])
-    # merge defaults with user input
-    input_dict.update(input_user_eval)
-    input_dict['project_file'] = options.create
-    refine.Refine(refine.RefineServer()).new_project(**input_dict)
-
-def export_project(project, options):
-    """Dump a project to stdout or options.output file."""
-    export_format = 'tsv'
-    if options.output and not options.splitToFiles == 'true':
-        ext = os.path.splitext(options.output)[1][1:]
-        if ext:
-            export_format = ext.lower()
-        output = open(options.output, 'wb')
+    if projects:
+        for project_id, project_info in projects:
+            print('{0:>14}: {1}'.format(project_id, project_info['name']))
     else:
-        output = sys.stdout
-    if options.template:
-        templateconfig = { group6_arg.dest : getattr(options, group6_arg.dest) for group6_arg in group6.option_list if group6_arg.dest in ['prefix', 'template', 'rowSeparator', 'suffix'] }
-        if options.mode == 'record-based':
-            engine = { 'facets':[], 'mode':'record-based' }
-        else:
-            engine = { 'facets':[], 'mode':'row-based' }
-        if options.facets:
-            engine['facets'].append(json.loads(options.facets))
-        if options.filterQuery:
-            if not options.filterColumn:
-                filterColumn = project.get_models()['columnModel']['keyColumnName']
-            else:
-                filterColumn = options.filterColumn
-            textFilter = { 'type':'text', 'name':filterColumn, 'columnName':filterColumn, 'mode':'regex', 'caseSensitive':False, 'query':options.filterQuery }
-            engine['facets'].append(textFilter)
-        templateconfig.update({ 'engine': json.dumps(engine) })
-        if options.splitToFiles == 'true':
-            # common config for row-based and record-based
-            prefix = templateconfig['prefix']
-            suffix = templateconfig['suffix']
-            split = '===|||THISISTHEBEGINNINGOFANEWRECORD|||==='
-            keyColumn = project.get_models()['columnModel']['keyColumnName']
-            if not options.output:
-                filename = time.strftime('%Y%m%d')
-            else:
-                filename = os.path.splitext(options.output)[0]
-                ext = os.path.splitext(options.output)[1][1:]
-            if not ext:
-                ext = 'txt'
-            if options.suffixById:
-                ids_template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, v, "")}}'
-                ids_templateconfig = { 'engine': json.dumps(engine), 'template': ids_template, 'rowSeparator':'\n' }
-                ids = [line.rstrip('\n') for line in project.export_templating(**ids_templateconfig) if line.rstrip('\n')]
-            if options.mode == 'record-based':
-                # record-based: split-character into template if key column is not blank (=record)
-                template = '{{forNonBlank(cells["' + keyColumn + '"].value, v, "' + split + '", "")}}' + templateconfig['template']
-                templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
-            else:
-                # row-based: split-character into template
-                template = split + templateconfig['template']
-                templateconfig.update({ 'prefix': '', 'suffix': '', 'template': template, 'rowSeparator':'' })
-            records = project.export_templating(**templateconfig).read().split(split)
-            del records[0] # skip first blank entry
-            if options.suffixById:
-                for index, record in enumerate(records):
-                    output = open(filename + '_' + ids[index] + '.' + ext, 'wb')
-                    output.writelines([prefix, record, suffix])
-            else:
-                zeros = len(str(len(records)))
-                for index, record in enumerate(records):
-                    output = open(filename + '_' + str(index+1).zfill(zeros) + '.' + ext, 'wb')
-                    output.writelines([prefix, record, suffix])
-        else:
-            output.writelines(project.export_templating(**templateconfig))
-            output.close()
+        print('Error: No projects found')
+
+
+def templating(project_id,
+               template,
+               output_file=None,
+               mode=None,
+               prefix='',
+               rowSeparator='\n',
+               suffix='',
+               filterQuery=None,
+               filterColumn=None,
+               facets=None,
+               splitToFiles=False,
+               suffixById=None
+               ):
+    """Dump a project to stdout or file with templating."""
+    project = refine.RefineProject(project_id)
+
+    # basic config
+    templateconfig = {'prefix': prefix,
+                      'suffix': suffix,
+                      'template': template,
+                      'rowSeparator': rowSeparator}
+
+    # construct the engine config
+    if mode == 'record-based':
+        engine = {'facets': [], 'mode': 'record-based'}
     else:
-        output.writelines(project.export(export_format=export_format))
-        output.close()
+        engine = {'facets': [], 'mode': 'row-based'}
+    if facets:
+        engine['facets'].append(json.loads(facets))
+    if filterQuery:
+        if not filterColumn:
+            filterColumn = project.get_models()['columnModel']['keyColumnName']
+        textFilter = {'type': 'text',
+                      'name': filterColumn,
+                      'columnName': filterColumn,
+                      'mode': 'regex',
+                      'caseSensitive': False,
+                      'query': filterQuery}
+        engine['facets'].append(textFilter)
+    templateconfig.update({'engine': json.dumps(engine)})
+
+    # normal output or some refinable magic for splitToFiles functionality
+    if not splitToFiles:
+        if not output_file:
+            sys.stdout.write(project.export_templating(
+                             **templateconfig).read())
+        else:
+            with open(output_file, 'wb') as f:
+                f.write(project.export_templating(**templateconfig).read())
+            print('Export to file %s complete' % output_file)
+    else:
+        # common config for row-based and record-based
+        prefix = templateconfig['prefix']
+        suffix = templateconfig['suffix']
+        split = '===|||THISISTHEBEGINNINGOFANEWRECORD|||==='
+        keyColumn = project.get_models()['columnModel']['keyColumnName']
+        if not output_file:
+            output_file = time.strftime('%Y%m%d')
+        else:
+            base = os.path.splitext(output_file)[0]
+            ext = os.path.splitext(output_file)[1][1:]
+        if not ext:
+            ext = 'txt'
+        if suffixById:
+            ids_template = ('{{forNonBlank(cells["' +
+                            keyColumn +
+                            '"].value, v, v, "")}}')
+            ids_templateconfig = {'engine': json.dumps(engine),
+                                  'template': ids_template,
+                                  'rowSeparator': '\n'}
+            ids = [line.rstrip('\n') for line in project.export_templating(
+                   **ids_templateconfig) if line.rstrip('\n')]
+        if mode == 'record-based':
+            # record-based: split-character into template
+            #               if key column is not blank (=record)
+            template = ('{{forNonBlank(cells["' +
+                        keyColumn +
+                        '"].value, v, "' +
+                        split +
+                        '", "")}}' +
+                        templateconfig['template'])
+            templateconfig.update({'prefix': '',
+                                   'suffix': '',
+                                   'template': template,
+                                   'rowSeparator': ''})
+        else:
+            # row-based: split-character into template
+            template = split + templateconfig['template']
+            templateconfig.update({'prefix': '',
+                                   'suffix': '',
+                                   'template': template,
+                                   'rowSeparator': ''})
+        records = project.export_templating(
+            **templateconfig).read().split(split)
+        del records[0]  # skip first blank entry
+        if suffixById:
+            for index, record in enumerate(records):
+                output_file = base + '_' + ids[index] + '.' + ext
+                with open(output_file, 'wb') as f:
+                    f.writelines([prefix, record, suffix])
+            print('Export to files complete. Last file: %s' % output_file)
+        else:
+            zeros = len(str(len(records)))
+            for index, record in enumerate(records):
+                output_file = base + '_' + \
+                    str(index + 1).zfill(zeros) + '.' + ext
+                with open(output_file, 'wb') as f:
+                    f.writelines([prefix, record, suffix])
+            print('Export to files complete. Last file: %s' % output_file)

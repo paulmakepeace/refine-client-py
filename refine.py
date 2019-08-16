@@ -19,8 +19,7 @@ Script to provide a command line interface to a Refine server.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
-from google.refine import __main__
+from google.refine import __main__, cli, refine
 
 if __name__ == '__main__':
-    # return project so that it's available interactively, python -i refine.py
-    refine_project = __main__.main()
+    __main__.main()
