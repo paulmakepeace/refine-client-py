@@ -20,7 +20,6 @@ Script to provide a command line interface to a Refine server.
 
 
 import optparse
-import os
 
 from google.refine import refine
 from google.refine import cli
