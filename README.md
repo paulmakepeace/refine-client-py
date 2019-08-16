@@ -672,7 +672,7 @@ Note to myself: When releasing a new version...
      cd openrefine-client
      python -m pip install . --user
      python -m pip install pyinstaller --user
-     pyinstaller --onefile refine.py --hidden-import google.refine__main__.py
+     pyinstaller --onefile refine.py --hidden-import google.refine.__main__
      ```
 
 4. Create release in GitHub
