@@ -661,7 +661,7 @@ Note to myself: When releasing a new version...
 
    - Run PyInstaller in Python 2 environments on native Windows, macOS and Linux. Should be "the oldest version of the OS you need to support"! Current release is built with: 
 
-     - Ubuntu 14.04 LTS (64-bit)
+     - Ubuntu 16.04 LTS (64-bit)
      - macOS Sierra 10.12
      - Windows 10
 
@@ -670,8 +670,9 @@ Note to myself: When releasing a new version...
      ```
      git clone https://github.com/opencultureconsulting/openrefine-client.git
      cd openrefine-client
-     pip install pyinstaller
-     pyinstaller --onefile refine.py
+     python -m pip install . --user
+     python -m pip install pyinstaller --user
+     pyinstaller --onefile refine.py --hidden-import google.refine__main__.py
      ```
 
 4. Create release in GitHub
