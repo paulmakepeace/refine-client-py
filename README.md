@@ -168,13 +168,13 @@ To try out the functionality create another project from the example file above.
 The following example code will export...
 
 - the columns "name" and "purchase" in JSON format
-- from the project "duplicates"
-- for rows matching the regex text filter `^CA$` in column "state"
+- from the project "advanced"
+- for rows matching the regex text filter `^F$` in column "gender"
 
 macOS/Linux Terminal (multi-line input with `\` ):
 
 ```
---export "advanced" \
+"advanced" \
 --prefix='{ "events" : [
 ' \
 --template='    { "name" : {{jsonize(cells["name"].value)}}, "purchase" : {{jsonize(cells["purchase"].value)}} }' \
@@ -182,14 +182,14 @@ macOS/Linux Terminal (multi-line input with `\` ):
 ' \
 --suffix='
 ] }' \
---filterQuery='^CA$' \
---filterColumn='state'
+--filterQuery='^F$' \
+--filterColumn='gender'
 ```
 
 Windows PowerShell (multi-line input with `` ` ``; quotes needs to be doubled):
 
 ```
---export "advanced" `
+"advanced" `
 --prefix='{ ""events"" : [
 ' `
 --template='    { ""name"" : {{jsonize(cells[""name""].value)}}, ""purchase"" : {{jsonize(cells[""purchase""].value)}} }' `
@@ -197,8 +197,8 @@ Windows PowerShell (multi-line input with `` ` ``; quotes needs to be doubled):
 ' `
 --suffix='
 ] }' `
---filterQuery='^CA$' `
---filterColumn='state'
+--filterQuery='^F$' `
+--filterColumn='gender'
 ```
 
 Add the following options to the last command (recall with `↑`) to store the results in multiple files.
@@ -215,7 +215,7 @@ There is another option to use the value in the first column instead:
 --output=advanced.json --splitToFiles=true --suffixById=true
 ```
 
-Because our project "advanced" contains duplicates in the first column "email" this command will store only one file `advanced_danny.baron@example1.com.json`.
+Because our project "advanced" contains duplicates in the first column "email" this command will overwrite files (e.g. `advanced_melanie.white@example2.edu.json`).
 When using this option, the first column should contain unique identifiers.
 
 ### See also
@@ -363,8 +363,8 @@ from google.refine import cli
 Change URL (if necessary):
 
 ```
-refine.REFINE_HOST = 'localhost'
-refine.REFINE_PORT = 3333
+cli.refine.REFINE_HOST = 'localhost'
+cli.refine.REFINE_PORT = '3333'
 ```
 
 Help screen:
