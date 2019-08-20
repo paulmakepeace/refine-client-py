@@ -25,6 +25,7 @@ import ssl
 import sys
 import time
 import urllib
+from xml.etree import ElementTree
 
 from google.refine import refine
 
@@ -43,7 +44,6 @@ def apply(project_id, history_file):
 
 def create(project_file,
            project_format=None,
-           project_name=None,
            columnWidths=None,
            encoding=None,
            guessCellValueTypes=False,
@@ -54,6 +54,7 @@ def create(project_file,
            linesPerRow=None,
            processQuotes=True,
            projectName=None,
+           projectTags=None,
            recordPath=None,
            separator=None,
            sheets=None,
@@ -69,15 +70,15 @@ def create(project_file,
         project_format = os.path.splitext(project_file)[1][1:].lower()
         if project_format == 'txt':
             try:
-                columnWidths
+                columnWidths[0]
                 project_format = 'fixed-width'
-            except NameError:
+            except TypeError:
                 project_format = 'line-based'
     # defaults for each file type
     if project_format == 'xml':
         project_format = 'text/xml'
         if not recordPath:
-            recordPath = 'record'
+            recordPath = [ElementTree.parse(project_file).getroot().tag]
     elif project_format == 'csv':
         project_format = 'text/line-based/*sv'
     elif project_format == 'tsv':
@@ -95,22 +96,35 @@ def create(project_file,
     elif project_format == 'json':
         project_format = 'text/json'
         if not recordPath:
-            recordPath = ('_', '_')
+            recordPath = ['_', '_']
     elif project_format == 'xls':
         project_format = 'binary/text/xml/xls/xlsx'
         if not sheets:
-            sheets = 0
+            sheets = [0]
+            # TODO: new format for sheets option introduced in OpenRefine 2.8
     elif project_format == 'xlsx':
         project_format = 'binary/text/xml/xls/xlsx'
         if not sheets:
-            sheets = 0
+            sheets = [0]
+            # TODO: new format for sheets option introduced in OpenRefine 2.8
     elif project_format == 'ods':
         project_format = 'text/xml/ods'
         if not sheets:
-            sheets = 0
+            sheets = [0]
+            # TODO: new format for sheets option introduced in OpenRefine 2.8
     # execute
     kwargs = {k: v for k, v in vars().items() if v is not None}
-    project = refine.Refine(refine.RefineServer()).new_project(**kwargs)
+    project = refine.Refine(refine.RefineServer()).new_project(
+        guess_cell_value_types=guessCellValueTypes,
+        ignore_lines=ignoreLines,
+        header_lines=headerLines,
+        skip_data_lines=skipDataLines,
+        store_blank_rows=storeBlankRows,
+        process_quotes=processQuotes,
+        project_name=projectName,        
+        store_blank_cells_as_nulls=storeBlankCellsAsNulls,
+        include_file_sources=includeFileSources,
+        **kwargs)
     rows = project.do_json('get-rows')['total']
     if rows > 0:
         print('{0}: {1}'.format('id', project.project_id))

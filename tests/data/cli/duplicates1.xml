@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record>
+  <email>danny.baron@example1.com</email>
+  <name>Danny Baron</name>
+  <state>CA</state>
+  <gender>M</gender>
+  <purchase>TV (UTF-8: 📺)</purchase>
+  <count>1</count>
+  <date>Wed, 4 Jul 2001</date>
+</record>

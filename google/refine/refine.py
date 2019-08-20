@@ -147,41 +147,127 @@ class Refine:
         """Open a Refine project."""
         return RefineProject(self.server, project_id)
 
-    def new_project(self, project_file=None, project_name=None,
-                    project_format='text/line-based/*sv', **kwargs):
-        """Create a Refine project."""
+    # These aren't used yet but are included for reference
+    new_project_defaults = {
+        'text/line-based/*sv': {
+            'encoding': '',
+            'separator': ',',
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'guess_cell_value_types': True,
+            'process_quotes': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based': {
+            'encoding': '',
+            'lines_per_row': 1,
+            'ignore_lines': -1,
+            'limit': -1,
+            'skip_data_lines': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/fixed-width': {
+            'encoding': '',
+            'column_widths': [20],
+            'ignore_lines': -1,
+            'header_lines': 0,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'guess_cell_value_types': False,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'text/line-based/pc-axis': {
+            'encoding': '',
+            'limit': -1,
+            'skip_data_lines': -1,
+            'include_file_sources': False},
+        'text/rdf+n3': {'encoding': ''},
+        'text/xml/ods': {
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False},
+        'binary/xls': {
+            'xml_based': False,
+            'sheets': [],
+            'ignore_lines': -1,
+            'header_lines': 1,
+            'skip_data_lines': 0,
+            'limit': -1,
+            'store_blank_rows': True,
+            'store_blank_cells_as_nulls': True,
+            'include_file_sources': False}
+    }
 
-        defaults = {'guessCellValueTypes': False,
-                    'headerLines': 1,
-                    'ignoreLines': -1,
-                    'includeFileSources': False,
-                    'limit': -1,
-                    'linesPerRow': 1,
-                    'processQuotes': True,
-                    'separator': ',',
-                    'skipDataLines': 0,
-                    'storeBlankCellsAsNulls': True,
-                    'storeBlankRows': True,
-                    'storeEmptyStrings': True,
-                    'trimStrings': False}
+    def new_project(self, project_file=None, project_url=None, project_name=None, project_format='text/line-based/*sv',
+                    encoding='',
+                    separator=',',
+                    ignore_lines=-1,
+                    header_lines=1,
+                    skip_data_lines=0,
+                    limit=-1,
+                    store_blank_rows=True,
+                    guess_cell_value_types=False,
+                    process_quotes=True,
+                    store_blank_cells_as_nulls=True,
+                    include_file_sources=False,
+                    **opts):
 
-        # options
-        options = {'format': project_format}
-        if project_file is not None:
-            options['project-file'] = {'fd': open(project_file),
-                                       'filename': project_file}
+        if (project_file and project_url) or (not project_file and not project_url):
+            raise ValueError('One (only) of project_file and project_url must be set')
+
+        def s(opt):
+            if isinstance(opt, bool):
+                return 'true' if opt else 'false'
+            if opt is None:
+                return ''
+            return str(opt)
+
+        # the new APIs requires a json in the 'option' POST or GET argument
+        # POST is broken at the moment, so we send it in the URL
+        new_style_options = dict(opts, **{
+            'encoding': s(encoding),
+        })
+        params = {
+            'options': json.dumps(new_style_options),
+        }
+
+        # old style options
+        options = {
+            'format': project_format,
+            'separator': s(separator),
+            'ignore-lines': s(ignore_lines),
+            'header-lines': s(header_lines),
+            'skip-data-lines': s(skip_data_lines),
+            'limit': s(limit),
+            'guess-value-type': s(guess_cell_value_types),
+            'process-quotes': s(process_quotes),
+            'store-blank-rows': s(store_blank_rows),
+            'store-blank-cells-as-nulls': s(store_blank_cells_as_nulls),
+            'include-file-sources': s(include_file_sources),
+        }
+
+        if project_url is not None:
+            options['url'] = project_url
+        elif project_file is not None:
+            options['project-file'] = {
+                'fd': open(project_file),
+                'filename': project_file,
+            }
         if project_name is None:
             # make a name for itself by stripping extension and directories
             project_name = (project_file or 'New project').rsplit('.', 1)[0]
             project_name = os.path.basename(project_name)
         options['project-name'] = project_name
-
-        # params
-        params_dict = dict(defaults)
-        params_dict.update(kwargs)
-        params = {'options': json.dumps(params_dict)}
-
-        # submit
         response = self.server.urlopen(
             'create-project-from-upload', options, params
         )

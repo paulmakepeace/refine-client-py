@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <record>
+    <email>danny.baron@example1.com</email>
+    <name>Danny Baron</name>
+    <state>CA</state>
+    <gender>M</gender>
+    <purchase>TV (UTF-8: 📺)</purchase>
+    <count>1</count>
+    <date>Wed, 4 Jul 2001</date>
+  </record>
+  <record>
+    <email>melanie.white@example2.edu</email>
+    <name>Melanie White</name>
+    <state>NC</state>
+    <gender>F</gender>
+    <purchase>&lt;iPhone&gt;</purchase>
+    <count>1</count>
+    <date>2001-07-04T12:08:56</date>
+  </record>
+  <record>
+    <email>danny.baron@example1.com</email>
+    <name>   D.	(&quot;Tab&quot;) Baron</name>
+    <state>CA</state>
+    <gender>M</gender>
+    <purchase>Winter jacket</purchase>
+    <count>1</count>
+    <date>2001-07-04</date>
+  </record>
+  <record>
+    <email>ben.tyler@example3.org</email>
+    <name>Ben Tyler</name>
+    <state>NV</state>
+    <gender>M</gender>
+    <purchase>Flashlight</purchase>
+    <count>1</count>
+    <date>2001/07/04</date>
+  </record>
+  <record>
+    <email>arthur.duff@example4.com</email>
+    <name>Arthur Duff</name>
+    <state>OR</state>
+    <gender>M</gender>
+    <purchase>Dining table</purchase>
+    <count>1</count>
+    <date>2001-07</date>
+  </record>
+  <record>
+    <email>danny.baron@example1.com</email>
+    <name>Daniel Baron</name>
+    <state></state>
+    <gender></gender>
+    <purchase>Bike</purchase>
+    <count>1</count>
+    <date>2001</date>
+  </record>
+  <record>
+    <email>jean.griffith@example5.org</email>
+    <name>Jean Griffith</name>
+    <state>WA</state>
+    <gender>F</gender>
+    <purchase>Power drill</purchase>
+    <count>1</count>
+    <date>2000</date>
+  </record>
+  <record>
+    <email>melanie.white@example2.edu</email>
+    <name>Melanie White</name>
+    <state>NC</state>
+    <gender>F</gender>
+    <purchase>&apos;iPad&apos;</purchase>
+    <count>1</count>
+    <date>1999</date>
+  </record>
+  <record>
+    <email>ben.morisson@example6.org</email>
+    <name>Ben Morisson</name>
+    <state>FL</state>
+    <gender>M</gender>
+    <purchase>Amplifier</purchase>
+    <count>1</count>
+    <date>1998</date>
+  </record>
+  <record>
+    <email>arthur.duff@example4.com</email>
+    <name>Arthur Duff</name>
+    <state>OR</state>
+    <gender>M</gender>
+    <purchase>Night table</purchase>
+    <count>1</count>
+    <date>1997</date>
+  </record>
+</root>

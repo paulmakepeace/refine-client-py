@@ -1,0 +1,92 @@
+[
+  {
+    "email": "danny.baron@example1.com",
+    "name": "Danny Baron",
+    "state": "CA",
+    "gender": "M",
+    "purchase": "TV (UTF-8: 📺)",
+    "count": 1,
+    "date": "Wed, 4 Jul 2001"
+  },
+  {
+    "email": "melanie.white@example2.edu",
+    "name": "Melanie White",
+    "state": "NC",
+    "gender": "F",
+    "purchase": "<iPhone>",
+    "count": 1,
+    "date": "2001-07-04T12:08:56"
+  },
+  {
+    "email": "danny.baron@example1.com",
+    "name": "   D.\t(\"Tab\") Baron",
+    "state": "CA",
+    "gender": "M",
+    "purchase": "Winter jacket",
+    "count": 1,
+    "date": "2001-07-04"
+  },
+  {
+    "email": "ben.tyler@example3.org",
+    "name": "Ben Tyler",
+    "state": "NV",
+    "gender": "M",
+    "purchase": "Flashlight",
+    "count": 1,
+    "date": "2001/07/04"
+  },
+  {
+    "email": "arthur.duff@example4.com",
+    "name": "Arthur Duff",
+    "state": "OR",
+    "gender": "M",
+    "purchase": "Dining table",
+    "count": 1,
+    "date": "2001-07"
+  },
+  {
+    "email": "danny.baron@example1.com",
+    "name": "Daniel Baron",
+    "state": "",
+    "gender": "",
+    "purchase": "Bike",
+    "count": 1,
+    "date": 2001
+  },
+  {
+    "email": "jean.griffith@example5.org",
+    "name": "Jean Griffith",
+    "state": "WA",
+    "gender": "F",
+    "purchase": "Power drill",
+    "count": 1,
+    "date": 2000
+  },
+  {
+    "email": "melanie.white@example2.edu",
+    "name": "Melanie White",
+    "state": "NC",
+    "gender": "F",
+    "purchase": "'iPad'",
+    "count": 1,
+    "date": 1999
+  },
+  {
+    "email": "ben.morisson@example6.org",
+    "name": "Ben Morisson",
+    "state": "FL",
+    "gender": "M",
+    "purchase": "Amplifier",
+    "count": 1,
+    "date": 1998
+  },
+  {
+    "email": "arthur.duff@example4.com",
+    "name": "Arthur Duff",
+    "state": "OR",
+    "gender": "M",
+    "purchase": "Night table",
+    "count": 1,
+    "date": 1997
+  }
+]

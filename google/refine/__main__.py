@@ -145,7 +145,7 @@ group5.add_option('--projectTags', dest='projectTags',
                   help='(all formats), please provide tags in multiple arguments, e.g. --projectTags=beta --projectTags=client1')
 group5.add_option('--recordPath', dest='recordPath',
                   action='append',
-                  help='(xml,json), please provide path in multiple arguments without slashes, e.g. /collection/record/ should be entered like this: --recordPath=collection --recordPath=record, default xml: record, default json: _ _')
+                  help='(xml,json), please provide path in multiple arguments, e.g. /collection/record/ should be entered: --recordPath=collection --recordPath=record, default xml: root element, default json: _ _')
 group5.add_option('--separator', dest='separator',
                   help='(csv,tsv), default csv: , default tsv: \\t')
 group5.add_option('--sheets', dest='sheets',

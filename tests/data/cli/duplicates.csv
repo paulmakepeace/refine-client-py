@@ -1,0 +1,11 @@
+email,name,state,gender,purchase,count,date
+danny.baron@example1.com,Danny Baron,CA,M,TV (UTF-8: 📺),1,"Wed, 4 Jul 2001"
+melanie.white@example2.edu,Melanie White,NC,F,<iPhone>,1,2001-07-04T12:08:56
+danny.baron@example1.com,   D.	("Tab") Baron,CA,M,Winter jacket,1,2001-07-04
+ben.tyler@example3.org,Ben Tyler,NV,M,Flashlight,1,2001/07/04
+arthur.duff@example4.com,Arthur Duff,OR,M,Dining table,1,2001-07
+danny.baron@example1.com,Daniel Baron,,,Bike,1,2001
+jean.griffith@example5.org,Jean Griffith,WA,F,Power drill,1,2000
+melanie.white@example2.edu,Melanie White,NC,F,'iPad',1,1999
+ben.morisson@example6.org,Ben Morisson,FL,M,Amplifier,1,1998
+arthur.duff@example4.com,Arthur Duff,OR,M,Night table,1,1997
