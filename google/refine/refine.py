@@ -216,7 +216,7 @@ class Refine:
                     skip_data_lines=0,
                     limit=-1,
                     store_blank_rows=True,
-                    guess_cell_value_types=True,
+                    guess_cell_value_types=False,
                     process_quotes=True,
                     store_blank_cells_as_nulls=True,
                     include_file_sources=False,
