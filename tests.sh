@@ -122,7 +122,7 @@ for t in ${tags[*]} ; do
     until curl --silent -N http://localhost:"$port" | cat | grep -q -o "Refine" ; do sleep 1; done
     echo "Refine running at http://localhost:${port}"
     if [ $interactively = true ]; then read -r -p "Press [Enter] key to start tests..."; fi
-    python setup.py test
+    python2 setup.py test
     if [ $interactively = true ]; then read -r -p "Press [Enter] key to stop OpenRefine..."; fi
     ${docker[*]} stop "$t"
     echo "End: $(date)"
